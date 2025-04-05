@@ -3,15 +3,15 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function Home() {
+export default function ForgotPassword() {
   return (
     <main className="min-h-screen bg-[#ecffee] flex flex-col items-center justify-between">
       <div className="w-full max-w-md mx-auto pt-16 px-4 flex flex-col items-center">
         <div className="w-full text-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1e1e1e]">
-            Welcome to EduKids
-          </h1>
-          <p className="text-[#4b5563] mt-2">Sign in to continue</p>
+          <h1 className="text-2xl font-bold text-[#1e1e1e]">Forgot Password</h1>
+          <p className="text-[#4b5563] mt-2">
+            Enter your email to reset password
+          </p>
         </div>
 
         <div className="w-full space-y-4">
@@ -22,41 +22,18 @@ export default function Home() {
               className="w-full border border-[#d9d9d9] bg-white rounded-md px-4 py-2"
             />
           </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Password"
-              className="w-full border border-[#d9d9d9] bg-white rounded-md px-4 py-2"
-            />
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Button className="w-full bg-[#10b981] hover:bg-[#059669] text-white py-2 rounded-md">
-              <Link href="/auth/role-select" className="w-full">
-                Sign In
-              </Link>
-            </Button>
-
-            <Button variant="outline" className="w-full">
-              <Link href="/kid-login" className="w-full">
-                Kids Login
-              </Link>
-            </Button>
-          </div>
+          <Button className="w-full bg-[#10b981] hover:bg-[#059669] text-white py-2 rounded-md">
+            Reset Password
+          </Button>
 
           <div className="text-center mt-4">
             <p className="text-[#4b5563] text-sm">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-[#10b981] font-medium">
-                Sign up
+              Remember your password?{" "}
+              <Link href="/" className="text-[#10b981] font-medium">
+                Sign in
               </Link>
             </p>
-            <Link
-              href="/forgot-password"
-              className="text-[#10b981] text-sm font-medium"
-            >
-              Forgot password?
-            </Link>
           </div>
         </div>
       </div>
