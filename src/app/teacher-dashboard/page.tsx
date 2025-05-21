@@ -1,83 +1,49 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Award,
-  BookOpen,
-  Calendar,
-  MessageCircle,
-  Search,
-  TrendingUp,
-  User,
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Award, BookOpen, Calendar, MessageSquare, Search, TrendingUp, User } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import TeacherLayout from "@/components/layouts/teacher-layout"
 
-export default function TeacherDashboard() {
+export default function TeacherDashboardPage() {
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Header */}
-      <header className="bg-[#702dff] text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-full"></div>
-            <h1 className="font-bold text-xl">EduKids</h1>
+    
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#1e1e1e]">Teacher Dashboard</h1>
+            <p className="text-[#6b7280]">Welcome back, Ms. Johnson! Here's an overview of your classes.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10"
-            >
-              <Bell size={20} />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-[#d9d9d9] rounded-full"></div>
-              <span className="hidden md:inline">Teacher Account</span>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1e1e1e]">
-            Teacher Dashboard
-          </h1>
           <div className="flex items-center gap-3">
             <div className="relative hidden md:block">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-              <Input
-                placeholder="Search students..."
-                className="pl-10 bg-white border-none w-64"
-              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input placeholder="Search students..." className="pl-10 bg-white border-none w-64" />
             </div>
-            <Button className="bg-[#702dff] hover:bg-[#5811f2]">
+            <Button className="bg-[#4dacc4] hover:bg-[#3b8a9e]">
+              <BookOpen className="mr-2 h-4 w-4" />
               Add Class
             </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Students"
             value="48"
             change="+3 new"
-            icon={<User className="h-5 w-5 text-[#702dff]" />}
-            bgColor="bg-[#f0e5fc]"
+            icon={<User className="h-5 w-5 text-[#4dacc4]" />}
+            bgColor="bg-[#d7ebf0]"
           />
           <StatCard
             title="Active Courses"
             value="12"
             change="2 pending"
-            icon={<BookOpen className="h-5 w-5 text-[#f13e3e]" />}
-            bgColor="bg-[#fff1ee]"
+            icon={<BookOpen className="h-5 w-5 text-[#f15f6c]" />}
+            bgColor="bg-[#feccd6]"
           />
           <StatCard
             title="Average Score"
@@ -96,12 +62,12 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Class Selector */}
-        <Tabs defaultValue="class-3a" className="mb-8">
-          <TabsList className="bg-white">
+        <Tabs defaultValue="class-3a" className="w-full">
+          <TabsList className="bg-white w-full justify-start overflow-x-auto">
             <TabsTrigger value="class-3a">Class 3A</TabsTrigger>
             <TabsTrigger value="class-3b">Class 3B</TabsTrigger>
             <TabsTrigger value="class-4a">Class 4A</TabsTrigger>
-            <TabsTrigger value="add" className="text-[#702dff]">
+            <TabsTrigger value="add" className="text-[#4dacc4]">
               + Add Class
             </TabsTrigger>
           </TabsList>
@@ -118,14 +84,13 @@ export default function TeacherDashboard() {
             <ClassDashboard name="Class 4A" />
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
-  );
+      </div>
+  )
 }
 
 function ClassDashboard({ name }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Class Overview */}
       <Card className="border-none shadow-sm">
         <CardContent className="p-6">
@@ -134,8 +99,8 @@ function ClassDashboard({ name }) {
               <h2 className="text-xl font-semibold">{name}</h2>
               <p className="text-[#6b7280]">25 students • 5 subjects</p>
               <div className="flex items-center gap-2 mt-2">
-                <Button size="sm" className="bg-[#702dff] hover:bg-[#5811f2]">
-                  <MessageCircle className="h-4 w-4 mr-2" />
+                <Button size="sm" className="bg-[#4dacc4] hover:bg-[#3b8a9e]">
+                  <MessageSquare className="h-4 w-4 mr-2" />
                   Message Class
                 </Button>
                 <Button size="sm" variant="outline">
@@ -145,9 +110,9 @@ function ClassDashboard({ name }) {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <div className="bg-[#f0e5fc] rounded-lg p-4 flex-1">
+              <div className="bg-[#d7ebf0] rounded-lg p-4 flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-5 w-5 text-[#702dff]" />
+                  <TrendingUp className="h-5 w-5 text-[#4dacc4]" />
                   <span className="font-medium">Average Score</span>
                 </div>
                 <p className="text-2xl font-bold">82%</p>
@@ -209,11 +174,7 @@ function ClassDashboard({ name }) {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
                   <div>
                     <p className="text-sm text-[#6b7280]">Average Score</p>
-                    <p
-                      className={`font-medium ${getScoreColor(student.score)}`}
-                    >
-                      {student.score}%
-                    </p>
+                    <p className={`font-medium ${getScoreColor(student.score)}`}>{student.score}%</p>
                   </div>
 
                   <div>
@@ -278,9 +239,7 @@ function ClassDashboard({ name }) {
             {lessons.map((lesson, i) => (
               <div key={i} className="border rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${lesson.bgColor}`}
-                  >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${lesson.bgColor}`}>
                     {lesson.icon}
                   </div>
                   <div>
@@ -288,9 +247,7 @@ function ClassDashboard({ name }) {
                     <p className="text-sm text-[#6b7280]">{lesson.date}</p>
                   </div>
                 </div>
-                <p className="text-sm text-[#4b5563] mb-3">
-                  {lesson.description}
-                </p>
+                <p className="text-sm text-[#4b5563] mb-3">{lesson.description}</p>
                 <div className="flex gap-2">
                   <Button size="sm" className={lesson.buttonColor}>
                     Prepare
@@ -305,7 +262,7 @@ function ClassDashboard({ name }) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 function StatCard({ title, value, change, icon, bgColor }) {
@@ -318,44 +275,20 @@ function StatCard({ title, value, change, icon, bgColor }) {
             <p className="text-2xl font-bold mt-1">{value}</p>
             <p className="text-xs text-[#6b7280] mt-1">{change}</p>
           </div>
-          <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center ${bgColor}`}
-          >
-            {icon}
-          </div>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${bgColor}`}>{icon}</div>
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function Bell(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  );
+  )
 }
 
 function getScoreColor(score) {
   if (score >= 90) {
-    return "text-[#10b981]";
+    return "text-[#10b981]"
   } else if (score >= 70) {
-    return "text-[#f59e0b]";
+    return "text-[#f59e0b]"
   } else {
-    return "text-[#ef4444]";
+    return "text-[#ef4444]"
   }
 }
 
@@ -395,62 +328,62 @@ const students = [
     attendance: 92,
     lastActivity: "Today",
   },
-];
+]
 
 const subjects = [
   {
-    name: "Mathematics",
+    name: "Life Skills Basics",
     teacher: "You",
     progress: 75,
     completed: 9,
     total: 12,
   },
   {
-    name: "Science",
+    name: "Emotional Intelligence",
     teacher: "Mr. Johnson",
     progress: 60,
     completed: 6,
     total: 10,
   },
   {
-    name: "English",
+    name: "Communication Skills",
     teacher: "Ms. Davis",
     progress: 85,
     completed: 17,
     total: 20,
   },
   {
-    name: "Art",
+    name: "Problem Solving",
     teacher: "Ms. Wilson",
     progress: 40,
     completed: 4,
     total: 10,
   },
-];
+]
 
 const lessons = [
   {
-    title: "Mathematics",
+    title: "Teamwork Skills",
     date: "Today, 10:00 AM",
-    description: "Multiplication and division concepts",
-    bgColor: "bg-[#f0e5fc]",
-    icon: <BookOpen className="h-5 w-5 text-[#702dff]" />,
-    buttonColor: "bg-[#702dff] hover:bg-[#5811f2]",
+    description: "Collaborative problem-solving activities",
+    bgColor: "bg-[#d7ebf0]",
+    icon: <BookOpen className="h-5 w-5 text-[#4dacc4]" />,
+    buttonColor: "bg-[#4dacc4] hover:bg-[#3b8a9e]",
   },
   {
-    title: "Science",
+    title: "Emotional Awareness",
     date: "Tomorrow, 11:30 AM",
-    description: "Introduction to simple machines",
+    description: "Identifying and managing emotions",
     bgColor: "bg-[#ebfdf4]",
     icon: <BookOpen className="h-5 w-5 text-[#10b981]" />,
     buttonColor: "bg-[#10b981] hover:bg-[#059669]",
   },
   {
-    title: "English",
+    title: "Public Speaking",
     date: "Wednesday, 9:00 AM",
-    description: "Vocabulary and reading comprehension",
+    description: "Building confidence in presentations",
     bgColor: "bg-[#e0f2fe]",
     icon: <BookOpen className="h-5 w-5 text-[#0ea5e9]" />,
     buttonColor: "bg-[#0ea5e9] hover:bg-[#0284c7]",
   },
-];
+]

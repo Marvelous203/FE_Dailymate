@@ -11,7 +11,6 @@ export default function ParentCourses() {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
-      <ParentHeader />
 
       {/* Main Content */}
       <main className="container mx-auto p-4 md:p-8">

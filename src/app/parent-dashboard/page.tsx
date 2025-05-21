@@ -1,65 +1,55 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Award,
-  BookOpen,
-  Calendar,
-  Clock,
-  Mail,
-  MessageCircle,
-  Phone,
-  TrendingUp,
-  User,
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Award, BookOpen, Calendar, Clock, ExternalLink, MessageSquare, Star, TrendingUp, Users } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import ParentLayout from "@/components/layouts/parent-layout"
 
-export default function ParentDashboard() {
+export default function ParentDashboardPage() {
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Header */}
-      <header className="bg-[#8b5cf6] text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-full"></div>
-            <h1 className="font-bold text-xl">EduKids</h1>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#1e1e1e]">Parent Dashboard</h1>
+            <p className="text-[#6b7280]">
+              Welcome back, Sarah! Here's what's happening with your children's learning.
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10"
-            >
-              <Bell size={20} />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-[#d9d9d9] rounded-full"></div>
-              <span className="hidden md:inline">Parent Account</span>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1e1e1e]">
-            Parent Dashboard
-          </h1>
-          <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed]">Add Child</Button>
+          <div className="flex gap-3">
+            <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed]">
+              <Users className="mr-2 h-4 w-4" />
+              Add Child
+            </Button>
+            <Button variant="outline" className="border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Kid's Environment
+            </Button>
+          </div>
         </div>
 
         {/* Child Selector */}
-        <Tabs defaultValue="alex" className="mb-8">
-          <TabsList className="bg-white">
+        <Tabs defaultValue="alex" className="w-full">
+          <TabsList className="bg-white w-full justify-start overflow-x-auto">
             <TabsTrigger value="alex" className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-[#d9d9d9] rounded-full"></div>
+              <div className="w-6 h-6 bg-[#d1fae5] rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-[#10b981]">A</span>
+              </div>
               Alex
             </TabsTrigger>
             <TabsTrigger value="emma" className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-[#d9d9d9] rounded-full"></div>
+              <div className="w-6 h-6 bg-[#feccd6] rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-[#f15f6c]">E</span>
+              </div>
               Emma
+            </TabsTrigger>
+            <TabsTrigger value="noah" className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-[#d7ebf0] rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-[#4dacc4]">N</span>
+              </div>
+              Noah
             </TabsTrigger>
             <TabsTrigger value="add" className="text-[#8b5cf6]">
               + Add Child
@@ -73,21 +63,25 @@ export default function ParentDashboard() {
           <TabsContent value="emma" className="mt-6">
             <ChildDashboard name="Emma Johnson" />
           </TabsContent>
+
+          <TabsContent value="noah" className="mt-6">
+            <ChildDashboard name="Noah Johnson" />
+          </TabsContent>
         </Tabs>
-      </main>
-    </div>
-  );
+      </div>
+
+  )
 }
 
-function ChildDashboard({ name }: { name: string }) {
+function ChildDashboard({ name }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Child Overview */}
       <Card className="border-none shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-[#d9d9d9]">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-[#d1fae5]">
                 <Image
                   src="/placeholder.svg?height=80&width=80"
                   alt="Child"
@@ -104,16 +98,16 @@ function ChildDashboard({ name }: { name: string }) {
             </div>
 
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 md:ml-8">
-              <div className="bg-[#ebfdf4] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-5 w-5 text-[#10b981]" />
+                  <BookOpen className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Courses</span>
                 </div>
                 <p className="text-2xl font-bold">4</p>
                 <p className="text-sm text-[#6b7280]">Active courses</p>
               </div>
 
-              <div className="bg-[#ede9fe] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Time</span>
@@ -122,9 +116,9 @@ function ChildDashboard({ name }: { name: string }) {
                 <p className="text-sm text-[#6b7280]">This week</p>
               </div>
 
-              <div className="bg-[#e0f2fe] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Award className="h-5 w-5 text-[#0ea5e9]" />
+                  <Award className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Achievements</span>
                 </div>
                 <p className="text-2xl font-bold">8</p>
@@ -149,9 +143,7 @@ function ChildDashboard({ name }: { name: string }) {
                     <div className="flex justify-between mb-2">
                       <div>
                         <h3 className="font-medium">{course.title}</h3>
-                        <p className="text-sm text-[#6b7280]">
-                          {course.category}
-                        </p>
+                        <p className="text-sm text-[#6b7280]">{course.category}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{course.progress}%</p>
@@ -160,7 +152,7 @@ function ChildDashboard({ name }: { name: string }) {
                         </p>
                       </div>
                     </div>
-                    <Progress value={course.progress} className="h-2" />
+                    <Progress value={course.progress} className="h-2 bg-[#e5e7eb]" indicatorClassName="bg-[#8b5cf6]" />
                   </div>
                 ))}
               </div>
@@ -194,68 +186,47 @@ function ChildDashboard({ name }: { name: string }) {
         </div>
       </div>
 
-      {/* Teacher Communication */}
+      {/* Recommended Courses */}
       <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle>Teacher Communication</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Recommended Courses</CardTitle>
+            <CardDescription>Courses that might interest your child</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" className="border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10">
+            View All
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-[#d9d9d9]">
-                  <Image
-                    src="/placeholder.svg?height=48&width=48"
-                    alt="Teacher"
-                    width={48}
-                    height={48}
-                    className="w-full h-full object-cover"
-                  />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {recommendedCourses.map((course, i) => (
+              <Link href={`/parent/courses/${i}`} key={i}>
+                <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="aspect-video relative bg-[#f3f4f6]">
+                    <Image src={course.image || "/placeholder.svg"} alt={course.title} fill className="object-cover" />
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium px-2 py-1 bg-[#f5f3ff] text-[#8b5cf6] rounded-full">
+                        {course.category}
+                      </span>
+                      <div className="flex items-center">
+                        <Star className="h-3 w-3 fill-[#f59e0b] text-[#f59e0b]" />
+                        <span className="text-xs ml-1">{course.rating}</span>
+                      </div>
+                    </div>
+                    <h3 className="font-medium mb-1">{course.title}</h3>
+                    <p className="text-sm text-[#6b7280] mb-2">{course.description}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#8b5cf6]">${course.price}</span>
+                      <Button size="sm" className="bg-[#8b5cf6] hover:bg-[#7c3aed]">
+                        Enroll
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium">Ms. Sarah Johnson</h3>
-                  <p className="text-sm text-[#6b7280]">Mathematics Teacher</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-[#6b7280]" />
-                  <span>sarah.johnson@example.com</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-[#6b7280]" />
-                  <span>+1 234 567 890</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-[#6b7280]" />
-                  <span>Office hours: Mon-Fri, 2-4 PM</span>
-                </div>
-              </div>
-
-              <Button className="mt-4 bg-[#8b5cf6] hover:bg-[#7c3aed] w-full md:w-auto">
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Send Message
-              </Button>
-            </div>
-
-            <div className="flex-1 border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
-              <h3 className="font-medium mb-3">Latest Message</h3>
-              <div className="bg-[#f9fafb] p-4 rounded-lg">
-                <p className="text-[#4b5563] mb-2">
-                  Alex is doing great in mathematics! He&apos;s showing
-                  excellent progress in multiplication and division. I recommend
-                  practicing more word problems at home to reinforce these
-                  skills.
-                </p>
-                <p className="text-sm text-[#6b7280]">
-                  Received: Yesterday, 3:45 PM
-                </p>
-              </div>
-              <Button variant="outline" className="mt-4 w-full">
-                View All Messages
-              </Button>
-            </div>
+              </Link>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -270,9 +241,7 @@ function ChildDashboard({ name }: { name: string }) {
             {events.map((event, i) => (
               <div key={i} className="border rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${event.bgColor}`}
-                  >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${event.bgColor}`}>
                     {event.icon}
                   </div>
                   <div>
@@ -280,10 +249,12 @@ function ChildDashboard({ name }: { name: string }) {
                     <p className="text-sm text-[#6b7280]">{event.date}</p>
                   </div>
                 </div>
-                <p className="text-sm text-[#4b5563] mb-3">
-                  {event.description}
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <p className="text-sm text-[#4b5563] mb-3">{event.description}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10"
+                >
                   Add to Calendar
                 </Button>
               </div>
@@ -292,27 +263,7 @@ function ChildDashboard({ name }: { name: string }) {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function Bell(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  );
+  )
 }
 
 const courses = [
@@ -344,49 +295,76 @@ const courses = [
     completed: 0,
     total: 10,
   },
-];
+]
 
 const activities = [
   {
     title: "Completed Mathematics Lesson 5",
     time: "Today, 10:30 AM",
-    bgColor: "bg-[#ebfdf4]",
-    icon: <BookOpen className="h-5 w-5 text-[#10b981]" />,
+    bgColor: "bg-[#f5f3ff]",
+    icon: <BookOpen className="h-5 w-5 text-[#8b5cf6]" />,
   },
   {
     title: "Scored 95% on Science Quiz",
     time: "Yesterday, 3:15 PM",
-    bgColor: "bg-[#ede9fe]",
+    bgColor: "bg-[#f5f3ff]",
     icon: <TrendingUp className="h-5 w-5 text-[#8b5cf6]" />,
   },
   {
     title: "Started Art & Craft course",
     time: "2 days ago",
-    bgColor: "bg-[#fff7ed]",
-    icon: <BookOpen className="h-5 w-5 text-[#f59e0b]" />,
+    bgColor: "bg-[#f5f3ff]",
+    icon: <BookOpen className="h-5 w-5 text-[#8b5cf6]" />,
   },
-];
+]
+
+const recommendedCourses = [
+  {
+    title: "Creative Problem Solving",
+    category: "Life Skills",
+    description: "Learn how to approach problems creatively",
+    price: 29.99,
+    rating: 4.8,
+    image: "/placeholder.svg?height=180&width=320",
+  },
+  {
+    title: "Emotional Intelligence",
+    category: "Social Skills",
+    description: "Understanding and managing emotions",
+    price: 24.99,
+    rating: 4.7,
+    image: "/placeholder.svg?height=180&width=320",
+  },
+  {
+    title: "Public Speaking for Kids",
+    category: "Communication",
+    description: "Build confidence in public speaking",
+    price: 19.99,
+    rating: 4.9,
+    image: "/placeholder.svg?height=180&width=320",
+  },
+]
 
 const events = [
   {
-    title: "Math Quiz",
+    title: "Life Skills Workshop",
     date: "Tomorrow, 10:00 AM",
-    description: "Quiz on multiplication and division concepts",
-    bgColor: "bg-[#ebfdf4]",
-    icon: <BookOpen className="h-5 w-5 text-[#10b981]" />,
-  },
-  {
-    title: "Science Fair",
-    date: "Next Friday, 1:00 PM",
-    description: "Annual science fair with project presentations",
-    bgColor: "bg-[#ede9fe]",
+    description: "Interactive workshop on problem-solving skills",
+    bgColor: "bg-[#f5f3ff]",
     icon: <BookOpen className="h-5 w-5 text-[#8b5cf6]" />,
   },
   {
     title: "Parent-Teacher Meeting",
-    date: "May 15, 4:00 PM",
+    date: "Next Friday, 1:00 PM",
     description: "Discuss your child's progress and development",
-    bgColor: "bg-[#e0f2fe]",
-    icon: <User className="h-5 w-5 text-[#0ea5e9]" />,
+    bgColor: "bg-[#f5f3ff]",
+    icon: <MessageSquare className="h-5 w-5 text-[#8b5cf6]" />,
   },
-];
+  {
+    title: "Summer Camp Registration",
+    date: "May 15, 4:00 PM",
+    description: "Last day to register for summer life skills camp",
+    bgColor: "bg-[#f5f3ff]",
+    icon: <Calendar className="h-5 w-5 text-[#8b5cf6]" />,
+  },
+]

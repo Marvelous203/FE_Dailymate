@@ -1,120 +1,66 @@
-"use client";
+import Link from "next/link"
+import { Bell, BookOpen, Home, LineChart, Settings, User, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  BarChart,
-  BookOpen,
-  Grid,
-  Settings,
-  Users,
-  LogOut,
-  Bell,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-
+export default function AdminLayout({ children }) {
   return (
-    <div className="min-h-screen bg-[#f5f5f5] flex">
-      {/* Sidebar */}
-      <div className="hidden md:flex w-64 bg-[#ef4444] flex-col p-4">
-        <div className="flex items-center gap-2 mb-8 mt-4">
-          <div className="w-8 h-8 bg-white rounded-full"></div>
-          <h1 className="text-white font-bold text-xl">EduKids Admin</h1>
-        </div>
-
-        <nav className="flex-1 space-y-2">
-          <NavLink
-            href="/admin/dashboard"
-            icon={<Grid size={20} />}
-            label="Dashboard"
-            active={pathname === "/admin/dashboard"}
-          />
-          <NavLink
-            href="/admin/courses"
-            icon={<BookOpen size={20} />}
-            label="Courses"
-            active={pathname.startsWith("/admin/courses")}
-          />
-          <NavLink
-            href="/admin/users"
-            icon={<Users size={20} />}
-            label="Users"
-            active={pathname.startsWith("/admin/users")}
-          />
-          <NavLink
-            href="/admin/analytics"
-            icon={<BarChart size={20} />}
-            label="Analytics"
-            active={pathname.startsWith("/admin/analytics")}
-          />
-          <NavLink
-            href="/admin/settings"
-            icon={<Settings size={20} />}
-            label="Settings"
-            active={pathname.startsWith("/admin/settings")}
-          />
-        </nav>
-
-        <div className="mt-auto">
-          <Link
-            href="/"
-            className="flex items-center gap-3 text-white hover:bg-white/10 rounded-lg p-3"
-          >
-            <LogOut size={20} />
-            <span>Log Out</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm p-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-[#1e1e1e]">Admin Panel</h1>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" className="rounded-full">
-                <Bell size={20} />
-              </Button>
-              <div className="w-10 h-10 bg-[#d9d9d9] rounded-full"></div>
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-[#f15f6c] text-white">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <Link href="/admin-dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+              <span className="text-[#f15f6c] font-bold">E</span>
             </div>
-          </div>
-        </header>
+            <span className="font-bold text-lg">EduKids</span>
+          </Link>
 
-        {/* Content */}
-        <main className="flex-1 p-4 md:p-8">{children}</main>
-      </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+              <Bell size={20} />
+            </Button>
+
+            <Avatar>
+              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Admin" />
+              <AvatarFallback>A</AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
+
+        <nav className="container mx-auto px-4 py-1">
+          <ul className="flex space-x-1 overflow-x-auto pb-2">
+            <NavItem href="/admin-dashboard" icon={<Home size={18} />} label="Dashboard" />
+            <NavItem href="/admin/users" icon={<Users size={18} />} label="Users" />
+            <NavItem href="/admin/courses" icon={<BookOpen size={18} />} label="Courses" />
+            <NavItem href="/admin/analytics" icon={<LineChart size={18} />} label="Analytics" />
+            <NavItem href="/admin/profile" icon={<User size={18} />} label="Profile" />
+            <NavItem href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
+          </ul>
+        </nav>
+      </header>
+
+      <main className="flex-1 bg-[#f5f5f5]">
+        <div className="container mx-auto px-4 py-6">{children}</div>
+      </main>
+
+      <footer className="bg-white py-4 border-t">
+        <div className="container mx-auto px-4 text-center text-[#6b7280] text-sm">
+          <p>© 2025 EduKids. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }
 
-function NavLink({
-  href,
-  icon,
-  label,
-  active,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
-}) {
+function NavItem({ href, icon, label }) {
   return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 text-white ${
-        active ? "bg-white/20" : "hover:bg-white/10"
-      } rounded-lg p-3`}
-    >
-      {icon}
-      <span>{label}</span>
-    </Link>
-  );
+    <li>
+      <Link href={href}>
+        <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex gap-1 items-center">
+          {icon}
+          <span>{label}</span>
+        </Button>
+      </Link>
+    </li>
+  )
 }

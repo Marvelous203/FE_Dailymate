@@ -1,86 +1,136 @@
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  UserCog,
-  ClapperboardIcon as ChalkboardTeacher,
-  Users,
-} from "lucide-react";
+import Image from "next/image"
+import Link from "next/link"
 
-export default function RoleSelect() {
+const RoleSelectPage = () => {  // Changed to arrow function component
   return (
-    <main className="min-h-screen bg-[#ecffee] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#1e1e1e]">
-            Select Your Role
-          </h1>
-          <p className="text-[#4b5563] mt-2">
-            Choose how you want to access EduKids
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#eafff4] flex flex-col">
+      <div className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/placeholder.svg?height=80&width=80"
+                alt="Logo"
+                width={80}
+                height={80}
+                className="rounded-full bg-white p-2"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-[#1e1e1e]">Select Your Role</h1>
+            <p className="text-[#4b5563]">Choose how you want to access EduKids</p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <RoleCard
-            title="Administrator"
-            description="Manage courses, users, and platform settings"
-            icon={<UserCog size={48} className="text-[#ef4444]" />}
-            color="bg-red-50"
-            href="/admin/dashboard"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <RoleCard
+              title="Parent"
+              icon={<UserIcon className="h-10 w-10 text-[#10b981]" />}
+              description="Manage your child's learning journey"
+              href="/parent-dashboard"
+              color="bg-[#d1fae5]"
+              hoverColor="hover:bg-[#a7f3d0]"
+              textColor="text-[#059669]"
+            />
 
-          <RoleCard
-            title="Teacher"
-            description="Create content and manage your classes"
-            icon={<ChalkboardTeacher size={48} className="text-[#702dff]" />}
-            color="bg-purple-50"
-            href="/teacher/dashboard"
-          />
+            <RoleCard
+              title="Teacher"
+              icon={<BookOpenIcon className="h-10 w-10 text-[#4dacc4]" />}
+              description="Manage courses and students"
+              href="/teacher-dashboard"
+              color="bg-[#d7ebf0]"
+              hoverColor="hover:bg-[#8abade]"
+              textColor="text-[#4dacc4]"
+            />
 
-          <RoleCard
-            title="Parent"
-            description="Monitor your child's progress and purchase courses"
-            icon={<Users size={48} className="text-[#8b5cf6]" />}
-            color="bg-violet-50"
-            href="/parent/dashboard"
-          />
-        </div>
-
-        <div className="text-center mt-8">
-          <Link href="/" className="text-[#10b981] font-medium">
-            Back to login
-          </Link>
+            <RoleCard
+              title="Admin"
+              icon={<SettingsIcon className="h-10 w-10 text-[#f15f6c]" />}
+              description="System administration"
+              href="/admin-dashboard"
+              color="bg-[#feccd6]"
+              hoverColor="hover:bg-[#f87171]"
+              textColor="text-[#f15f6c]"
+            />
+          </div>
         </div>
       </div>
-    </main>
-  );
+
+      <footer className="py-4 text-center text-[#6b7280] text-sm">
+        <p>© 2025 EduKids. All rights reserved.</p>
+      </footer>
+    </div>
+  )
 }
 
-function RoleCard({
-  title,
-  description,
-  icon,
-  color,
-  href,
-}: {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-  href: string;
-}) {
+function RoleCard({ title, icon, description, href, color, hoverColor, textColor }) {
   return (
     <Link href={href}>
-      <Card className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full">
-        <CardContent className="p-6 flex flex-col items-center text-center h-full">
-          <div
-            className={`w-16 h-16 rounded-full ${color} flex items-center justify-center mb-4`}
-          >
-            {icon}
-          </div>
-          <h2 className="text-xl font-semibold mb-2">{title}</h2>
-          <p className="text-[#4b5563]">{description}</p>
-        </CardContent>
-      </Card>
+      <div className={`${color} ${hoverColor} rounded-lg p-6 text-center transition-all cursor-pointer`}>
+        <div className="flex justify-center mb-4">{icon}</div>
+        <h2 className={`font-bold text-lg ${textColor}`}>{title}</h2>
+        <p className="text-[#4b5563] text-sm mt-2">{description}</p>
+      </div>
     </Link>
-  );
+  )
 }
+
+function UserIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
+function BookOpenIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  )
+}
+
+function SettingsIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+export default RoleSelectPage

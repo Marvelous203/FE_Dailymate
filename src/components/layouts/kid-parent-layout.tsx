@@ -1,40 +1,48 @@
 import Link from "next/link"
-import { Award, BookOpen, GamepadIcon, Home, LogOut } from "lucide-react"
+import { Bell, Clock, Home, MessageSquare, Settings, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function KidLayout({ children }) {
+export default function KidParentLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col bg-[#eafff4]">
       <header className="bg-[#83d98c] text-white py-3">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/environment-kid/kid-learning-zone" className="flex items-center gap-2">
+          <Link href="/environment-kid/parent-monitor" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#83d98c] font-bold text-xl">E</span>
             </div>
             <span className="font-bold text-xl">EduKids</span>
+            <span className="text-sm bg-white text-[#83d98c] px-2 py-1 rounded-full">Parent Mode</span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <div className="text-right mr-2 hidden sm:block">
-              <p className="font-bold">Alex</p>
-              <p className="text-xs">Level 5</p>
-            </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+              <Bell size={20} />
+            </Button>
 
             <Avatar>
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Kid" />
-              <AvatarFallback>A</AvatarFallback>
+              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Parent" />
+              <AvatarFallback>P</AvatarFallback>
             </Avatar>
           </div>
         </div>
 
         <nav className="container mx-auto px-4 mt-2">
           <div className="bg-white rounded-full p-1 flex justify-between">
-            <NavItem href="/environment-kid/kid-learning-zone" icon={<Home size={20} />} label="Home" />
-            <NavItem href="/environment-kid/kid-learning-zone/courses" icon={<BookOpen size={20} />} label="Courses" />
-            <NavItem href="/environment-kid/kid-learning-zone/games" icon={<GamepadIcon size={20} />} label="Games" />
-            <NavItem href="/environment-kid/kid-learning-zone/rewards" icon={<Award size={20} />} label="Rewards" />
-            <NavItem href="/environment-kid/login" icon={<LogOut size={20} />} label="Exit" />
+            <NavItem href="/environment-kid/parent-monitor" icon={<Home size={18} />} label="Dashboard" />
+            <NavItem
+              href="/environment-kid/parent-monitor/progress"
+              icon={<Clock size={18} />}
+              label="Time & Progress"
+            />
+            <NavItem
+              href="/environment-kid/parent-monitor/messages"
+              icon={<MessageSquare size={18} />}
+              label="Messages"
+            />
+            <NavItem href="/environment-kid/parent-monitor/settings" icon={<Settings size={18} />} label="Settings" />
+            <NavItem href="/parent-dashboard" icon={<User size={18} />} label="Main Account" />
           </div>
         </nav>
       </header>

@@ -1,22 +1,20 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Award,
-  BookOpen,
-  Calendar,
-  Clock,
-  Mail,
-  MessageCircle,
-  Phone,
-  TrendingUp,
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Award, BookOpen, Calendar, Clock, Mail, MessageCircle, Phone, TrendingUp, UserPlus } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
 
 export default function ParentDashboard() {
   return (
     <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-[#1e1e1e]">Parent Dashboard</h1>
+        <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed]">
+          <UserPlus className="mr-2 h-4 w-4" /> Add Child
+        </Button>
+      </div>
+
       {/* Child Selector */}
       <Tabs defaultValue="alex" className="mb-8">
         <TabsList className="bg-white">
@@ -28,8 +26,9 @@ export default function ParentDashboard() {
             <div className="w-6 h-6 bg-[#d9d9d9] rounded-full"></div>
             Emma
           </TabsTrigger>
-          <TabsTrigger value="add" className="text-[#8b5cf6]">
-            + Add Child
+          <TabsTrigger value="noah" className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-[#d9d9d9] rounded-full"></div>
+            Noah
           </TabsTrigger>
         </TabsList>
 
@@ -40,9 +39,13 @@ export default function ParentDashboard() {
         <TabsContent value="emma" className="mt-6">
           <ChildDashboard name="Emma Johnson" />
         </TabsContent>
+
+        <TabsContent value="noah" className="mt-6">
+          <ChildDashboard name="Noah Johnson" />
+        </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
 
 function ChildDashboard({ name }) {
@@ -70,16 +73,16 @@ function ChildDashboard({ name }) {
             </div>
 
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 md:ml-8">
-              <div className="bg-[#ebfdf4] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-5 w-5 text-[#10b981]" />
+                  <BookOpen className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Courses</span>
                 </div>
                 <p className="text-2xl font-bold">4</p>
                 <p className="text-sm text-[#6b7280]">Active courses</p>
               </div>
 
-              <div className="bg-[#ede9fe] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Time</span>
@@ -88,9 +91,9 @@ function ChildDashboard({ name }) {
                 <p className="text-sm text-[#6b7280]">This week</p>
               </div>
 
-              <div className="bg-[#e0f2fe] rounded-lg p-4">
+              <div className="bg-[#f5f3ff] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Award className="h-5 w-5 text-[#0ea5e9]" />
+                  <Award className="h-5 w-5 text-[#8b5cf6]" />
                   <span className="font-medium">Achievements</span>
                 </div>
                 <p className="text-2xl font-bold">8</p>
@@ -115,9 +118,7 @@ function ChildDashboard({ name }) {
                     <div className="flex justify-between mb-2">
                       <div>
                         <h3 className="font-medium">{course.title}</h3>
-                        <p className="text-sm text-[#6b7280]">
-                          {course.category}
-                        </p>
+                        <p className="text-sm text-[#6b7280]">{course.category}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{course.progress}%</p>
@@ -126,7 +127,9 @@ function ChildDashboard({ name }) {
                         </p>
                       </div>
                     </div>
-                    <Progress value={course.progress} className="h-2" />
+                    <Progress value={course.progress} className="h-2 bg-[#e5e7eb]">
+                      <div className="h-full bg-[#8b5cf6]" style={{ width: `${course.progress}%` }} />
+                    </Progress>
                   </div>
                 ))}
               </div>
@@ -209,14 +212,10 @@ function ChildDashboard({ name }) {
               <h3 className="font-medium mb-3">Latest Message</h3>
               <div className="bg-[#f9fafb] p-4 rounded-lg">
                 <p className="text-[#4b5563] mb-2">
-                  Alex is doing great in mathematics! He's showing excellent
-                  progress in multiplication and division. I recommend
-                  practicing more word problems at home to reinforce these
-                  skills.
+                  Alex is doing great in mathematics! He's showing excellent progress in multiplication and division. I
+                  recommend practicing more word problems at home to reinforce these skills.
                 </p>
-                <p className="text-sm text-[#6b7280]">
-                  Received: Yesterday, 3:45 PM
-                </p>
+                <p className="text-sm text-[#6b7280]">Received: Yesterday, 3:45 PM</p>
               </div>
               <Button variant="outline" className="mt-4 w-full">
                 View All Messages
@@ -226,7 +225,7 @@ function ChildDashboard({ name }) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 const courses = [
@@ -258,25 +257,25 @@ const courses = [
     completed: 0,
     total: 10,
   },
-];
+]
 
 const activities = [
   {
     title: "Completed Mathematics Lesson 5",
     time: "Today, 10:30 AM",
-    bgColor: "bg-[#ebfdf4]",
-    icon: <BookOpen className="h-5 w-5 text-[#10b981]" />,
+    bgColor: "bg-[#f5f3ff]",
+    icon: <BookOpen className="h-5 w-5 text-[#8b5cf6]" />,
   },
   {
     title: "Scored 95% on Science Quiz",
     time: "Yesterday, 3:15 PM",
-    bgColor: "bg-[#ede9fe]",
+    bgColor: "bg-[#f5f3ff]",
     icon: <TrendingUp className="h-5 w-5 text-[#8b5cf6]" />,
   },
   {
     title: "Started Art & Craft course",
     time: "2 days ago",
-    bgColor: "bg-[#fff7ed]",
-    icon: <BookOpen className="h-5 w-5 text-[#f59e0b]" />,
+    bgColor: "bg-[#f5f3ff]",
+    icon: <BookOpen className="h-5 w-5 text-[#8b5cf6]" />,
   },
-];
+]
