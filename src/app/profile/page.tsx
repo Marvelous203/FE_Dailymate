@@ -7,7 +7,6 @@ import {
   Calendar,
   Clock,
   Edit,
-  LogOut,
   Mail,
   MapPin,
   Phone,
@@ -66,14 +65,6 @@ export default function Profile() {
                     <span>Joined: Jan 2023</span>
                   </div>
                 </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full mt-6 flex items-center gap-2 text-[#ef4444] hover:text-[#ef4444] hover:bg-red-50"
-                >
-                  <LogOut size={16} />
-                  Log Out
-                </Button>
               </div>
             </CardContent>
           </Card>

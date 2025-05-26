@@ -1,13 +1,33 @@
+"use client";
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Award, BookOpen, Calendar, Clock, ExternalLink, MessageSquare, Star, TrendingUp, Users } from "lucide-react"
+import { Award, BookOpen, Calendar, Clock, ExternalLink, MessageSquare, Star, TrendingUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import ParentLayout from "@/components/layouts/parent-layout"
+import { useState } from "react"
+import { AddChild } from "@/components/addchild"
 
 export default function ParentDashboardPage() {
+  const [childrenList, setChildrenList] = useState(children);
+
+  const handleAddChild = (child: {
+      name: string;
+      age: string;
+      gender: string;
+      avatar: string;
+  }) => {
+      // Add the new child to the list
+      const newChildWithCourses = {
+          name: child.name,
+          age: parseInt(child.age) || 0,
+          courses: 0,
+      };
+      
+      setChildrenList([...childrenList, newChildWithCourses]);
+  };
+
   return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -19,10 +39,7 @@ export default function ParentDashboardPage() {
           </div>
 
           <div className="flex gap-3">
-            <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed]">
-              <Users className="mr-2 h-4 w-4" />
-              Add Child
-            </Button>
+            <AddChild onAddChild={handleAddChild} />
             <Button variant="outline" className="border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10">
               <ExternalLink className="mr-2 h-4 w-4" />
               Kid's Environment

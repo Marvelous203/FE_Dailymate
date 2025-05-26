@@ -1,13 +1,16 @@
+"use client"
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Filter, Search, Star, User } from "lucide-react";
-import ParentHeader from "@/components/parent-header";
+import { BookOpen, Search, Star, User } from "lucide-react";
+import { useState } from "react";
 
 export default function ParentCourses() {
+  const [filteredCourses, setFilteredCourses] = useState(allCourses);
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
@@ -35,14 +38,8 @@ export default function ParentCourses() {
               className="pl-10 bg-white border-none"
             />
           </div>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 bg-white"
-          >
-            <Filter size={18} />
-            Filter
-          </Button>
         </div>
+
 
         {/* Featured Courses */}
         <div className="mb-12">
@@ -66,7 +63,7 @@ export default function ParentCourses() {
 
           <TabsContent value="all" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses.map((course, index) => (
+              {filteredCourses.map((course, index) => (
                 <CourseCard key={index} course={course} />
               ))}
             </div>
@@ -74,7 +71,7 @@ export default function ParentCourses() {
 
           <TabsContent value="math" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses
+              {filteredCourses
                 .filter((c) => c.category === "Mathematics")
                 .map((course, index) => (
                   <CourseCard key={index} course={course} />
@@ -84,7 +81,7 @@ export default function ParentCourses() {
 
           <TabsContent value="science" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses
+              {filteredCourses
                 .filter((c) => c.category === "Science")
                 .map((course, index) => (
                   <CourseCard key={index} course={course} />
@@ -94,7 +91,7 @@ export default function ParentCourses() {
 
           <TabsContent value="language" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses
+              {filteredCourses
                 .filter((c) => c.category === "Language")
                 .map((course, index) => (
                   <CourseCard key={index} course={course} />
@@ -104,7 +101,7 @@ export default function ParentCourses() {
 
           <TabsContent value="art" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses
+              {filteredCourses
                 .filter((c) => c.category === "Art" || c.category === "Music")
                 .map((course, index) => (
                   <CourseCard key={index} course={course} />
@@ -159,11 +156,10 @@ export default function ParentCourses() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-4 w-4 ${
-                              i < testimonial.rating
-                                ? "text-[#f59e0b] fill-[#f59e0b]"
-                                : "text-[#e5e7eb]"
-                            }`}
+                            className={`h-4 w-4 ${i < testimonial.rating
+                              ? "text-[#f59e0b] fill-[#f59e0b]"
+                              : "text-[#e5e7eb]"
+                              }`}
                           />
                         ))}
                       </div>
