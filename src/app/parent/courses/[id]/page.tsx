@@ -13,7 +13,7 @@ export default function ParentCourseDetail({ params }) {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
-      <ParentHeader />
+
 
       {/* Main Content */}
       <main className="container mx-auto p-4 md:p-8">
@@ -213,9 +213,8 @@ export default function ParentCourseDetail({ params }) {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
-                              className={`h-5 w-5 ${
-                                star <= Math.floor(course.rating) ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
-                              }`}
+                              className={`h-5 w-5 ${star <= Math.floor(course.rating) ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
+                                }`}
                             />
                           ))}
                         </div>
@@ -263,9 +262,8 @@ export default function ParentCourseDetail({ params }) {
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <Star
                                     key={star}
-                                    className={`h-4 w-4 ${
-                                      star <= 5 ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
-                                    }`}
+                                    className={`h-4 w-4 ${star <= 5 ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
+                                      }`}
                                   />
                                 ))}
                                 <span className="text-xs text-[#6b7280] ml-2">2 weeks ago</span>

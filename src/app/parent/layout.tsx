@@ -1,7 +1,18 @@
+"use client";
+
 import Link from "next/link"
-import { Bell, BookOpen, CreditCard, Home, MessageSquare, Settings, Users, BarChart2, ExternalLink } from "lucide-react"
+import { Bell, BookOpen, CreditCard, Home, MessageSquare, Settings, Users, BarChart2, ExternalLink, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 export default function ParentLayout({ children }) {
   return (
@@ -28,6 +39,7 @@ export default function ParentLayout({ children }) {
             <NavItem href="/parent/messages" icon={<MessageSquare size={18} />} label="Messages" />
             <NavItem href="/parent/analytics" icon={<BarChart2 size={18} />} label="Analytics" />
             <NavItem href="/parent/settings" icon={<Settings size={18} />} label="Settings" />
+            {/* <NavItem href="/parent/profile" icon={<Profile size={18} />} label="Profile" /> */}
           </nav>
 
           <div className="flex items-center gap-4">
@@ -35,10 +47,35 @@ export default function ParentLayout({ children }) {
               <Bell size={20} />
             </Button>
 
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-              <AvatarFallback>P</AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
+                <Avatar className="cursor-pointer hover:ring-2 hover:ring-[#8b5cf6] transition-all duration-300">
+                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                  <AvatarFallback>P</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Parent Name</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      parent@example.com
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/parent/profile" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

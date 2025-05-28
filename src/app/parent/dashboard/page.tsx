@@ -1,18 +1,53 @@
+"use client"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Award, BookOpen, Calendar, Clock, Mail, MessageCircle, Phone, TrendingUp, UserPlus } from "lucide-react"
+import { Award, BookOpen, Calendar, Clock, Mail, MessageCircle, Phone, TrendingUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { useState } from "react"
+import { AddChild } from "@/components/addchild"
 
 export default function ParentDashboard() {
+  const [children, setChildren] = useState([
+    {
+      name: "Alex Johnson",
+      age: 8,
+      courses: 4,
+    },
+    {
+      name: "Emma Johnson",
+      age: 6,
+      courses: 3,
+    },
+    {
+      name: "Noah Johnson",
+      age: 5,
+      courses: 2,
+    },
+  ]);
+
+  const handleAddChild = (child: {
+    name: string;
+    age: string;
+    gender: string;
+    avatar: string;
+  }) => {
+    // Add the new child to the list
+    const newChildWithCourses = {
+      name: child.name,
+      age: parseInt(child.age) || 0,
+      courses: 0,
+    };
+    
+    setChildren([...children, newChildWithCourses]);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[#1e1e1e]">Parent Dashboard</h1>
-        <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed]">
-          <UserPlus className="mr-2 h-4 w-4" /> Add Child
-        </Button>
+        <AddChild onAddChild={handleAddChild} />
       </div>
 
       {/* Child Selector */}

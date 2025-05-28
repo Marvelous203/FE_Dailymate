@@ -242,7 +242,7 @@ export default function HomePage() {
             <Button size="lg" variant="secondary" asChild>
               <Link href="/signup">Sign Up Now</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-[#10b981]" asChild>
+            <Button size="lg" variant="outline" className="text-green border-white hover:bg-white hover:text-[#10b981]" asChild>
               <Link href="/environment-kid/login">Go to Kid's Area</Link>
             </Button>
           </div>
@@ -268,7 +268,7 @@ export default function HomePage() {
                 Life skills education for children through interactive learning experiences.
               </p>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-lg mb-4">Platform</h3>
               <ul className="space-y-2">
@@ -278,7 +278,7 @@ export default function HomePage() {
                 <li><Link href="/faq" className="text-gray-300 hover:text-white">FAQ</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-lg mb-4">Company</h3>
               <ul className="space-y-2">
@@ -288,7 +288,7 @@ export default function HomePage() {
                 <li><Link href="/contact" className="text-gray-300 hover:text-white">Contact</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-lg mb-4">Legal</h3>
               <ul className="space-y-2">
@@ -298,7 +298,7 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
             <p>© 2025 EduKids. All rights reserved.</p>
           </div>
@@ -341,7 +341,7 @@ function PricingCard({ title, price, description, features, buttonText, buttonLi
         <div className={`text-3xl font-bold mb-2 ${highlighted ? 'text-white' : 'text-[#1e1e1e]'}`}>{price}</div>
         <p className={highlighted ? 'text-white/90' : 'text-[#4b5563]'}>{description}</p>
       </div>
-      
+
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start">
@@ -350,11 +350,11 @@ function PricingCard({ title, price, description, features, buttonText, buttonLi
           </li>
         ))}
       </ul>
-      
-      <Button 
-        className={`w-full ${highlighted 
-          ? 'bg-white text-[#10b981] hover:bg-gray-100' 
-          : 'bg-[#10b981] text-white hover:bg-[#059669]'}`} 
+
+      <Button
+        className={`w-full ${highlighted
+          ? 'bg-white text-[#10b981] hover:bg-gray-100'
+          : 'bg-[#10b981] text-white hover:bg-[#059669]'}`}
         asChild
       >
         <Link href={buttonLink}>{buttonText}</Link>
