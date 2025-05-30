@@ -25,7 +25,7 @@ const RoleSelectPage = () => {  // Changed to arrow function component
               title="Parent"
               icon={<UserIcon className="h-10 w-10 text-[#10b981]" />}
               description="Manage your child's learning journey"
-              href="/parent-dashboard"
+              href="/parent/dashboard"
               color="bg-[#d1fae5]"
               hoverColor="hover:bg-[#a7f3d0]"
               textColor="text-[#059669]"

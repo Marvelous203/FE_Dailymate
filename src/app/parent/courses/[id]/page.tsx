@@ -1,54 +1,86 @@
+"use client"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, CheckCircle, ChevronLeft, Clock, Play, Shield, Star, User } from "lucide-react"
-import ParentHeader from "@/components/parent-header"
+import { BookOpen, CheckCircle, ChevronLeft, Clock, Play, Shield, Star, User, Heart, Download, Share2 } from "lucide-react"
+import { motion } from "framer-motion"
+import { useState } from "react"
 
 export default function ParentCourseDetail({ params }) {
   const courseId = params.id
   const course = courses.find((c) => c.id.toString() === courseId) || courses[0]
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Header */}
-
-
+    <div className="min-h-screen bg-[#f8f9fc]">
       {/* Main Content */}
       <main className="container mx-auto p-4 md:p-8">
-        <Link href="/parent/courses" className="flex items-center text-[#6b7280] mb-6 hover:text-[#8b5cf6]">
-          <ChevronLeft size={20} className="mr-1" />
-          Back to Courses
-        </Link>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Link href="/parent/courses" className="flex items-center text-[#6b7280] mb-6 hover:text-[#8b5cf6] group">
+            <ChevronLeft size={20} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+            Back to Courses
+          </Link>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Course Details */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm mb-8">
-              <div className="h-64 bg-[#d9d9d9] relative">
-                <Image
-                  src={`/placeholder.svg?height=300&width=800`}
-                  alt={course.title}
-                  width={800}
-                  height={300}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <Button className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm p-4">
-                    <Play className="h-8 w-8 text-white fill-white" />
-                  </Button>
-                </div>
+          <motion.div 
+            className="lg:col-span-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="border-none rounded-xl overflow-hidden shadow-md mb-8">
+              <div className="h-[400px] relative">
+                {!isVideoPlaying ? (
+                  <>
+                    <Image
+                      src={`/placeholder.svg?height=400&width=800`}
+                      alt={course.title}
+                      width={800}
+                      height={400}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Button 
+                        className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm p-6 group"
+                        onClick={() => setIsVideoPlaying(true)}
+                      >
+                        <Play className="h-10 w-10 text-white fill-white group-hover:scale-110 transition-transform" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-black flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <p className="text-xl mb-4">Video Player Placeholder</p>
+                      <Button 
+                        variant="outline" 
+                        className="text-white border-white hover:bg-white/10"
+                        onClick={() => setIsVideoPlaying(false)}
+                      >
+                        Close Video
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="p-6">
-                <div className="flex flex-wrap items-center gap-3 mb-3">
+              <div className="p-6 md:p-8">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
                   <div className="bg-[#f0e5fc] px-3 py-1 rounded-full text-sm text-[#8b5cf6] font-medium">
                     {course.category}
                   </div>
                   <div className="flex items-center text-[#f59e0b]">
                     <Star className="h-5 w-5 fill-[#f59e0b] mr-1" />
                     <span className="font-medium">{course.rating}</span>
+                    <span className="text-[#6b7280] text-sm ml-1">({course.reviewCount} reviews)</span>
                   </div>
                   <div className="flex items-center text-[#6b7280] text-sm">
                     <User className="h-4 w-4 mr-1" />
@@ -60,51 +92,65 @@ export default function ParentCourseDetail({ params }) {
                   </div>
                 </div>
 
-                <h1 className="text-2xl font-bold mb-4">{course.title}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-4">{course.title}</h1>
 
-                <p className="text-[#4b5563] mb-6">{course.description}</p>
+                <p className="text-[#4b5563] mb-6 text-lg">{course.description}</p>
 
                 <div className="flex flex-wrap gap-4 mb-6">
-                  <div className="flex items-center gap-2 bg-[#f9fafb] px-3 py-2 rounded-md">
+                  <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <BookOpen className="h-5 w-5 text-[#8b5cf6]" />
                     <span>{course.lessons} lessons</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-[#f9fafb] px-3 py-2 rounded-md">
+                  <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <User className="h-5 w-5 text-[#8b5cf6]" />
                     <span>Ages {course.ageRange}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-[#f9fafb] px-3 py-2 rounded-md">
+                  <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <Clock className="h-5 w-5 text-[#8b5cf6]" />
                     <span>{course.accessPeriod} access</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] flex-1">Purchase This Course</Button>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <BookmarkIcon className="h-5 w-5" />
-                    Save for Later
+                  <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full flex-1 py-6 text-lg">
+                    Purchase This Course
                   </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="rounded-full flex items-center gap-2">
+                      <Heart className="h-5 w-5" />
+                      Save
+                    </Button>
+                    <Button variant="outline" className="rounded-full flex items-center gap-2">
+                      <Share2 className="h-5 w-5" />
+                      Share
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             <Tabs defaultValue="curriculum" className="mb-8">
-              <TabsList className="bg-white">
-                <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="instructor">Instructor</TabsTrigger>
-                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              <TabsList className="bg-white rounded-full p-1 w-full flex justify-between md:w-auto">
+                <TabsTrigger value="curriculum" className="rounded-full">Curriculum</TabsTrigger>
+                <TabsTrigger value="overview" className="rounded-full">Overview</TabsTrigger>
+                <TabsTrigger value="instructor" className="rounded-full">Instructor</TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-full">Reviews</TabsTrigger>
               </TabsList>
 
               <TabsContent value="curriculum" className="mt-6">
-                <Card className="border-none shadow-sm">
+                <Card className="border-none rounded-xl shadow-md">
                   <CardContent className="p-0">
                     {lessons.map((lesson, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border-b last:border-b-0">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center">
-                            <span>{index + 1}</span>
+                      <motion.div 
+                        key={index} 
+                        className="flex items-center justify-between p-5 border-b last:border-b-0 hover:bg-[#f9fafb] transition-colors"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center font-semibold">
+                            {index + 1}
                           </div>
                           <div>
                             <h3 className="font-medium">{lesson.title}</h3>
@@ -115,50 +161,72 @@ export default function ParentCourseDetail({ params }) {
                           </div>
                         </div>
                         {lesson.preview ? (
-                          <Button variant="outline" size="sm" className="text-[#8b5cf6] border-[#8b5cf6]">
+                          <Button variant="outline" size="sm" className="text-[#8b5cf6] border-[#8b5cf6] rounded-full">
                             Preview
                           </Button>
                         ) : (
-                          <LockIcon className="h-5 w-5 text-[#6b7280]" />
+                          <div className="w-8 h-8 rounded-full border border-[#e5e7eb] flex items-center justify-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="text-[#6b7280]"
+                            >
+                              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                          </div>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="overview" className="mt-6">
-                <Card className="border-none shadow-sm">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-semibold mb-4">About This Course</h2>
-                    <p className="text-[#4b5563] mb-4">{course.longDescription}</p>
+                <Card className="border-none rounded-xl shadow-md">
+                  <CardContent className="p-6 md:p-8">
+                    <h2 className="text-xl font-semibold mb-6">About This Course</h2>
+                    <p className="text-[#4b5563] mb-6 leading-relaxed">{course.longDescription}</p>
 
-                    <h3 className="text-lg font-semibold mb-3 mt-6">What Your Child Will Learn</h3>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <h3 className="text-lg font-semibold mb-4 mt-8">What Your Child Will Learn</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                       {course.learningOutcomes.map((outcome, index) => (
-                        <li key={index} className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{outcome}</span>
-                        </li>
+                        <motion.div 
+                          key={index} 
+                          className="flex items-start"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-[#4b5563]">{outcome}</span>
+                        </motion.div>
                       ))}
-                    </ul>
+                    </div>
 
-                    <h3 className="text-lg font-semibold mb-3 mt-6">Requirements</h3>
-                    <ul className="space-y-2">
+                    <h3 className="text-lg font-semibold mb-4">Requirements</h3>
+                    <ul className="space-y-3 mb-8">
                       {course.requirements.map((requirement, index) => (
                         <li key={index} className="flex items-start">
-                          <div className="h-1.5 w-1.5 rounded-full bg-[#4b5563] mt-2 mr-2"></div>
-                          <span>{requirement}</span>
+                          <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
+                          <span className="text-[#4b5563]">{requirement}</span>
                         </li>
                       ))}
                     </ul>
 
-                    <h3 className="text-lg font-semibold mb-3 mt-6">Who This Course is For</h3>
-                    <ul className="space-y-2">
+                    <h3 className="text-lg font-semibold mb-4">Who This Course is For</h3>
+                    <ul className="space-y-3">
                       {course.targetAudience.map((audience, index) => (
                         <li key={index} className="flex items-start">
-                          <div className="h-1.5 w-1.5 rounded-full bg-[#4b5563] mt-2 mr-2"></div>
-                          <span>{audience}</span>
+                          <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
+                          <span className="text-[#4b5563]">{audience}</span>
                         </li>
                       ))}
                     </ul>
@@ -167,10 +235,10 @@ export default function ParentCourseDetail({ params }) {
               </TabsContent>
 
               <TabsContent value="instructor" className="mt-6">
-                <Card className="border-none shadow-sm">
-                  <CardContent className="p-6">
+                <Card className="border-none rounded-xl shadow-md">
+                  <CardContent className="p-6 md:p-8">
                     <div className="flex flex-col sm:flex-row gap-6">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-[#d9d9d9] flex-shrink-0">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-[#f0e5fc] flex-shrink-0 border-4 border-white shadow-md">
                         <Image
                           src="/placeholder.svg?height=96&width=96"
                           alt="Instructor"
@@ -181,19 +249,19 @@ export default function ParentCourseDetail({ params }) {
                       </div>
                       <div>
                         <h2 className="text-xl font-semibold mb-2">{course.instructor.name}</h2>
-                        <p className="text-[#6b7280] mb-4">{course.instructor.title}</p>
-                        <p className="text-[#4b5563] mb-4">{course.instructor.bio}</p>
-                        <div className="flex items-center gap-4">
+                        <p className="text-[#8b5cf6] mb-4">{course.instructor.title}</p>
+                        <p className="text-[#4b5563] mb-6 leading-relaxed">{course.instructor.bio}</p>
+                        <div className="flex items-center gap-8">
                           <div className="text-center">
-                            <div className="font-bold text-lg">{course.instructor.courses}+</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.courses}+</div>
                             <div className="text-sm text-[#6b7280]">Courses</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-lg">{course.instructor.students}+</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.students}+</div>
                             <div className="text-sm text-[#6b7280]">Students</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-lg">{course.instructor.rating}</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.rating}</div>
                             <div className="text-sm text-[#6b7280]">Rating</div>
                           </div>
                         </div>
@@ -204,10 +272,10 @@ export default function ParentCourseDetail({ params }) {
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-6">
-                <Card className="border-none shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6 mb-8">
-                      <div className="text-center md:text-left md:border-r md:pr-6 flex-shrink-0">
+                <Card className="border-none rounded-xl shadow-md">
+                  <CardContent className="p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row gap-8 mb-10 border-b pb-8">
+                      <div className="text-center md:text-left md:border-r md:pr-8 flex-shrink-0">
                         <div className="text-5xl font-bold text-[#1e1e1e]">{course.rating}</div>
                         <div className="flex items-center justify-center md:justify-start mt-2">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -223,7 +291,7 @@ export default function ParentCourseDetail({ params }) {
 
                       <div className="flex-1">
                         {[5, 4, 3, 2, 1].map((rating) => (
-                          <div key={rating} className="flex items-center gap-3 mb-2">
+                          <div key={rating} className="flex items-center gap-3 mb-3">
                             <div className="text-sm text-[#6b7280] w-2">{rating}</div>
                             <Star className="h-4 w-4 text-[#f59e0b] fill-[#f59e0b]" />
                             <div className="flex-1 h-2 bg-[#e5e7eb] rounded-full overflow-hidden">
@@ -234,7 +302,7 @@ export default function ParentCourseDetail({ params }) {
                                 }}
                               ></div>
                             </div>
-                            <div className="text-sm text-[#6b7280] w-8">
+                            <div className="text-sm text-[#6b7280] w-10">
                               {rating === 5 ? "75%" : rating === 4 ? "20%" : rating === 3 ? "5%" : "0%"}
                             </div>
                           </div>
@@ -243,16 +311,22 @@ export default function ParentCourseDetail({ params }) {
                     </div>
 
                     {/* Sample Reviews */}
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                       {[1, 2, 3].map((review) => (
-                        <div key={review} className="border-b pb-6 last:border-b-0">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-[#d9d9d9]">
+                        <motion.div 
+                          key={review} 
+                          className="border-b pb-8 last:border-b-0 last:pb-0"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.4, delay: review * 0.1 }}
+                        >
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-[#f0e5fc]">
                               <Image
-                                src={`/placeholder.svg?height=40&width=40`}
+                                src={`/placeholder.svg?height=48&width=48`}
                                 alt="User"
-                                width={40}
-                                height={40}
+                                width={48}
+                                height={48}
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -270,27 +344,31 @@ export default function ParentCourseDetail({ params }) {
                               </div>
                             </div>
                           </div>
-                          <p className="text-[#4b5563]">
+                          <p className="text-[#4b5563] leading-relaxed">
                             My child loves this course! The content is engaging and easy to follow. The instructor
                             explains concepts clearly and the interactive activities make learning fun. I've seen
                             significant improvement in my child's understanding.
                           </p>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
+          </motion.div>
 
           {/* Sidebar */}
-          <div>
-            <Card className="border-none shadow-sm sticky top-4">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="border-none rounded-xl shadow-md sticky top-4">
               <CardContent className="p-6">
-                <div className="text-3xl font-bold text-[#1e1e1e] mb-4">${course.price}</div>
+                <div className="text-3xl font-bold text-[#1e1e1e] mb-6">${course.price}</div>
 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-5 mb-8">
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
@@ -328,8 +406,10 @@ export default function ParentCourseDetail({ params }) {
                   </div>
                 </div>
 
-                <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] mb-3">Purchase This Course</Button>
-                <Button variant="outline" className="w-full">
+                <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-3">
+                  Purchase This Course
+                </Button>
+                <Button variant="outline" className="w-full rounded-full">
                   Add to Cart
                 </Button>
 
@@ -337,95 +417,84 @@ export default function ParentCourseDetail({ params }) {
                   <Shield className="h-4 w-4 mr-2" />
                   <span>30-day money-back guarantee</span>
                 </div>
+                
+                <div className="mt-6 pt-6 border-t">
+                  <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-3 rounded-full">
+                    <Download className="h-4 w-4" />
+                    Download Course Syllabus
+                  </Button>
+                  <Button variant="ghost" className="w-full flex items-center justify-center gap-2 text-[#6b7280] rounded-full">
+                    <Share2 className="h-4 w-4" />
+                    Share This Course
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         </div>
 
         {/* Related Courses */}
-        <div className="mt-12">
-          <h2 className="text-xl font-semibold mb-6">You May Also Like</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div 
+          className="mt-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <h2 className="text-2xl font-bold text-[#1e1e1e] border-l-4 border-[#8b5cf6] pl-3 mb-8">
+            You May Also Like
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {relatedCourses.map((course, index) => (
-              <Card key={index} className="border-none shadow-sm overflow-hidden">
-                <div className="h-40 bg-[#d9d9d9] relative">
-                  <Image
-                    src={`/placeholder.svg?height=160&width=320`}
-                    alt={course.title}
-                    width={320}
-                    height={160}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-[#f0e5fc] px-2 py-1 rounded text-xs text-[#8b5cf6] font-medium">
-                      {course.category}
-                    </div>
-                    <div className="text-[#6b7280] text-xs flex items-center">
-                      <Star className="h-3 w-3 text-[#f59e0b] mr-1" />
-                      {course.rating}
-                    </div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+                whileHover={{ y: -5 }}
+              >
+                <Card className="border-none rounded-xl shadow-md overflow-hidden h-full">
+                  <div className="h-44 relative overflow-hidden">
+                    <Image
+                      src={`/placeholder.svg?height=176&width=352`}
+                      alt={course.title}
+                      width={352}
+                      height={176}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    />
+                    <button className="absolute top-3 right-3 bg-white/30 backdrop-blur-sm p-2 rounded-full hover:bg-white/50 transition-colors">
+                      <Heart className="h-4 w-4 text-white" />
+                    </button>
                   </div>
-                  <Link href={`/parent/courses/${course.id}`}>
-                    <h3 className="font-semibold mb-2 hover:text-[#8b5cf6] transition-colors">{course.title}</h3>
-                  </Link>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-[#6b7280]">
-                      <BookOpen size={16} className="mr-1" />
-                      <span>{course.lessons} lessons</span>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="bg-[#f0e5fc] px-2 py-1 rounded-full text-xs text-[#8b5cf6] font-medium">
+                        {course.category}
+                      </div>
+                      <div className="text-[#6b7280] text-xs flex items-center">
+                        <Star className="h-3 w-3 text-[#f59e0b] fill-[#f59e0b] mr-1" />
+                        {course.rating}
+                      </div>
                     </div>
-                    <div className="font-bold text-[#8b5cf6]">${course.price}</div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <Link href={`/parent/courses/${course.id}`}>
+                      <h3 className="font-semibold mb-3 hover:text-[#8b5cf6] transition-colors line-clamp-2">{course.title}</h3>
+                    </Link>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-[#6b7280]">
+                        <BookOpen size={16} className="mr-1" />
+                        <span>{course.lessons} lessons</span>
+                      </div>
+                      <div className="font-bold text-[#8b5cf6]">${course.price}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   )
 }
-
-function BookmarkIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-    </svg>
-  )
-}
-
-function LockIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  )
-}
-
 const courses = [
   {
     id: 1,

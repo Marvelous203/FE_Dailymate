@@ -70,9 +70,11 @@ export default function ParentLayout({ children }) {
                     <span>Hồ sơ</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+                <DropdownMenuItem asChild className="cursor-pointer text-red-600 focus:text-red-600">
+                  <Link href={"/login"}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Đăng xuất</span>
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -96,9 +98,13 @@ export default function ParentLayout({ children }) {
 function NavItem({ href, icon, label }) {
   return (
     <Link href={href}>
-      <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex gap-1 items-center">
-        {icon}
-        <span>{label}</span>
+      <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex items-center gap-2 group transition-all duration-300 overflow-hidden">
+        <div className="flex-shrink-0">
+          {icon}
+        </div>
+        <span className="whitespace-nowrap transition-all duration-300 max-w-0 group-hover:max-w-xs opacity-0 group-hover:opacity-100">
+          {label}
+        </span>
       </Button>
     </Link>
   )

@@ -63,7 +63,7 @@ export default function HomeContent() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button size="lg" className="bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white px-8 py-4 text-lg" asChild>
-                    <Link href="/signup" className="flex items-center gap-2">
+                    <Link href="/login" className="flex items-center gap-2">
                       Bắt đầu ngay
                       <ArrowRight className="h-5 w-5" />
                     </Link>
