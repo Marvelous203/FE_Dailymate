@@ -10,7 +10,11 @@ import { useState } from "react"
 import { AddChild } from "@/components/addchild"
 
 export default function ParentDashboardPage() {
-  const [childrenList, setChildrenList] = useState(children);
+  const [childrenList, setChildrenList] = useState<{
+    name: string;
+    age: number;
+    courses: number;
+  }[]>([]);
 
   const handleAddChild = (child: {
       name: string;
