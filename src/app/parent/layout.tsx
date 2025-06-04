@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link"
-import { Bell, BookOpen, CreditCard, Home, MessageSquare, Settings, Users, BarChart2, ExternalLink, LogOut, User } from "lucide-react"
+import { Bell, BookOpen, CreditCard, Home, MessageSquare, Settings, Users, BarChart2, ExternalLink, LogOut, User, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -30,11 +30,6 @@ export default function ParentLayout({ children }) {
             <NavItem href="/parent/dashboard" icon={<Home size={18} />} label="Dashboard" />
             <NavItem href="/parent/courses" icon={<BookOpen size={18} />} label="Courses" />
             <NavItem href="/parent/children" icon={<Users size={18} />} label="My Children" />
-            <NavItem
-              href="/environment-kid/parent-monitor"
-              icon={<ExternalLink size={18} />}
-              label="Kids Environment"
-            />
             <NavItem href="/parent/premium" icon={<CreditCard size={18} />} label="Premium" />
             <NavItem href="/parent/messages" icon={<MessageSquare size={18} />} label="Messages" />
             <NavItem href="/parent/analytics" icon={<BarChart2 size={18} />} label="Analytics" />

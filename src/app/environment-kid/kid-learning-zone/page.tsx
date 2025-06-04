@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Clock, Star, Trophy } from "lucide-react"
+import { RewardDisplay } from "@/components/rewards/RewardDisplay"
 
 export default function KidLearningZonePage() {
   return (
@@ -13,18 +14,21 @@ export default function KidLearningZonePage() {
           <div className="w-16 h-16 bg-[#83d98c] rounded-full flex items-center justify-center">
             <Image
               src="/placeholder.svg?height=48&width=48"
-              alt="Kid avatar"
+              alt="Avatar"
               width={48}
               height={48}
               className="rounded-full"
             />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Hi, Alex!</h1>
-            <p className="text-[#6b7280]">Ready to learn something new today?</p>
+            <h1 className="text-2xl font-bold">Chào bạn nhỏ! 👋</h1>
+            <p className="text-[#6b7280]">Hôm nay bạn muốn học gì?</p>
           </div>
         </div>
       </div>
+
+      {/* Reward Display */}
+      <RewardDisplay />
 
       {/* Continue Learning */}
       <div className="mb-8">

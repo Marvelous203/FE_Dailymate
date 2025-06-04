@@ -16,7 +16,6 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
     { id: 'courses', label: 'Khóa học' },
     { id: 'features', label: 'Tính năng' },
     { id: 'premium', label: 'Premium' },
-    { id: 'about', label: 'Giới thiệu' }
   ]
 
   return (

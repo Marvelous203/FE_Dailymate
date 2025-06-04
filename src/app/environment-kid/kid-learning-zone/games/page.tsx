@@ -52,7 +52,7 @@ export default function GamesPage() {
                 </div>
               </div>
               <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                <Link href={`/environment-kid/kid-learning-zone/games/${game.id}`}>Play Now</Link>
+                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/games/color-reflex` : `/environment-kid/kid-learning-zone/games/${game.id}`}>Play Now</Link>
               </Button>
             </CardContent>
           </Card>
@@ -110,5 +110,13 @@ const availableGames = [
     highScore: 2800,
     stars: 18,
     multiplayer: true,
+  },
+  {
+    id: 7,
+    title: "Phản xạ màu chữ",
+    description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
+    highScore: 0,
+    stars: 25,
+    multiplayer: false,
   },
 ]

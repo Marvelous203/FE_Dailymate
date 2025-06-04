@@ -14,9 +14,11 @@ import {
   Sparkles,
   Heart
 } from "lucide-react"
+import AboutContent from "./AboutContent"
 
 export default function HomeContent() {
   return (
+    <div>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -176,5 +178,8 @@ export default function HomeContent() {
         </div>
       </section>
     </motion.div>
+
+  <AboutContent />
+  </div>
   )
 }

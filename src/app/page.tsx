@@ -10,6 +10,7 @@ import FeaturesContent from "@/components/FeaturesContent"
 import PremiumContent from "@/components/PremiumContent"
 import AboutContent from "@/components/AboutContent"
 
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [isVisible, setIsVisible] = useState(false)
@@ -27,7 +28,6 @@ export default function HomePage() {
         {activeTab === 'courses' && <CoursesContent key="courses" />}
         {activeTab === 'features' && <FeaturesContent key="features" />}
         {activeTab === 'premium' && <PremiumContent key="premium" />}
-        {activeTab === 'about' && <AboutContent key="about" />}
       </AnimatePresence>
       
       <Footer />
