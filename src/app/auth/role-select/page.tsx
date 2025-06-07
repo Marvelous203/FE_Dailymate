@@ -35,7 +35,7 @@ const RoleSelectPage = () => {  // Changed to arrow function component
               title="Teacher"
               icon={<BookOpenIcon className="h-10 w-10 text-[#4dacc4]" />}
               description="Manage courses and students"
-              href="/teacher-dashboard"
+              href="/teacher"
               color="bg-[#d7ebf0]"
               hoverColor="hover:bg-[#8abade]"
               textColor="text-[#4dacc4]"

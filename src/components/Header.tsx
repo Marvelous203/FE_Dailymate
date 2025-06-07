@@ -66,7 +66,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <Link href="/login">Đăng nhập</Link>
             </Button>
             <Button className="bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857]" asChild>
-              <Link href="/signup">Đăng ký</Link>
+              <Link href="/login">Đăng ký</Link>
             </Button>
           </div>
         </div>

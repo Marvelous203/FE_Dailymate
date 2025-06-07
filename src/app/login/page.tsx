@@ -3,24 +3,74 @@
 import { useState } from 'react';
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Eye, EyeOff, Globe, BookOpen } from "lucide-react";
+import { loginUser } from '@/lib/api';
+import { useAppDispatch } from '@/redux/hook';
+import { loginStart, loginSuccess, loginFailure } from '@/redux/features/auth/authSlice';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(''); // Thay đổi từ username sang email
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+      dispatch(loginStart());
+      const response = await loginUser(email, password); // Sử dụng email
+      
+      // Chuyển đổi dữ liệu từ API sang định dạng UserData
+      const userData = {
+        id: response.user._id,
+        name: response.user.username,
+        email: response.user.email,
+        role: response.user.role,
+      };
+      
+      // Giả định token được trả về từ API hoặc tạo một token tạm thời
+      const token = 'temp-token'; // Trong thực tế, token nên được trả về từ API
+      
+      dispatch(loginSuccess({ user: userData, token }));
+      
+      // Chuyển hướng dựa trên vai trò người dùng
+      if (response.user.role === 'parent') {
+        router.push('/parent/dashboard');
+      } else if (response.user.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (response.user.role === 'teacher') {
+        router.push('/teacher/dashboard');
+      } else {
+        router.push('/auth/role-select');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      dispatch(loginFailure(error.message));
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -107,7 +157,12 @@ export default function LoginPage() {
               </TabsList>
 
               <TabsContent value="login">
-                <form className="space-y-5">
+                <form className="space-y-5" onSubmit={handleLogin}>
+                  {error && (
+                    <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
+                      {error}
+                    </div>
+                  )}
                   <motion.div 
                     className="space-y-2"
                     variants={itemVariants}
@@ -120,6 +175,7 @@ export default function LoginPage() {
                       className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </motion.div>
                   <motion.div 
@@ -140,6 +196,7 @@ export default function LoginPage() {
                         className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20 pr-10"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        required
                       />
                       <button 
                         type="button"
@@ -152,15 +209,16 @@ export default function LoginPage() {
                   </motion.div>
                   <motion.div variants={itemVariants}>
                     <Button 
-                      className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-medium py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
-                      asChild
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-medium py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      disabled={loading}
                     >
-                      <Link href="/auth/role-select" className="flex items-center justify-center gap-2">
-                        <span>Login</span>
+                      {loading ? 'Logging in...' : 'Login'}
+                      {!loading && (
                         <motion.span whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400 }}>
                           <CheckCircle size={18} />
                         </motion.span>
-                      </Link>
+                      )}
                     </Button>
                   </motion.div>
                 </form>
