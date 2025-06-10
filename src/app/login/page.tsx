@@ -23,8 +23,9 @@ export default function LoginPage() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [gender, setGender] = useState(''); // Thêm state cho gender
-  const [activeTab, setActiveTab] = useState('login');
+  const [gender, setGender] = useState('');
+  // Thêm các state mới cho verification
+const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [signupError, setSignupError] = useState('');
@@ -38,11 +39,20 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     
+    const minLoadingTime = 3000;
+    const startTime = Date.now();
+    
     try {
       dispatch(loginStart());
+      
+      // Sử dụng Promise.all để đồng bộ hóa API call và minimum loading time
       const [response] = await Promise.all([
         loginUser(email, password),
-        new Promise((resolve) => setTimeout(resolve, 1000))
+        new Promise(resolve => {
+          const elapsedTime = Date.now() - startTime;
+          const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+          setTimeout(resolve, remainingTime);
+        })
       ]);
       
       const userData = {
@@ -53,12 +63,9 @@ export default function LoginPage() {
       };
       
       const token = 'temp-token';
-      
       dispatch(loginSuccess({ user: userData, token }));
       
-      // Delay nhỏ để hiển thị success animation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Redirect based on role
       if (response.user.role === 'parent') {
         router.push('/parent/dashboard');
       } else if (response.user.role === 'admin') {
@@ -69,6 +76,14 @@ export default function LoginPage() {
         router.push('/auth/role-select');
       }
     } catch (error: any) {
+      // Đảm bảo minimum loading time ngay cả khi có lỗi
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+      
       console.error('Login error:', error);
       dispatch(loginFailure(error.message));
       setError(error.message);
@@ -142,7 +157,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -513,3 +527,4 @@ export default function LoginPage() {
     </>
   );
 }
+
