@@ -1,0 +1,299 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { PlayCircle, Clock } from 'lucide-react';
+import { Course } from './page';
+import { CreateLessonModal, NewLessonData } from '../lesson/LesongDetail/CreateLesson';
+import { UpdateLessonModal } from '../lesson/LesongDetail/UpdateLesson';
+import { DeleteLessonModal } from '../lesson/LesongDetail/DeleteLesson';
+import { Button } from '@/components/ui/button';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+
+interface Lesson {
+    _id: string;
+    title: string;
+    description: string;
+    videoUrl: string;
+    duration: number; // in minutes
+    order: number;
+    content?: string;
+    audioUrl?: string;
+    imageUrl?: string;
+    isPublished?: boolean;
+    createdBy?: string;
+}
+
+interface CourseInfo {
+    courseId: string;
+    courseTitle: string;
+    courseCategory: string;
+}
+
+interface LessonsResponse {
+    success: boolean;
+    message: string;
+    data: {
+        lessons: Lesson[];
+        courseInfo: CourseInfo;
+        pagination: {
+            currentPage: number;
+            totalPages: number;
+            totalItems: number;
+            itemsPerPage: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    };
+}
+
+interface CourseDetailModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    course: Course | null;
+}
+
+export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModalProps) {
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [isCreateLessonModalOpen, setIsCreateLessonModalOpen] = useState(false);
+    const [isUpdateLessonModalOpen, setIsUpdateLessonModalOpen] = useState(false);
+    const [isDeleteLessonModalOpen, setIsDeleteLessonModalOpen] = useState(false);
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+
+    const fetchLessons = async () => {
+        if (!course?._id) return;
+        try {
+            const response = await fetch(`http://localhost:8386/api/lesson/course/${course._id}`);
+            const data: LessonsResponse = await response.json();
+
+            if (data.success) {
+                setLessons(data.data.lessons);
+                setCourseInfo(data.data.courseInfo);
+            } else {
+                setError(data.message);
+            }
+        } catch (error: unknown) {
+            setError(error instanceof Error ? error.message : 'Failed to fetch lessons');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen && course) {
+            setLoading(true);
+            setError(null);
+            fetchLessons();
+        } else if (!isOpen) {
+            // Reset state when modal is closed
+            setLessons([]);
+            setCourseInfo(null);
+            setLoading(true);
+            setError(null);
+        }
+    }, [isOpen, course]);
+
+    const handleCreateLesson = async (courseId: string, newLessonData: NewLessonData) => {
+        try {
+            let parsedContent: object;
+            try {
+                const tempContent = JSON.parse(newLessonData.content);
+                if (!Array.isArray(tempContent)) {
+                    alert('Nội dung (Content) phải là một chuỗi JSON của một mảng các đối tượng (ví dụ: [{ "title": "...", "text": "..." }]). Vui lòng kiểm tra lại định dạng.');
+                    return;
+                }
+                parsedContent = { sections: tempContent };
+            } catch (error: unknown) {
+                alert(`Nội dung (Content) phải là một chuỗi JSON hợp lệ của một mảng. Chi tiết lỗi: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+                return;
+            }
+
+            const dataToSend = {
+                ...newLessonData,
+                content: parsedContent,
+                courseId: courseId,
+            };
+
+            const response = await fetch(`http://localhost:8386/api/lesson`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToSend),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Bài học đã được tạo thành công!');
+                fetchLessons();
+                setIsCreateLessonModalOpen(false);
+            } else {
+                alert(`Tạo bài học thất bại: ${data.message}`);
+            }
+        } catch (error: unknown) {
+            alert(`Lỗi khi tạo bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+        }
+    };
+
+    const handleUpdateLesson = async (lessonId: string, updatedData: { title?: string; description?: string; videoUrl?: string; duration?: number; order?: number }) => {
+        try {
+            const response = await fetch(`http://localhost:8386/api/lesson/${lessonId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Bài học đã được cập nhật thành công!');
+                fetchLessons(); // Refetch lessons to update the list
+                setIsUpdateLessonModalOpen(false);
+            } else {
+                alert(`Cập nhật bài học thất bại: ${data.message}`);
+            }
+        } catch (error: unknown) {
+            alert(`Lỗi khi cập nhật bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+        }
+    };
+
+    const handleDeleteLesson = async () => {
+        if (!selectedLesson) return;
+        try {
+            const response = await fetch(`http://localhost:8386/api/lesson/${selectedLesson._id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Bài học đã được xóa thành công!');
+                fetchLessons(); // Refetch lessons to update the list
+                setIsDeleteLessonModalOpen(false);
+            } else {
+                alert(`Xóa bài học thất bại: ${data.message}`);
+            }
+        } catch (error: unknown) {
+            alert(`Lỗi khi xóa bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+        }
+    };
+
+    const openCreateLessonModal = () => setIsCreateLessonModalOpen(true);
+    const closeCreateLessonModal = () => setIsCreateLessonModalOpen(false);
+
+    const openUpdateLessonModal = (lesson: Lesson) => {
+        setSelectedLesson(lesson);
+        setIsUpdateLessonModalOpen(true);
+    };
+    const closeUpdateLessonModal = () => {
+        setSelectedLesson(null);
+        setIsUpdateLessonModalOpen(false);
+    };
+
+    const openDeleteLessonModal = (lesson: Lesson) => {
+        setSelectedLesson(lesson);
+        setIsDeleteLessonModalOpen(true);
+    };
+    const closeDeleteLessonModal = () => {
+        setSelectedLesson(null);
+        setIsDeleteLessonModalOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>{courseInfo?.courseTitle || 'Chi tiết khóa học'}</DialogTitle>
+                    <DialogDescription>
+                        {courseInfo?.courseCategory ? `Danh mục: ${courseInfo.courseCategory}` : ''}
+                    </DialogDescription>
+                </DialogHeader>
+
+                {loading ? (
+                    <div className="text-center py-8">Đang tải bài học...</div>
+                ) : error ? (
+                    <div className="text-center py-8 text-red-500">Lỗi: {error}</div>
+                ) : !courseInfo ? (
+                    <div className="text-center py-8">Không tìm thấy thông tin khóa học.</div>
+                ) : (
+                    <div className="py-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Các bài học</h2>
+                            <Button size="sm" onClick={openCreateLessonModal}>
+                                <Plus className="mr-2 h-4 w-4" /> Thêm bài học mới
+                            </Button>
+                        </div>
+
+                        {lessons.length === 0 ? (
+                            <p>Chưa có bài học nào cho khóa học này.</p>
+                        ) : (
+                            <div className="grid gap-4">
+                                {lessons.map((lesson) => (
+                                    <Card key={lesson._id} className="shadow-sm hover:shadow-md transition-shadow">
+                                        <CardContent className="p-4 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <PlayCircle className="text-blue-500 flex-shrink-0" size={24} />
+                                                <div>
+                                                    <h3 className="text-lg font-semibold">{lesson.title}</h3>
+                                                    <p className="text-gray-600 text-sm mb-1">{lesson.description}</p>
+                                                    <div className="flex items-center text-gray-500 text-xs">
+                                                        <Clock size={14} className="mr-1" />
+                                                        <span>{lesson.duration} phút</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => openUpdateLessonModal(lesson)}>
+                                                    <Edit size={16} />
+                                                </Button>
+                                                <Button variant="destructive" size="sm" onClick={() => openDeleteLessonModal(lesson)}>
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </DialogContent>
+            {course && (
+                <>
+                    <CreateLessonModal
+                        isOpen={isCreateLessonModalOpen}
+                        onClose={closeCreateLessonModal}
+                        courseId={course._id}
+                        onCreate={handleCreateLesson}
+                    />
+                    <UpdateLessonModal
+                        isOpen={isUpdateLessonModalOpen}
+                        onClose={closeUpdateLessonModal}
+                        lesson={selectedLesson}
+                        onUpdate={handleUpdateLesson}
+                    />
+                    <DeleteLessonModal
+                        isOpen={isDeleteLessonModalOpen}
+                        onClose={closeDeleteLessonModal}
+                        onConfirm={handleDeleteLesson}
+                        lessonTitle={selectedLesson?.title || ''}
+                    />
+                </>
+            )}
+        </Dialog>
+    );
+}
