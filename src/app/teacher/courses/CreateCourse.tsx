@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Course } from './page'; // Adjust path if necessary
 
 interface CreateCourseModalProps {
@@ -22,8 +23,34 @@ interface CreateCourseModalProps {
     onCreate: (newCourseData: Omit<Course, '_id' | 'createdAt' | 'updatedAt' | 'instructor'> & { instructor: string }) => void;
 }
 
-export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseModalProps) {
-    const [formData, setFormData] = useState<Omit<Course, '_id' | 'createdAt' | 'updatedAt' | 'instructor'> & { instructor: string }>({
+// Định nghĩa các options
+const CATEGORIES = [
+    { value: 'Mathematics', label: 'Toán học' },
+    { value: 'Science', label: 'Khoa học' },
+    { value: 'Language', label: 'Ngôn ngữ' },
+    { value: 'Art', label: 'Nghệ thuật' },
+    { value: 'Music', label: 'Âm nhạc' },
+    { value: 'Physical Education', label: 'Thể dục' },
+    { value: 'Social Studies', label: 'Xã hội học' },
+    { value: 'Technology', label: 'Công nghệ' }
+];
+
+const AGE_GROUPS = [
+    { value: '5-10', label: '5-10 tuổi' },
+    { value: '10-15', label: '10-15 tuổi' }
+];
+
+const POINTS_OPTIONS = [
+    { value: 10, label: '10 điểm' },
+    { value: 20, label: '20 điểm' },
+    { value: 30, label: '30 điểm' },
+    { value: 50, label: '50 điểm' },
+    { value: 75, label: '75 điểm' },
+    { value: 100, label: '100 điểm' }
+];
+
+export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseModalProps) {
+    const [formData, setFormData] = useState({
         title: '',
         description: '',
         category: '',
@@ -31,10 +58,50 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
         thumbnailUrl: '',
         pointsEarned: 0,
         isPremium: false,
-        instructor: '', // Placeholder for instructor ID
+        instructor: '',
         isPublished: false,
     });
 
+
+
+    useEffect(() => {
+        console.log('=== DEBUG CREATE COURSE ===');
+        console.log('isOpen:', isOpen);
+        
+        if (isOpen) {
+            const storedUser = localStorage.getItem('user');
+            
+            if (storedUser) {
+                try {
+                    const userData = JSON.parse(storedUser);
+                    console.log('User data from localStorage:', userData);
+                    console.log('RoleData:', userData.roleData);
+                    
+                    // Kiểm tra roleData trước, nếu không có thì dùng user.id
+                    if (userData.roleData && userData.roleData._id && userData.role === 'teacher') {
+                        setFormData(prev => ({
+                            ...prev,
+                            instructor: userData.roleData._id
+                        }));
+                        console.log('Đã set instructor ID từ roleData._id:', userData.roleData._id);
+                    } else if (userData.id && userData.role === 'teacher') {
+                        // Fallback: sử dụng user.id nếu không có roleData
+                        setFormData(prev => ({
+                            ...prev,
+                            instructor: userData.id
+                        }));
+                        console.log('Đã set instructor ID từ user.id (fallback):', userData.id);
+                    } else {
+                        console.log('User không phải teacher hoặc thiếu thông tin cần thiết');
+                    }
+                } catch (error) {
+                    console.error('Lỗi parse user data:', error);
+                }
+            }
+        }
+    }, [isOpen]);
+    
+    
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
         setFormData((prev) => ({
@@ -43,11 +110,10 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
         }));
     };
 
-    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
+    const handleSelectChange = (field: string, value: string | number) => {
         setFormData((prev) => ({
             ...prev,
-            [id]: Number(value),
+            [field]: value,
         }));
     };
 
@@ -71,12 +137,12 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
             isPremium: false,
             instructor: '',
             isPublished: false,
-        }); // Reset form after submission
+        });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Tạo khóa học mới</DialogTitle>
                     <DialogDescription>
@@ -93,8 +159,10 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
                             value={formData.title}
                             onChange={handleChange}
                             className="col-span-3"
+                            placeholder="Nhập tiêu đề khóa học"
                         />
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="description" className="text-right">
                             Mô tả
@@ -104,30 +172,47 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
                             value={formData.description}
                             onChange={handleChange}
                             className="col-span-3"
+                            placeholder="Nhập mô tả khóa học"
+                            rows={3}
                         />
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="category" className="text-right">
+                        <Label className="text-right">
                             Danh mục
                         </Label>
-                        <Input
-                            id="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                        <Select onValueChange={(value) => handleSelectChange('category', value)} value={formData.category}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Chọn danh mục" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CATEGORIES.map((category) => (
+                                    <SelectItem key={category.value} value={category.value}>
+                                        {category.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="ageGroup" className="text-right">
+                        <Label className="text-right">
                             Độ tuổi
                         </Label>
-                        <Input
-                            id="ageGroup"
-                            value={formData.ageGroup}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                        <Select onValueChange={(value) => handleSelectChange('ageGroup', value)} value={formData.ageGroup}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Chọn độ tuổi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {AGE_GROUPS.map((ageGroup) => (
+                                    <SelectItem key={ageGroup.value} value={ageGroup.value}>
+                                        {ageGroup.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="thumbnailUrl" className="text-right">
                             URL hình ảnh
@@ -137,58 +222,87 @@ export function CreateCourseModal({ isOpen, onClose, onCreate }: CreateCourseMod
                             value={formData.thumbnailUrl}
                             onChange={handleChange}
                             className="col-span-3"
+                            placeholder="https://example.com/image.jpg"
                         />
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="pointsEarned" className="text-right">
+                        <Label className="text-right">
                             Điểm kiếm được
                         </Label>
-                        <Input
-                            id="pointsEarned"
-                            type="number"
-                            value={formData.pointsEarned}
-                            onChange={handleNumberChange}
-                            className="col-span-3"
-                        />
+                        <Select onValueChange={(value) => handleSelectChange('pointsEarned', Number(value))} value={formData.pointsEarned.toString()}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Chọn điểm" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {POINTS_OPTIONS.map((point) => (
+                                    <SelectItem key={point.value} value={point.value.toString()}>
+                                        {point.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="isPremium" className="text-right">
                             Premium
                         </Label>
-                        <Switch
-                            id="isPremium"
-                            checked={formData.isPremium}
-                            onCheckedChange={(checked) => handleSwitchChange('isPremium', checked)}
-                            className="col-span-3"
-                        />
+                        <div className="col-span-3 flex items-center space-x-2">
+                            <Switch
+                                id="isPremium"
+                                checked={formData.isPremium}
+                                onCheckedChange={(checked) => handleSwitchChange('isPremium', checked)}
+                            />
+                            <span className="text-sm text-gray-600">
+                                {formData.isPremium ? 'Khóa học Premium' : 'Khóa học miễn phí'}
+                            </span>
+                        </div>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="instructor" className="text-right">
-                            ID Giảng viên
+                        <Label className="text-right">
+                            Giảng viên
                         </Label>
-                        <Input
-                            id="instructor"
-                            value={formData.instructor}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                        <div className="col-span-3">
+                            <Input
+                                value={formData.instructor}
+                                disabled
+                                className="bg-gray-100"
+                                placeholder="ID sẽ được tự động điền"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                ID giảng viên được lấy từ tài khoản đăng nhập
+                            </p>
+                        </div>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="isPublished" className="text-right">
                             Xuất bản
                         </Label>
-                        <Switch
-                            id="isPublished"
-                            checked={formData.isPublished}
-                            onCheckedChange={(checked) => handleSwitchChange('isPublished', checked)}
-                            className="col-span-3"
-                        />
+                        <div className="col-span-3 flex items-center space-x-2">
+                            <Switch
+                                id="isPublished"
+                                checked={formData.isPublished}
+                                onCheckedChange={(checked) => handleSwitchChange('isPublished', checked)}
+                            />
+                            <span className="text-sm text-gray-600">
+                                {formData.isPublished ? 'Xuất bản ngay' : 'Lưu nháp'}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleSubmit}>Tạo khóa học</Button>
+                    <Button variant="outline" onClick={onClose}>
+                        Hủy
+                    </Button>
+                    <Button type="submit" onClick={handleSubmit} disabled={!formData.title || !formData.category || !formData.ageGroup}>
+                        Tạo khóa học
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+

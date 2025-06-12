@@ -9,8 +9,9 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { EditCourseModal } from './EditCourseModal';
 import { DeleteCourseModal } from './DeleteCourse';
-import { CreateCourseModal } from './CreateCourse';
+import CreateCourseModal from './CreateCourse'; // Thay đổi thành default import
 import { CourseDetailModal } from './CourseDetail';
+import { getAllCourses, updateCourse, deleteCourse, createCourse } from '@/lib/api';
 
 export interface Instructor {
   _id: string;
@@ -29,6 +30,7 @@ export interface Course {
   isPremium: boolean;
   instructor: Instructor;
   isPublished: boolean;
+  status?: 'active' | 'archived'; // Thêm field này
   createdAt: string;
   updatedAt: string;
 }
@@ -54,19 +56,21 @@ interface Pagination {
   hasPrevPage: boolean;
 }
 
-interface CourseResponse {
-  success: boolean;
-  message: string;
-  data: {
-    courses: Course[];
-    pagination: Pagination;
-  };
-}
+// interface CourseResponse {
+//   success: boolean;
+//   message: string;
+//   data: {
+//     courses: Course[];
+//     pagination: Pagination;
+//   };
+// }
 
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -75,13 +79,15 @@ export default function TeacherCoursesPage() {
   const [isCourseDetailModalOpen, setIsCourseDetailModalOpen] = useState(false);
   const [courseToView, setCourseToView] = useState<Course | null>(null);
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (page: number = 1) => {
     try {
-      const response = await fetch('http://localhost:8386/api/course');
-      const data: CourseResponse = await response.json();
+      setLoading(true);
+      const data = await getAllCourses(page, 10);
 
       if (data.success) {
         setCourses(data.data.courses);
+        setPagination(data.data.pagination);
+        setCurrentPage(page);
       } else {
         setError(data.message);
       }
@@ -98,25 +104,21 @@ export default function TeacherCoursesPage() {
 
   const handleEditCourse = async (courseId: string, updatedData: CourseUpdatePayload) => {
     try {
-      const response = await fetch(`http://localhost:8386/api/course/${courseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      const data = await response.json();
+      const data = await updateCourse(courseId, updatedData);
 
       if (data.success) {
         alert('Khóa học đã được cập nhật thành công!');
-        fetchCourses(); // Refetch courses to update the list
+        fetchCourses(currentPage); // Refetch courses to update the list
       } else {
         alert(`Cập nhật khóa học thất bại: ${data.message}`);
       }
     } catch (error: unknown) {
       alert(`Lỗi khi cập nhật khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchCourses(page);
   };
 
   if (loading) {
@@ -150,15 +152,11 @@ export default function TeacherCoursesPage() {
   const handleDeleteCourse = async () => {
     if (courseToDelete) {
       try {
-        const response = await fetch(`http://localhost:8386/api/course/${courseToDelete._id}`, {
-          method: 'DELETE',
-        });
-
-        const data = await response.json();
+        const data = await deleteCourse(courseToDelete._id);
 
         if (data.success) {
           alert('Khóa học đã được xóa thành công!');
-          fetchCourses(); // Refetch courses to update the list
+          fetchCourses(currentPage); // Refetch courses to update the list
           closeDeleteModal();
         } else {
           alert(`Xóa khóa học thất bại: ${data.message}`);
@@ -179,19 +177,11 @@ export default function TeacherCoursesPage() {
 
   const handleCreateCourse = async (newCourseData: Omit<Course, '_id' | 'createdAt' | 'updatedAt' | 'instructor'> & { instructor: string }) => {
     try {
-      const response = await fetch('http://localhost:8386/api/course', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCourseData),
-      });
-
-      const data = await response.json();
+      const data = await createCourse(newCourseData);
 
       if (data.success) {
         alert('Khóa học đã được tạo thành công!');
-        fetchCourses(); // Refetch courses to update the list
+        fetchCourses(currentPage); // Refetch courses to update the list
         closeCreateModal();
       } else {
         alert(`Tạo khóa học thất bại: ${data.message}`);
@@ -240,15 +230,129 @@ export default function TeacherCoursesPage() {
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course, index) => (
-              <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
-            ))}
-          </div>
+          {courses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Không có khóa học nào</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course, index) => (
+                  <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                ))}
+              </div>
 
-          <div className="flex justify-center mt-8">
-            <Button variant="outline">Load More</Button>
-          </div>
+              <div className="flex justify-center mt-8">
+                {pagination?.hasNextPage ? (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang tải...' : 'Load More'}
+                  </Button>
+                ) : (
+                  <p className="text-gray-500">Không có khóa học mới</p>
+                )}
+              </div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="published" className="mt-6">
+          {courses.filter((course) => course.isPublished).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Không có khóa học đã xuất bản</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter((course) => course.isPublished)
+                  .map((course, index) => (
+                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                  ))}
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                {pagination?.hasNextPage ? (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang tải...' : 'Load More'}
+                  </Button>
+                ) : (
+                  <p className="text-gray-500">Không có khóa học mới</p>
+                )}
+              </div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="draft" className="mt-6">
+          {courses.filter((course) => !course.isPublished).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Không có khóa học nháp</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter((course) => !course.isPublished)
+                  .map((course, index) => (
+                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                  ))}
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                {pagination?.hasNextPage ? (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang tải...' : 'Load More'}
+                  </Button>
+                ) : (
+                  <p className="text-gray-500">Không có khóa học mới</p>
+                )}
+              </div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="archived" className="mt-6">
+          {courses.filter((course) => course.status === 'archived').length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Không có khóa học đã lưu trữ</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter((course) => course.status === 'archived')
+                  .map((course, index) => (
+                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                  ))}
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                {pagination?.hasNextPage ? (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang tải...' : 'Load More'}
+                  </Button>
+                ) : (
+                  <p className="text-gray-500">Không có khóa học mới</p>
+                )}
+              </div>
+            </>
+          )}
         </TabsContent>
 
         {/* Other tabs would have similar content but filtered by status */}
@@ -256,6 +360,26 @@ export default function TeacherCoursesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses
               .filter((course) => course.isPublished)
+              .map((course, index) => (
+                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+              ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="draft" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses
+              .filter((course) => !course.isPublished)
+              .map((course, index) => (
+                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+              ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="archived" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses
+              .filter((course) => course.status === 'archived')
               .map((course, index) => (
                 <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
               ))}
@@ -379,7 +503,12 @@ function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEd
           </div>
           <div className="flex items-center text-[#6b7280]">
             <User className="mr-1 w-4 h-4" />
-            <span>{course.instructor.fullName}</span>
+            <span>
+              {typeof course.instructor === 'string' 
+                ? course.instructor 
+                : course.instructor?.fullName || 'Unknown Instructor'
+              }
+            </span>
           </div>
         </div>
         <div className="flex justify-between mt-4">

@@ -60,10 +60,14 @@ export default function LoginPage() {
         name: response.user.username,
         email: response.user.email,
         role: response.user.role,
+        roleData: response.user.roleData
       };
-
-      const token = 'temp-token';
-      dispatch(loginSuccess({ user: userData, token }));
+      
+      // Lưu user info vào cookie để middleware có thể đọc (tạm thời)
+      // Trong production, session sẽ được quản lý hoàn toàn bởi passport
+      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`;
+      
+      dispatch(loginSuccess({ user: userData }));
 
       // Redirect based on role
       if (response.user.role === 'parent') {
@@ -72,8 +76,8 @@ export default function LoginPage() {
         router.push('/admin/dashboard');
       } else if (response.user.role === 'teacher') {
         router.push('/teacher/dashboard');
-      } else {
-        router.push('/auth/role-select');
+      } else if (response.user.role === 'kid') {
+        router.push('/envirnoment-kid/kid-learning-zone');
       }
     } catch (error: any) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi

@@ -1,9 +1,25 @@
+'use client';
+
 import Link from "next/link"
-import { Bell, BookOpen, Home, MessageSquare, Settings, User, Users } from "lucide-react"
+import { Bell, BookOpen, Home, MessageSquare, Settings, User, Users, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function TeacherLayout({ children }) {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-[#4dacc4] text-white">
@@ -20,10 +36,40 @@ export default function TeacherLayout({ children }) {
               <Bell size={20} />
             </Button>
 
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Teacher" />
-              <AvatarFallback>T</AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar>
+                    <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Teacher" />
+                    <AvatarFallback>{user?.name?.charAt(0)?.toUpperCase() || 'T'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuItem className="flex flex-col items-start">
+                  <div className="font-medium">{user?.name || 'Teacher'}</div>
+                  <div className="text-xs text-muted-foreground">{user?.email}</div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/teacher/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teacher/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
