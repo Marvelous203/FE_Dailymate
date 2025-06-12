@@ -9,13 +9,16 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlayCircle, Clock } from 'lucide-react';
+import { PlayCircle, Clock, Eye } from 'lucide-react';
 import { Course } from './page';
 import { CreateLessonModal, NewLessonData } from '../lesson/LesongDetail/CreateLesson';
 import { UpdateLessonModal } from '../lesson/LesongDetail/UpdateLesson';
 import { DeleteLessonModal } from '../lesson/LesongDetail/DeleteLesson';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { CreateTest } from '../test/CreateTest';
+import { TestList } from '../test/TestList';
 
 interface Lesson {
     _id: string;
@@ -70,6 +73,10 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
     const [isUpdateLessonModalOpen, setIsUpdateLessonModalOpen] = useState(false);
     const [isDeleteLessonModalOpen, setIsDeleteLessonModalOpen] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+    const [isCreateTestModalOpen, setIsCreateTestModalOpen] = useState(false);
+    const [selectedLessonForTest, setSelectedLessonForTest] = useState<Lesson | null>(null);
+    const [isTestListModalOpen, setIsTestListModalOpen] = useState(false);
+    const [selectedLessonForTestList, setSelectedLessonForTestList] = useState<Lesson | null>(null);
 
     const fetchLessons = async () => {
         if (!course?._id) return;
@@ -123,14 +130,14 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
             const data = await response.json();
 
             if (data.success) {
-                alert('Bài học đã được tạo thành công!');
+                toast.success('Bài học đã được tạo thành công!');
                 fetchLessons();
                 setIsCreateLessonModalOpen(false);
             } else {
-                alert(`Tạo bài học thất bại: ${data.message}`);
+                toast.error(`Tạo bài học thất bại: ${data.message}`);
             }
         } catch (error: unknown) {
-            alert(`Lỗi khi tạo bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            toast.error(`Lỗi khi tạo bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
         }
     };
 
@@ -147,14 +154,14 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
             const data = await response.json();
 
             if (data.success) {
-                alert('Bài học đã được cập nhật thành công!');
+                toast.success("Bài học đã được cập nhật thành công!");
                 fetchLessons(); // Refetch lessons to update the list
                 setIsUpdateLessonModalOpen(false);
             } else {
-                alert(`Cập nhật bài học thất bại: ${data.message}`);
+                toast.success("Cập nhật bài học thất bại");
             }
         } catch (error: unknown) {
-            alert(`Lỗi khi cập nhật bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            toast.error(`Lỗi khi cập nhật bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
         }
     };
 
@@ -168,14 +175,14 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
             const data = await response.json();
 
             if (data.success) {
-                alert('Bài học đã được xóa thành công!');
+                toast.success("Bài học đã được cập nhật thành công!");
                 fetchLessons(); // Refetch lessons to update the list
                 setIsDeleteLessonModalOpen(false);
             } else {
-                alert(`Xóa bài học thất bại: ${data.message}`);
+                toast.success("Xóa bài học thất bại");
             }
         } catch (error: unknown) {
-            alert(`Lỗi khi xóa bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            toast.error(`Lỗi khi xóa bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
         }
     };
 
@@ -198,6 +205,26 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
     const closeDeleteLessonModal = () => {
         setSelectedLesson(null);
         setIsDeleteLessonModalOpen(false);
+    };
+
+    const openCreateTestModal = (lesson: Lesson) => {
+        setSelectedLessonForTest(lesson);
+        setIsCreateTestModalOpen(true);
+    };
+
+    const closeCreateTestModal = () => {
+        setSelectedLessonForTest(null);
+        setIsCreateTestModalOpen(false);
+    };
+
+    const openTestListModal = (lesson: Lesson) => {
+        setSelectedLessonForTestList(lesson);
+        setIsTestListModalOpen(true);
+    };
+
+    const closeTestListModal = () => {
+        setSelectedLessonForTestList(null);
+        setIsTestListModalOpen(false);
     };
 
     return (
@@ -244,6 +271,22 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => openTestListModal(lesson)}
+                                                >
+                                                    <Eye size={16} className="mr-1" />
+                                                    Xem test
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => openCreateTestModal(lesson)}
+                                                >
+                                                    <Plus size={16} className="mr-1" />
+                                                    Tạo test
+                                                </Button>
                                                 <Button variant="outline" size="sm" onClick={() => openUpdateLessonModal(lesson)}>
                                                     <Edit size={16} />
                                                 </Button>
@@ -279,6 +322,20 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
                         onConfirm={handleDeleteLesson}
                         lessonTitle={selectedLesson?.title || ''}
                     />
+                    {selectedLessonForTest && (
+                        <CreateTest
+                            isOpen={isCreateTestModalOpen}
+                            onClose={closeCreateTestModal}
+                            lessonId={selectedLessonForTest._id}
+                        />
+                    )}
+                    {selectedLessonForTestList && (
+                        <TestList
+                            isOpen={isTestListModalOpen}
+                            onClose={closeTestListModal}
+                            lessonId={selectedLessonForTestList._id}
+                        />
+                    )}
                 </>
             )}
         </Dialog>
