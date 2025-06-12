@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,17 @@ export default function LoginPage() {
   const [signupError, setSignupError] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Thêm useEffect để tự động điền email từ URL parameters
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+      // Tự động chuyển sang tab login nếu đang ở tab signup
+      setActiveTab('login');
+    }
+  }, [searchParams]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -128,27 +139,38 @@ export default function LoginPage() {
 
       const response = await createParent(parentData);
 
-      // Toast đơn giản và đồng nhất
-      toast.success('Đăng ký thành công! Email đã được điền sẵn, vui lòng nhập mật khẩu để đăng nhập.');
-
-      // Chuyển về tab login và điền email
-      setActiveTab('login');
-      setEmail(signupEmail);
-
-      // Reset signup form
-      setName('');
-      setSignupEmail('');
-      setSignupPassword('');
-      setConfirmPassword('');
-      setGender('');
-
-      // Focus vào password field sau khi chuyển tab
-      setTimeout(() => {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput) {
-          passwordInput.focus();
+      // Toast với action buttons
+      toast.success(
+        <div className="flex flex-col gap-2">
+          <span>Đăng ký thành công! 🎉</span>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                toast.dismiss();
+                router.push(`/verify-email?email=${encodeURIComponent(signupEmail)}`);
+              }}
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              Xác thực ngay
+            </button>
+            <button 
+              onClick={() => {
+                toast.dismiss();
+                setActiveTab('login');
+                setEmail(signupEmail);
+                // Reset form...
+              }}
+              className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+            >
+              Đăng nhập
+            </button>
+          </div>
+        </div>,
+        {
+          duration: 8000,
+          position: 'top-center'
         }
-      }, 100);
+      );
 
     } catch (error: any) {
       console.error('Signup error:', error);

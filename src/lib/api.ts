@@ -111,14 +111,17 @@ export async function createParent(parentData: {
 }
 
 // API function để gửi email xác thực
-export async function sendVerificationEmail(email: string) {
+export async function sendVerificationEmail(email: string, forgotPassword: boolean = false) {
   try {
     const response = await fetch(`${API_URL}/api/auth/send-verification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ 
+        email,
+        forgotPassword 
+      }),
       credentials: 'include',
     });
 
