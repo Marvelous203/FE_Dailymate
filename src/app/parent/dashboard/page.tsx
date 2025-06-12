@@ -6,14 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Award, 
-  BookOpen, 
-  Calendar, 
-  Clock, 
-  Mail, 
-  MessageCircle, 
-  Phone, 
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  Clock,
+  Mail,
+  MessageCircle,
+  Phone,
   TrendingUp,
   Star,
   Target,
@@ -98,7 +98,7 @@ export default function ParentDashboard() {
       achievements: 0,
       lastActive: "Never"
     };
-    
+
     setChildren([...children, newChild]);
   };
 
@@ -125,19 +125,19 @@ export default function ParentDashboard() {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ 
+          transition={{
             duration: 0.5,
             repeat: Infinity,
-            repeatType: "reverse" 
+            repeatType: "reverse"
           }}
           className="flex flex-col items-center"
         >
           <div className="relative w-24 h-24">
-            <Image 
-              src="/globe.svg" 
-              alt="EduKids Logo" 
-              width={96} 
-              height={96} 
+            <Image
+              src="/globe.svg"
+              alt="DailyMates Logo"
+              width={96}
+              height={96}
               className="animate-pulse"
             />
           </div>
@@ -148,29 +148,29 @@ export default function ParentDashboard() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8 p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 min-h-screen"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Header Section */}
-      <motion.div 
+      <motion.div
         className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
         variants={itemVariants}
       >
         <div>
           <div className="flex items-center gap-3">
-            <motion.div 
+            <motion.div
               className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500 p-2 shadow-lg"
               whileHover={{ rotate: 15, scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Image 
-                src="/globe.svg" 
-                alt="EduKids Logo" 
-                width={40} 
-                height={40} 
+              <Image
+                src="/globe.svg"
+                alt="DailyMates Logo"
+                width={40}
+                height={40}
                 className="w-full h-full object-contain"
               />
             </motion.div>
@@ -198,7 +198,7 @@ export default function ParentDashboard() {
       </motion.div>
 
       {/* Quick Stats Overview */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-4 gap-6"
         variants={itemVariants}
       >
@@ -283,11 +283,10 @@ export default function ParentDashboard() {
                   key={child.id}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-                    selectedChild.id === child.id 
-                      ? 'border-purple-500 bg-purple-50' 
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedChild.id === child.id
+                      ? 'border-purple-500 bg-purple-50'
                       : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                   onClick={() => setSelectedChild(child)}
                 >
                   <div className="flex items-center gap-3">
@@ -302,7 +301,7 @@ export default function ParentDashboard() {
                         />
                       </div>
                       {selectedChild.id === child.id && (
-                        <motion.div 
+                        <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center"
@@ -326,7 +325,7 @@ export default function ParentDashboard() {
 
       {/* Selected Child Dashboard */}
       <AnimatePresence mode="wait">
-        <motion.div 
+        <motion.div
           key={selectedChild.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -347,7 +346,7 @@ function ChildDashboard({ child }) {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8"
       initial="hidden"
       animate="visible"
@@ -367,7 +366,7 @@ function ChildDashboard({ child }) {
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <motion.div 
+                  <motion.div
                     className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg"
                     whileHover={{ scale: 1.05, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300 }}
@@ -380,7 +379,7 @@ function ChildDashboard({ child }) {
                       className="w-full h-full object-cover"
                     />
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-md"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -462,7 +461,7 @@ function ChildDashboard({ child }) {
             <CardContent>
               <div className="space-y-6">
                 {courses.map((course, i) => (
-                  <motion.div 
+                  <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -488,7 +487,7 @@ function ChildDashboard({ child }) {
                       </div>
                     </div>
                     <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${course.progress}%` }}
                         transition={{ duration: 1, delay: 0.2 }}
@@ -522,7 +521,7 @@ function ChildDashboard({ child }) {
             <CardContent>
               <div className="space-y-4">
                 {activities.map((activity, i) => (
-                  <motion.div 
+                  <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -546,7 +545,7 @@ function ChildDashboard({ child }) {
                   </motion.div>
                 ))}
               </div>
-              <motion.div 
+              <motion.div
                 className="mt-4"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -575,7 +574,7 @@ function ChildDashboard({ child }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-lg"
                     whileHover={{ scale: 1.05, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300 }}
@@ -599,21 +598,21 @@ function ChildDashboard({ child }) {
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ x: 5, backgroundColor: "rgba(243, 244, 246, 1)" }}
                     className="flex items-center gap-3 p-2 rounded-lg transition-colors"
                   >
                     <Mail className="h-5 w-5 text-purple-500" />
                     <span className="text-gray-700">sarah.johnson@example.com</span>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     whileHover={{ x: 5, backgroundColor: "rgba(243, 244, 246, 1)" }}
                     className="flex items-center gap-3 p-2 rounded-lg transition-colors"
                   >
                     <Phone className="h-5 w-5 text-purple-500" />
                     <span className="text-gray-700">+1 234 567 890</span>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     whileHover={{ x: 5, backgroundColor: "rgba(243, 244, 246, 1)" }}
                     className="flex items-center gap-3 p-2 rounded-lg transition-colors"
                   >
@@ -623,7 +622,7 @@ function ChildDashboard({ child }) {
                 </div>
 
                 <div className="flex gap-3">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex-1"
@@ -643,7 +642,7 @@ function ChildDashboard({ child }) {
 
               <div>
                 <h3 className="font-semibold text-gray-900 mb-4">Tin nhắn mới nhất</h3>
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.01 }}
                   className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border border-gray-100 shadow-sm"
                 >
@@ -672,7 +671,7 @@ function ChildDashboard({ child }) {
                     </motion.div>
                   </div>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   className="mt-4"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

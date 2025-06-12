@@ -8,7 +8,7 @@ export default function ParentHeader() {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-white rounded-full"></div>
-          <h1 className="font-bold text-xl">EduKids</h1>
+          <h1 className="font-bold text-xl">DailyMates</h1>
         </div>
 
         <div className="hidden md:flex items-center gap-6">

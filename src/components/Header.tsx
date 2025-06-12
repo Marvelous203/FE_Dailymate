@@ -19,7 +19,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   ]
 
   return (
-    <motion.header 
+    <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -27,7 +27,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05 }}
             className="flex items-center gap-3"
           >
@@ -36,7 +36,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
             </div>
             <div>
               <span className="font-bold text-2xl bg-gradient-to-r from-[#10b981] to-[#059669] bg-clip-text text-transparent">
-                EduKids
+                DailyMates
               </span>
               <p className="text-xs text-gray-500">Học kỹ năng sống</p>
             </div>
@@ -48,11 +48,10 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab.id
                     ? 'bg-white text-[#10b981] shadow-md'
                     : 'text-gray-600 hover:text-[#10b981]'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

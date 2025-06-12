@@ -20,7 +20,7 @@ export default function KidLoginPage() {
                 className="rounded-full bg-white p-2"
               />
             </div>
-            <h1 className="text-2xl font-bold text-[#1e1e1e]">Welcome to EduKids</h1>
+            <h1 className="text-2xl font-bold text-[#1e1e1e]">Welcome to DailyMates</h1>
             <p className="text-[#4b5563]">Fun learning zone for kids!</p>
           </div>
 
@@ -85,7 +85,7 @@ export default function KidLoginPage() {
       </div>
 
       <footer className="py-4 text-center text-[#6b7280] text-sm">
-        <p>© 2025 EduKids. All rights reserved.</p>
+        <p>© 2025 DailyMates. All rights reserved.</p>
       </footer>
     </div>
   )

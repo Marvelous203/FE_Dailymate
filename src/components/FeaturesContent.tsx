@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
-import { 
-  BookOpen, 
-  GamepadIcon, 
-  BarChart3, 
+import {
+  BookOpen,
+  GamepadIcon,
+  BarChart3,
   Brain,
   Users,
   Shield,
@@ -91,14 +91,14 @@ export default function FeaturesContent() {
     >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold mb-4"
           >
             Tính năng nổi bật
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -120,7 +120,7 @@ export default function FeaturesContent() {
             >
               <Card className="h-full border-none shadow-lg hover:shadow-2xl transition-all duration-300 bg-white">
                 <CardContent className="p-8 text-center">
-                  <motion.div 
+                  <motion.div
                     className={`w-20 h-20 ${feature.bgColor} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
@@ -136,16 +136,16 @@ export default function FeaturesContent() {
         </div>
 
         {/* Additional Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
           className="mt-20 text-center"
         >
           <div className="bg-gradient-to-r from-[#10b981] to-[#059669] rounded-3xl p-12 text-white">
-            <h3 className="text-3xl font-bold mb-4">Tại sao chọn EduKids?</h3>
+            <h3 className="text-3xl font-bold mb-4">Tại sao chọn DailyMates?</h3>
             <p className="text-xl mb-8 max-w-3xl mx-auto opacity-90">
-              Chúng tôi kết hợp công nghệ hiện đại với phương pháp giáo dục được chứng minh khoa học, 
+              Chúng tôi kết hợp công nghệ hiện đại với phương pháp giáo dục được chứng minh khoa học,
               tạo ra trải nghiệm học tập độc đáo và hiệu quả cho trẻ em Việt Nam.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

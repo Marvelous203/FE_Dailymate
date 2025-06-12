@@ -25,26 +25,26 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [gender, setGender] = useState('');
   // Thêm các state mới cho verification
-const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [signupError, setSignupError] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
-  
+
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     const minLoadingTime = 3000;
     const startTime = Date.now();
-    
+
     try {
       dispatch(loginStart());
-      
+
       // Sử dụng Promise.all để đồng bộ hóa API call và minimum loading time
       const [response] = await Promise.all([
         loginUser(email, password),
@@ -54,17 +54,17 @@ const [activeTab, setActiveTab] = useState('login');
           setTimeout(resolve, remainingTime);
         })
       ]);
-      
+
       const userData = {
         id: response.user._id,
         name: response.user.username,
         email: response.user.email,
         role: response.user.role,
       };
-      
+
       const token = 'temp-token';
       dispatch(loginSuccess({ user: userData, token }));
-      
+
       // Redirect based on role
       if (response.user.role === 'parent') {
         router.push('/parent/dashboard');
@@ -79,11 +79,11 @@ const [activeTab, setActiveTab] = useState('login');
       // Đảm bảo minimum loading time ngay cả khi có lỗi
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-      
+
       if (remainingTime > 0) {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
-      
+
       console.error('Login error:', error);
       dispatch(loginFailure(error.message));
       setError(error.message);
@@ -91,29 +91,29 @@ const [activeTab, setActiveTab] = useState('login');
       setLoading(false);
     }
   };
-  
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSignupError('');
-    
+
     // Validation
     if (!name || !signupEmail || !signupPassword || !confirmPassword || !gender) {
       setSignupError('Vui lòng điền đầy đủ thông tin');
       return;
     }
-    
+
     if (signupPassword !== confirmPassword) {
       setSignupError('Mật khẩu xác nhận không khớp');
       return;
     }
-    
+
     if (signupPassword.length < 6) {
       setSignupError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const parentData = {
         email: signupEmail,
@@ -121,23 +121,23 @@ const [activeTab, setActiveTab] = useState('login');
         fullName: name,
         gender: gender
       };
-      
+
       const response = await createParent(parentData);
-      
+
       // Toast đơn giản và đồng nhất
       toast.success('Đăng ký thành công! Email đã được điền sẵn, vui lòng nhập mật khẩu để đăng nhập.');
-      
+
       // Chuyển về tab login và điền email
       setActiveTab('login');
       setEmail(signupEmail);
-      
+
       // Reset signup form
       setName('');
       setSignupEmail('');
       setSignupPassword('');
       setConfirmPassword('');
       setGender('');
-      
+
       // Focus vào password field sau khi chuyển tab
       setTimeout(() => {
         const passwordInput = document.getElementById('password');
@@ -145,13 +145,13 @@ const [activeTab, setActiveTab] = useState('login');
           passwordInput.focus();
         }
       }, 100);
-      
+
     } catch (error: any) {
       console.error('Signup error:', error);
-      
+
       // Toast lỗi đơn giản
       toast.error(error.message || 'Đã có lỗi xảy ra khi đăng ký');
-      
+
       setSignupError(error.message);
     } finally {
       setLoading(false);
@@ -159,9 +159,9 @@ const [activeTab, setActiveTab] = useState('login');
   };
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         duration: 0.5,
         when: "beforeChildren",
         staggerChildren: 0.1
@@ -178,7 +178,7 @@ const [activeTab, setActiveTab] = useState('login');
     <>
       {/* Sử dụng Loading Component */}
       <AnimatePresence>
-        <LoadingOverlay 
+        <LoadingOverlay
           isVisible={loading}
           title="Đang xử lý..."
           subtitle="Vui lòng chờ trong giây lát"
@@ -189,7 +189,7 @@ const [activeTab, setActiveTab] = useState('login');
       </AnimatePresence>
 
       <div className="min-h-screen bg-gradient-to-b from-[#e6fffa] to-[#eafff4] flex flex-col">
-        <motion.div 
+        <motion.div
           className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center"
           variants={containerVariants}
           initial="hidden"
@@ -198,7 +198,7 @@ const [activeTab, setActiveTab] = useState('login');
           <motion.div className="w-full max-w-md" variants={itemVariants}>
             <motion.div className="mb-8 text-center" variants={itemVariants}>
               <div className="flex justify-center mb-4">
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -216,13 +216,13 @@ const [activeTab, setActiveTab] = useState('login');
                   </div>
                 </motion.div>
               </div>
-              <motion.h1 
+              <motion.h1
                 className="text-3xl font-bold text-[#1e1e1e] mb-2"
                 variants={itemVariants}
               >
-                Welcome to EduKids
+                Welcome to DailyMates
               </motion.h1>
-              <motion.p 
+              <motion.p
                 className="text-[#4b5563] text-lg"
                 variants={itemVariants}
               >
@@ -230,24 +230,24 @@ const [activeTab, setActiveTab] = useState('login');
               </motion.p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="bg-white rounded-xl shadow-lg p-8 border border-gray-100"
               variants={itemVariants}
             >
-              <Tabs 
+              <Tabs
                 value={activeTab}
-                defaultValue="login" 
+                defaultValue="login"
                 className="w-full"
                 onValueChange={(value) => setActiveTab(value)}
               >
                 <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100 p-1 rounded-lg">
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="login"
                     className={`text-base font-medium rounded-md ${activeTab === 'login' ? 'bg-white shadow-sm' : ''}`}
                   >
                     Login
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="signup"
                     className={`text-base font-medium rounded-md ${activeTab === 'signup' ? 'bg-white shadow-sm' : ''}`}
                   >
@@ -258,7 +258,7 @@ const [activeTab, setActiveTab] = useState('login');
                 <TabsContent value="login">
                   <form className="space-y-5" onSubmit={handleLogin}>
                     {error && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200"
@@ -266,15 +266,15 @@ const [activeTab, setActiveTab] = useState('login');
                         {error}
                       </motion.div>
                     )}
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
                       <Label htmlFor="email" className="text-[#374151] font-medium">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="your@email.com" 
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your@email.com"
                         className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -282,7 +282,7 @@ const [activeTab, setActiveTab] = useState('login');
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
@@ -293,17 +293,17 @@ const [activeTab, setActiveTab] = useState('login');
                         </Link>
                       </div>
                       <div className="relative">
-                        <Input 
-                          id="password" 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="••••••••" 
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
                           className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20 pr-10"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           disabled={loading}
                         />
-                        <button 
+                        <button
                           type="button"
                           onClick={togglePasswordVisibility}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
@@ -314,7 +314,7 @@ const [activeTab, setActiveTab] = useState('login');
                       </div>
                     </motion.div>
                     <motion.div variants={itemVariants}>
-                      <Button 
+                      <Button
                         type="submit"
                         className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-medium py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         disabled={loading}
@@ -336,7 +336,7 @@ const [activeTab, setActiveTab] = useState('login');
                     </motion.div>
                   </form>
 
-                  <motion.div 
+                  <motion.div
                     className="mt-8 text-center"
                     variants={itemVariants}
                   >
@@ -357,7 +357,7 @@ const [activeTab, setActiveTab] = useState('login');
                 <TabsContent value="signup">
                   <form className="space-y-4" onSubmit={handleSignup}>
                     {signupError && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200"
@@ -365,15 +365,15 @@ const [activeTab, setActiveTab] = useState('login');
                         {signupError}
                       </motion.div>
                     )}
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
                       <Label htmlFor="name" className="text-[#374151] font-medium">Full Name</Label>
-                      <Input 
-                        id="name" 
-                        type="text" 
-                        placeholder="John Doe" 
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="John Doe"
                         className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -381,15 +381,15 @@ const [activeTab, setActiveTab] = useState('login');
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
                       <Label htmlFor="signup-email" className="text-[#374151] font-medium">Email</Label>
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="your@email.com" 
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="your@email.com"
                         className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
@@ -397,7 +397,7 @@ const [activeTab, setActiveTab] = useState('login');
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
@@ -431,23 +431,23 @@ const [activeTab, setActiveTab] = useState('login');
                         </label>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
                       <Label htmlFor="signup-password" className="text-[#374151] font-medium">Password</Label>
                       <div className="relative">
-                        <Input 
-                          id="signup-password" 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="••••••••" 
+                        <Input
+                          id="signup-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
                           className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20 pr-10"
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
                           required
                           disabled={loading}
                         />
-                        <button 
+                        <button
                           type="button"
                           onClick={togglePasswordVisibility}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
@@ -457,15 +457,15 @@ const [activeTab, setActiveTab] = useState('login');
                         </button>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="space-y-2"
                       variants={itemVariants}
                     >
                       <Label htmlFor="confirm-password" className="text-[#374151] font-medium">Confirm Password</Label>
-                      <Input 
-                        id="confirm-password" 
-                        type="password" 
-                        placeholder="••••••••" 
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="••••••••"
                         className="border-gray-200 focus:border-[#10b981] focus:ring-[#10b981]/20"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -474,7 +474,7 @@ const [activeTab, setActiveTab] = useState('login');
                       />
                     </motion.div>
                     <motion.div variants={itemVariants}>
-                      <Button 
+                      <Button
                         type="submit"
                         className="w-full bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-medium py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         disabled={loading}
@@ -499,7 +499,7 @@ const [activeTab, setActiveTab] = useState('login');
               </Tabs>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="mt-6 flex justify-center gap-6 text-gray-500"
               variants={itemVariants}
             >
@@ -515,13 +515,13 @@ const [activeTab, setActiveTab] = useState('login');
           </motion.div>
         </motion.div>
 
-        <motion.footer 
+        <motion.footer
           className="py-6 text-center text-[#6b7280] text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <p>© 2025 EduKids. All rights reserved.</p>
+          <p>© 2025 DailyMates. All rights reserved.</p>
         </motion.footer>
       </div>
     </>

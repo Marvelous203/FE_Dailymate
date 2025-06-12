@@ -1,3 +1,4 @@
+'use client'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,13 +6,216 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Plus, Filter, BookOpen, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { EditCourseModal } from './EditCourseModal';
+import { DeleteCourseModal } from './DeleteCourse';
+import { CreateCourseModal } from './CreateCourse';
+import { CourseDetailModal } from './CourseDetail';
+
+export interface Instructor {
+  _id: string;
+  fullName: string;
+  specializations: string[];
+}
+
+export interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  ageGroup: string;
+  thumbnailUrl: string;
+  pointsEarned: number;
+  isPremium: boolean;
+  instructor: Instructor;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseUpdatePayload {
+  title?: string;
+  description?: string;
+  category?: string;
+  ageGroup?: string;
+  thumbnailUrl?: string;
+  pointsEarned?: number;
+  isPremium?: boolean;
+  instructor?: string; // API might expect instructor ID as string for update
+  isPublished?: boolean;
+}
+
+interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface CourseResponse {
+  success: boolean;
+  message: string;
+  data: {
+    courses: Course[];
+    pagination: Pagination;
+  };
+}
 
 export default function TeacherCoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCourseDetailModalOpen, setIsCourseDetailModalOpen] = useState(false);
+  const [courseToView, setCourseToView] = useState<Course | null>(null);
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch('http://localhost:8386/api/course');
+      const data: CourseResponse = await response.json();
+
+      if (data.success) {
+        setCourses(data.data.courses);
+      } else {
+        setError(data.message);
+      }
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch courses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const handleEditCourse = async (courseId: string, updatedData: CourseUpdatePayload) => {
+    try {
+      const response = await fetch(`http://localhost:8386/api/course/${courseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Khóa học đã được cập nhật thành công!');
+        fetchCourses(); // Refetch courses to update the list
+      } else {
+        alert(`Cập nhật khóa học thất bại: ${data.message}`);
+      }
+    } catch (error: unknown) {
+      alert(`Lỗi khi cập nhật khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  const openEditModal = (course: Course) => {
+    setSelectedCourse(course);
+    setIsModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsModalOpen(false);
+    setSelectedCourse(null);
+  };
+
+  const openDeleteModal = (course: Course) => {
+    setCourseToDelete(course);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCourseToDelete(null);
+  };
+
+  const handleDeleteCourse = async () => {
+    if (courseToDelete) {
+      try {
+        const response = await fetch(`http://localhost:8386/api/course/${courseToDelete._id}`, {
+          method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Khóa học đã được xóa thành công!');
+          fetchCourses(); // Refetch courses to update the list
+          closeDeleteModal();
+        } else {
+          alert(`Xóa khóa học thất bại: ${data.message}`);
+        }
+      } catch (error: unknown) {
+        alert(`Lỗi khi xóa khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      }
+    }
+  };
+
+  const openCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleCreateCourse = async (newCourseData: Omit<Course, '_id' | 'createdAt' | 'updatedAt' | 'instructor'> & { instructor: string }) => {
+    try {
+      const response = await fetch('http://localhost:8386/api/course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCourseData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Khóa học đã được tạo thành công!');
+        fetchCourses(); // Refetch courses to update the list
+        closeCreateModal();
+      } else {
+        alert(`Tạo khóa học thất bại: ${data.message}`);
+      }
+    } catch (error: unknown) {
+      alert(`Lỗi khi tạo khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+    }
+  };
+
+  const openCourseDetailModal = (course: Course) => {
+    setCourseToView(course);
+    setIsCourseDetailModalOpen(true);
+  };
+
+  const closeCourseDetailModal = () => {
+    setIsCourseDetailModalOpen(false);
+    setCourseToView(null);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-[#1e1e1e]">My Courses</h1>
-        <Button className="bg-[#702dff] hover:bg-[#5811f2]">
+        <Button className="bg-[#702dff] hover:bg-[#5811f2]" onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" /> Create New Course
         </Button>
       </div>
@@ -38,7 +242,7 @@ export default function TeacherCoursesPage() {
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course, index) => (
-              <CourseCard key={index} course={course} />
+              <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
             ))}
           </div>
 
@@ -51,9 +255,9 @@ export default function TeacherCoursesPage() {
         <TabsContent value="published" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses
-              .filter((course) => course.status === "Published")
+              .filter((course) => course.isPublished)
               .map((course, index) => (
-                <CourseCard key={index} course={course} />
+                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
               ))}
           </div>
         </TabsContent>
@@ -109,25 +313,51 @@ export default function TeacherCoursesPage() {
           </Card>
         </div>
       </div>
+
+      <EditCourseModal
+        isOpen={isModalOpen}
+        onClose={closeEditModal}
+        course={selectedCourse}
+        onSave={handleEditCourse}
+      />
+
+      <DeleteCourseModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteCourse}
+        courseTitle={courseToDelete?.title || ''}
+      />
+
+      <CreateCourseModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        onCreate={handleCreateCourse}
+      />
+
+      <CourseDetailModal
+        isOpen={isCourseDetailModalOpen}
+        onClose={closeCourseDetailModal}
+        course={courseToView}
+      />
     </div>
   )
 }
 
-function CourseCard({ course }) {
+function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEdit: (course: Course) => void; onDelete: (course: Course) => void; onView: (course: Course) => void }) {
   return (
     <Card className="border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
         <Image
-          src={`/placeholder.svg?height=160&width=320`}
+          src={course.thumbnailUrl || `/placeholder.svg?height=160&width=320`}
           alt={course.title}
           width={320}
           height={160}
           className="w-full h-full object-cover"
         />
         <div
-          className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(course.status)}`}
+          className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(course.isPublished ? "Published" : "Draft")}`}
         >
-          {course.status}
+          {course.isPublished ? "Published" : "Draft"}
         </div>
       </div>
       <CardContent className="p-4">
@@ -135,27 +365,31 @@ function CourseCard({ course }) {
           <div className="bg-[#f0e5fc] px-2 py-1 rounded text-xs text-[#702dff] font-medium">{course.category}</div>
           <div className="text-[#6b7280] text-xs flex items-center">
             <StarIcon className="h-3 w-3 text-[#f59e0b] mr-1" />
-            {course.rating}
+            {course.pointsEarned}
           </div>
         </div>
-        <Link href={`/teacher/courses/${course.id}`}>
+        <Link href={`/teacher/courses/${course._id}`}>
           <h3 className="font-semibold mb-2 hover:text-[#702dff] transition-colors">{course.title}</h3>
         </Link>
+        <p className="text-sm text-gray-600 mb-2">{course.description}</p>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center text-[#6b7280]">
-            <Clock size={16} className="mr-1" />
-            <span>{course.duration}</span>
+            <Clock className="mr-1 w-4 h-4" />
+            <span>{course.ageGroup}</span>
           </div>
           <div className="flex items-center text-[#6b7280]">
-            <User size={16} className="mr-1" />
-            <span>{course.students} students</span>
+            <User className="mr-1 w-4 h-4" />
+            <span>{course.instructor.fullName}</span>
           </div>
         </div>
         <div className="flex justify-between mt-4">
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => onEdit(course)}>
             Edit
           </Button>
-          <Button size="sm" variant="outline" className="flex-1 ml-2">
+          <Button size="sm" variant="outline" className="flex-1 ml-2" onClick={() => onDelete(course)}>
+            Delete
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1 ml-2" onClick={() => onView(course)}>
             View
           </Button>
         </div>
@@ -164,7 +398,7 @@ function CourseCard({ course }) {
   )
 }
 
-function getStatusBadgeColor(status) {
+function getStatusBadgeColor(status: string): string {
   switch (status) {
     case "Published":
       return "bg-green-100 text-green-800"
@@ -177,7 +411,7 @@ function getStatusBadgeColor(status) {
   }
 }
 
-function User(props) {
+function User(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -197,7 +431,7 @@ function User(props) {
   )
 }
 
-function StarIcon(props) {
+function StarIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -215,67 +449,4 @@ function StarIcon(props) {
     </svg>
   )
 }
-
-const courses = [
-  {
-    id: 1,
-    title: "Mathematics for Kids",
-    category: "Mathematics",
-    rating: 4.8,
-    duration: "4 hours",
-    lessons: 12,
-    students: 124,
-    status: "Published",
-  },
-  {
-    id: 2,
-    title: "English Vocabulary",
-    category: "Language",
-    rating: 4.5,
-    duration: "6 hours",
-    lessons: 18,
-    students: 98,
-    status: "Published",
-  },
-  {
-    id: 3,
-    title: "Science Experiments",
-    category: "Science",
-    rating: 4.9,
-    duration: "5 hours",
-    lessons: 15,
-    students: 156,
-    status: "Published",
-  },
-  {
-    id: 4,
-    title: "Art & Craft",
-    category: "Art",
-    rating: 4.7,
-    duration: "3 hours",
-    lessons: 10,
-    students: 42,
-    status: "Draft",
-  },
-  {
-    id: 5,
-    title: "Music Basics",
-    category: "Music",
-    rating: 4.6,
-    duration: "4 hours",
-    lessons: 12,
-    students: 0,
-    status: "Draft",
-  },
-  {
-    id: 6,
-    title: "Geography Adventures",
-    category: "Geography",
-    rating: 4.4,
-    duration: "5 hours",
-    lessons: 20,
-    students: 85,
-    status: "Archived",
-  },
-]
 

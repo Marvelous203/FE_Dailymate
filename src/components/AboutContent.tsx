@@ -3,12 +3,12 @@
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { 
-  Target, 
-  Eye, 
-  Heart, 
-  Users, 
-  Award, 
+import {
+  Target,
+  Eye,
+  Heart,
+  Users,
+  Award,
   BookOpen,
   Lightbulb,
   Globe,
@@ -98,21 +98,21 @@ export default function AboutContent() {
       <div className="container mx-auto px-4">
         {/* Hero Section */}
         <div className="text-center mb-20">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold mb-6"
           >
-            Về EduKids
+            Về DailyMates
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed"
           >
-            EduKids là nền tảng giáo dục kỹ năng sống hàng đầu tại Việt Nam, được phát triển bởi đội ngũ 
-            chuyên gia giáo dục và công nghệ với hơn 10 năm kinh nghiệm. Chúng tôi tin rằng mỗi đứa trẻ 
+            DailyMates là nền tảng giáo dục kỹ năng sống hàng đầu tại Việt Nam, được phát triển bởi đội ngũ
+            chuyên gia giáo dục và công nghệ với hơn 10 năm kinh nghiệm. Chúng tôi tin rằng mỗi đứa trẻ
             đều có tiềm năng vô hạn và xứng đáng được trang bị những kỹ năng cần thiết để thành công trong cuộc sống.
           </motion.p>
         </div>
@@ -133,9 +133,9 @@ export default function AboutContent() {
                   <h3 className="text-2xl font-bold">Sứ mệnh</h3>
                 </div>
                 <p className="text-gray-600 leading-relaxed text-lg">
-                  Tạo ra một thế hệ trẻ em Việt Nam tự tin, sáng tạo và có đầy đủ kỹ năng sống 
-                  để đối mặt với những thách thức của tương lai. Chúng tôi cam kết mang đến 
-                  những trải nghiệm học tập tốt nhất, giúp trẻ phát triển toàn diện cả về 
+                  Tạo ra một thế hệ trẻ em Việt Nam tự tin, sáng tạo và có đầy đủ kỹ năng sống
+                  để đối mặt với những thách thức của tương lai. Chúng tôi cam kết mang đến
+                  những trải nghiệm học tập tốt nhất, giúp trẻ phát triển toàn diện cả về
                   trí tuệ, cảm xúc và xã hội.
                 </p>
               </CardContent>
@@ -156,8 +156,8 @@ export default function AboutContent() {
                   <h3 className="text-2xl font-bold">Tầm nhìn</h3>
                 </div>
                 <p className="text-gray-600 leading-relaxed text-lg">
-                  Trở thành nền tảng giáo dục kỹ năng sống số 1 Đông Nam Á vào năm 2030, 
-                  góp phần xây dựng một xã hội phát triển bền vững với những công dân 
+                  Trở thành nền tảng giáo dục kỹ năng sống số 1 Đông Nam Á vào năm 2030,
+                  góp phần xây dựng một xã hội phát triển bền vững với những công dân
                   có kỹ năng sống tốt, biết yêu thương và chia sẻ.
                 </p>
               </CardContent>
@@ -166,7 +166,7 @@ export default function AboutContent() {
         </div>
 
         {/* Core Values */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -198,7 +198,7 @@ export default function AboutContent() {
         </motion.div>
 
         {/* Team Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -231,7 +231,7 @@ export default function AboutContent() {
         </motion.div>
 
         {/* Achievements */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
@@ -259,7 +259,7 @@ export default function AboutContent() {
         </motion.div>
 
         {/* CTA Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2 }}
@@ -267,7 +267,7 @@ export default function AboutContent() {
         >
           <h3 className="text-3xl font-bold mb-4">Cùng chúng tôi xây dựng tương lai</h3>
           <p className="text-xl mb-8 opacity-90 max-w-3xl mx-auto">
-            Tham gia cùng EduKids để mang đến cho con em bạn những kỹ năng sống cần thiết 
+            Tham gia cùng DailyMates để mang đến cho con em bạn những kỹ năng sống cần thiết
             cho thành công trong tương lai. Hãy bắt đầu hành trình học tập thú vị ngay hôm nay!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
