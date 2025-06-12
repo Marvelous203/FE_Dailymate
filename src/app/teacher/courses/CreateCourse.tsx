@@ -67,16 +67,16 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
     useEffect(() => {
         console.log('=== DEBUG CREATE COURSE ===');
         console.log('isOpen:', isOpen);
-        
+
         if (isOpen) {
             const storedUser = localStorage.getItem('user');
-            
+
             if (storedUser) {
                 try {
                     const userData = JSON.parse(storedUser);
                     console.log('User data from localStorage:', userData);
                     console.log('RoleData:', userData.roleData);
-                    
+
                     // Kiểm tra roleData trước, nếu không có thì dùng user.id
                     if (userData.roleData && userData.roleData._id && userData.role === 'teacher') {
                         setFormData(prev => ({
@@ -100,8 +100,8 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
             }
         }
     }, [isOpen]);
-    
-    
+
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
         setFormData((prev) => ({
@@ -162,7 +162,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             placeholder="Nhập tiêu đề khóa học"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="description" className="text-right">
                             Mô tả
@@ -176,7 +176,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             rows={3}
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">
                             Danh mục
@@ -194,7 +194,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             </SelectContent>
                         </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">
                             Độ tuổi
@@ -212,7 +212,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             </SelectContent>
                         </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="thumbnailUrl" className="text-right">
                             URL hình ảnh
@@ -225,7 +225,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             placeholder="https://example.com/image.jpg"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">
                             Điểm kiếm được
@@ -243,7 +243,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             </SelectContent>
                         </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="isPremium" className="text-right">
                             Premium
@@ -259,24 +259,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                             </span>
                         </div>
                     </div>
-                    
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">
-                            Giảng viên
-                        </Label>
-                        <div className="col-span-3">
-                            <Input
-                                value={formData.instructor}
-                                disabled
-                                className="bg-gray-100"
-                                placeholder="ID sẽ được tự động điền"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                ID giảng viên được lấy từ tài khoản đăng nhập
-                            </p>
-                        </div>
-                    </div>
-                    
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="isPublished" className="text-right">
                             Xuất bản

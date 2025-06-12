@@ -9,9 +9,11 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { EditCourseModal } from './EditCourseModal';
 import { DeleteCourseModal } from './DeleteCourse';
-import CreateCourseModal from './CreateCourse'; // Thay đổi thành default import
+import CreateCourseModal from './CreateCourse';
 import { CourseDetailModal } from './CourseDetail';
 import { getAllCourses, updateCourse, deleteCourse, createCourse } from '@/lib/api';
+import { toast } from "sonner"
+
 
 export interface Instructor {
   _id: string;
@@ -107,13 +109,13 @@ export default function TeacherCoursesPage() {
       const data = await updateCourse(courseId, updatedData);
 
       if (data.success) {
-        alert('Khóa học đã được cập nhật thành công!');
+        toast.success("Khóa học đã được cập nhật thành công!");
         fetchCourses(currentPage); // Refetch courses to update the list
       } else {
-        alert(`Cập nhật khóa học thất bại: ${data.message}`);
+        toast.error("Cập nhật khóa học thất bại!");
       }
     } catch (error: unknown) {
-      alert(`Lỗi khi cập nhật khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      console.log(error)
     }
   };
 
@@ -155,14 +157,14 @@ export default function TeacherCoursesPage() {
         const data = await deleteCourse(courseToDelete._id);
 
         if (data.success) {
-          alert('Khóa học đã được xóa thành công!');
+          toast.success("Khóa học đã được cập nhật thành công!");
           fetchCourses(currentPage); // Refetch courses to update the list
           closeDeleteModal();
         } else {
-          alert(`Xóa khóa học thất bại: ${data.message}`);
+          toast.success("Xóa khóa học thất bại!");
         }
       } catch (error: unknown) {
-        alert(`Lỗi khi xóa khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+        console.log(error)
       }
     }
   };
@@ -180,14 +182,14 @@ export default function TeacherCoursesPage() {
       const data = await createCourse(newCourseData);
 
       if (data.success) {
-        alert('Khóa học đã được tạo thành công!');
+        toast.success("Khóa học đã được cập nhật thành công!");
         fetchCourses(currentPage); // Refetch courses to update the list
         closeCreateModal();
       } else {
-        alert(`Tạo khóa học thất bại: ${data.message}`);
+        toast.success("Tạo khóa học thất bại!");
       }
     } catch (error: unknown) {
-      alert(`Lỗi khi tạo khóa học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      console.log(error)
     }
   };
 
@@ -215,7 +217,10 @@ export default function TeacherCoursesPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <Input placeholder="Search courses..." className="pl-10 bg-white border-none" />
         </div>
-        <Button variant="outline" className="flex items-center gap-2 bg-white">
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 bg-white border-gray-300 hover:bg-gray-100 text-gray-800"
+        >
           <Filter size={18} />
           Filter
         </Button>
@@ -244,15 +249,15 @@ export default function TeacherCoursesPage() {
 
               <div className="flex justify-center mt-8">
                 {pagination?.hasNextPage ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={loading}
                   >
                     {loading ? 'Đang tải...' : 'Load More'}
                   </Button>
                 ) : (
-                  <p className="text-gray-500">Không có khóa học mới</p>
+                  <p className="text-gray-500"></p>
                 )}
               </div>
             </>
@@ -273,11 +278,11 @@ export default function TeacherCoursesPage() {
                     <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
                   ))}
               </div>
-              
+
               <div className="flex justify-center mt-8">
                 {pagination?.hasNextPage ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={loading}
                   >
@@ -305,11 +310,11 @@ export default function TeacherCoursesPage() {
                     <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
                   ))}
               </div>
-              
+
               <div className="flex justify-center mt-8">
                 {pagination?.hasNextPage ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={loading}
                   >
@@ -337,11 +342,11 @@ export default function TeacherCoursesPage() {
                     <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
                   ))}
               </div>
-              
+
               <div className="flex justify-center mt-8">
                 {pagination?.hasNextPage ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={loading}
                   >
@@ -504,8 +509,8 @@ function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEd
           <div className="flex items-center text-[#6b7280]">
             <User className="mr-1 w-4 h-4" />
             <span>
-              {typeof course.instructor === 'string' 
-                ? course.instructor 
+              {typeof course.instructor === 'string'
+                ? course.instructor
                 : course.instructor?.fullName || 'Unknown Instructor'
               }
             </span>
