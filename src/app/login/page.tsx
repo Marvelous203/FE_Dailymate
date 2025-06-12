@@ -206,18 +206,20 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-[#10b981] to-[#3b82f6] rounded-full blur opacity-70"></div>
-                    <div className="relative bg-white rounded-full p-2">
-                      <Image
-                        src="/globe.svg"
-                        alt="Logo"
-                        width={80}
-                        height={80}
-                        className="rounded-full p-2"
-                      />
+                  <Link href="/" className="block">
+                    <div className="relative cursor-pointer">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-[#10b981] to-[#3b82f6] rounded-full blur opacity-70"></div>
+                      <div className="relative bg-white rounded-full p-2">
+                        <Image
+                          src="/globe.svg"
+                          alt="Logo - Quay về trang chủ"
+                          width={80}
+                          height={80}
+                          className="rounded-full p-2"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </motion.div>
               </div>
               <motion.h1

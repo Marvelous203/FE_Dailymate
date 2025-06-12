@@ -516,3 +516,58 @@ export async function getLessonById(lessonId: string) {
     throw error;
   }
 }
+
+// Thêm function để gọi multiple APIs cùng lúc
+export async function getCourseWithLessons(courseId: string) {
+  try {
+    const [courseResponse, lessonsResponse] = await Promise.all([
+      fetch(`${API_URL}/api/course/${courseId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      }),
+      fetch(`${API_URL}/api/lesson/course/${courseId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      })
+    ]);
+
+    if (!courseResponse.ok || !lessonsResponse.ok) {
+      const courseError = !courseResponse.ok ? await handleErrorResponse(courseResponse) : null;
+      const lessonsError = !lessonsResponse.ok ? await handleErrorResponse(lessonsResponse) : null;
+      throw new Error(courseError || lessonsError || 'Lỗi khi tải dữ liệu');
+    }
+
+    const [courseData, lessonsData] = await Promise.all([
+      courseResponse.json(),
+      lessonsResponse.json()
+    ]);
+
+    return {
+      course: courseData,
+      lessons: lessonsData
+    };
+  } catch (error) {
+    console.error('Get course with lessons error:', error);
+    throw error;
+  }
+}
+
+// Function để gọi multiple courses với lessons
+export async function getCoursesWithLessons(courseIds: string[]) {
+  try {
+    const promises = courseIds.map(courseId => 
+      Promise.all([
+        getCourseById(courseId),
+        getLessonsByCourse(courseId)
+      ]).then(([course, lessons]) => ({ courseId, course, lessons }))
+    );
+    
+    const results = await Promise.all(promises);
+    return results;
+  } catch (error) {
+    console.error('Get courses with lessons error:', error);
+    throw error;
+  }
+}

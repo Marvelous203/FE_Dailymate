@@ -34,7 +34,7 @@ export default function KidLayout({ children }) {
             <NavItem href="/environment-kid/kid-learning-zone/courses" icon={<BookOpen size={20} />} label="Courses" />
             <NavItem href="/environment-kid/kid-learning-zone/games" icon={<GamepadIcon size={20} />} label="Games" />
             <NavItem href="/environment-kid/kid-learning-zone/rewards" icon={<Award size={20} />} label="Rewards" />
-            <NavItem href="/environment-kid/login" icon={<LogOut size={20} />} label="Exit" />
+            <NavItem href="/login" icon={<LogOut size={20} />} label="Exit" />
           </div>
         </nav>
       </header>
