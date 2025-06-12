@@ -106,22 +106,9 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
 
     const handleCreateLesson = async (courseId: string, newLessonData: NewLessonData) => {
         try {
-            let parsedContent: object;
-            try {
-                const tempContent = JSON.parse(newLessonData.content);
-                if (!Array.isArray(tempContent)) {
-                    alert('Nội dung (Content) phải là một chuỗi JSON của một mảng các đối tượng (ví dụ: [{ "title": "...", "text": "..." }]). Vui lòng kiểm tra lại định dạng.');
-                    return;
-                }
-                parsedContent = { sections: tempContent };
-            } catch (error: unknown) {
-                alert(`Nội dung (Content) phải là một chuỗi JSON hợp lệ của một mảng. Chi tiết lỗi: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
-                return;
-            }
-
             const dataToSend = {
                 ...newLessonData,
-                content: parsedContent,
+                content: { sections: newLessonData.content },
                 courseId: courseId,
             };
 

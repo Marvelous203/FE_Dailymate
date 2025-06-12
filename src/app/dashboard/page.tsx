@@ -19,7 +19,7 @@ export default function Dashboard() {
       <div className="hidden md:flex w-64 bg-[#1dc994] flex-col p-4">
         <div className="flex items-center gap-2 mb-8 mt-4">
           <div className="w-8 h-8 bg-white rounded-full"></div>
-          <h1 className="text-white font-bold text-xl">EduKids</h1>
+          <h1 className="text-white font-bold text-xl">DailyMates</h1>
         </div>
 
         <nav className="flex-1 space-y-2">

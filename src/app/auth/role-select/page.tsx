@@ -17,7 +17,7 @@ const RoleSelectPage = () => {  // Changed to arrow function component
               />
             </div>
             <h1 className="text-2xl font-bold text-[#1e1e1e]">Select Your Role</h1>
-            <p className="text-[#4b5563]">Choose how you want to access EduKids</p>
+            <p className="text-[#4b5563]">Choose how you want to access DailyMates</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -55,7 +55,7 @@ const RoleSelectPage = () => {  // Changed to arrow function component
       </div>
 
       <footer className="py-4 text-center text-[#6b7280] text-sm">
-        <p>© 2025 EduKids. All rights reserved.</p>
+        <p>© 2025 DailyMates. All rights reserved.</p>
       </footer>
     </div>
   )

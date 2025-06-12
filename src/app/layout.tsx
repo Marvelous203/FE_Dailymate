@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "EduKids - Interactive Learning Platform",
+  title: "DailyMates - Interactive Learning Platform",
   description:
     "A comprehensive educational platform for children, parents, teachers, and administrators",
 };

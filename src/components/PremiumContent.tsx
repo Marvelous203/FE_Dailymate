@@ -3,11 +3,11 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { 
-  CheckCircle, 
-  Star, 
-  Crown, 
-  Zap, 
+import {
+  CheckCircle,
+  Star,
+  Crown,
+  Zap,
   Shield,
   Users,
   BookOpen,
@@ -104,14 +104,14 @@ export default function PremiumContent() {
     >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold mb-4"
           >
             Gói Premium
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -130,9 +130,8 @@ export default function PremiumContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.05, y: -10 }}
-              className={`relative ${
-                plan.highlighted ? 'z-10' : ''
-              }`}
+              className={`relative ${plan.highlighted ? 'z-10' : ''
+                }`}
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -142,12 +141,11 @@ export default function PremiumContent() {
                   </div>
                 </div>
               )}
-              
-              <Card className={`overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 h-full ${
-                plan.highlighted 
-                  ? 'ring-2 ring-[#10b981] bg-gradient-to-br from-white to-green-50' 
+
+              <Card className={`overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 h-full ${plan.highlighted
+                  ? 'ring-2 ring-[#10b981] bg-gradient-to-br from-white to-green-50'
                   : 'bg-white'
-              }`}>
+                }`}>
                 <CardContent className="p-8">
                   <div className="text-center mb-8">
                     <div className={`w-16 h-16 bg-gradient-to-r ${plan.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
@@ -159,9 +157,8 @@ export default function PremiumContent() {
                       {plan.originalPrice && (
                         <div className="text-lg text-gray-400 line-through mb-1">{plan.originalPrice}</div>
                       )}
-                      <div className={`text-4xl font-bold ${
-                        plan.highlighted ? 'text-[#10b981]' : 'text-gray-900'
-                      }`}>
+                      <div className={`text-4xl font-bold ${plan.highlighted ? 'text-[#10b981]' : 'text-gray-900'
+                        }`}>
                         {plan.price}
                       </div>
                       {plan.price !== 'Liên hệ' && plan.price !== 'Miễn phí' && (
@@ -169,33 +166,31 @@ export default function PremiumContent() {
                       )}
                     </div>
                   </div>
-                  
+
                   <ul className="space-y-4 mb-8">
                     {plan.features.map((feature, idx) => (
-                      <motion.li 
+                      <motion.li
                         key={idx}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: (index * 0.1) + (idx * 0.05) }}
                         className="flex items-start gap-3"
                       >
-                        <CheckCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
-                          plan.highlighted ? 'text-[#10b981]' : 'text-gray-400'
-                        }`} />
+                        <CheckCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${plan.highlighted ? 'text-[#10b981]' : 'text-gray-400'
+                          }`} />
                         <span className="text-gray-700">{feature}</span>
                       </motion.li>
                     ))}
                   </ul>
-                  
-                  <Button 
-                    className={`w-full ${
-                      plan.highlighted 
-                        ? 'bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white' 
+
+                  <Button
+                    className={`w-full ${plan.highlighted
+                        ? 'bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
-                    {plan.price === 'Liên hệ' ? 'Liên hệ tư vấn' : 
-                     plan.price === 'Miễn phí' ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
+                    {plan.price === 'Liên hệ' ? 'Liên hệ tư vấn' :
+                      plan.price === 'Miễn phí' ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
                   </Button>
                 </CardContent>
               </Card>
@@ -204,7 +199,7 @@ export default function PremiumContent() {
         </div>
 
         {/* Premium Features */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -231,7 +226,7 @@ export default function PremiumContent() {
         </motion.div>
 
         {/* CTA Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1 }}
@@ -239,7 +234,7 @@ export default function PremiumContent() {
         >
           <h3 className="text-3xl font-bold mb-4">Sẵn sàng bắt đầu?</h3>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Tham gia cùng hàng nghìn gia đình đã tin tưởng EduKids để phát triển kỹ năng sống cho con em mình
+            Tham gia cùng hàng nghìn gia đình đã tin tưởng DailyMates để phát triển kỹ năng sống cho con em mình
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="bg-white text-[#10b981] hover:bg-gray-100">

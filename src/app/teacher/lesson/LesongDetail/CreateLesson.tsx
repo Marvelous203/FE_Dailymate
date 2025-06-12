@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 export interface NewLessonData {
     title: string;
     description: string;
-    content: string;
+    content: { title: string; text: string }[];
     videoUrl: string;
     audioUrl: string;
     imageUrl: string;
@@ -39,7 +39,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
     const [formData, setFormData] = useState<NewLessonData>({
         title: '',
         description: '',
-        content: '',
+        content: [],
         videoUrl: '',
         audioUrl: '',
         imageUrl: '',
@@ -72,13 +72,36 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
         }));
     };
 
+    const handleAddContentSection = () => {
+        setFormData((prev) => ({
+            ...prev,
+            content: [...prev.content, { title: '', text: '' }],
+        }));
+    };
+
+    const handleRemoveContentSection = (index: number) => {
+        setFormData((prev) => ({
+            ...prev,
+            content: prev.content.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handleContentSectionChange = (index: number, field: 'title' | 'text', value: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            content: prev.content.map((item, i) =>
+                i === index ? { ...item, [field]: value } : item
+            ),
+        }));
+    };
+
     const handleSubmit = () => {
         onCreate(courseId, formData);
         onClose();
         setFormData({
             title: '',
             description: '',
-            content: '',
+            content: [],
             videoUrl: '',
             audioUrl: '',
             imageUrl: '',
@@ -91,16 +114,16 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Tạo bài học mới</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-6">
+                <DialogHeader className="mb-4">
+                    <DialogTitle className="text-2xl font-bold">Tạo bài học mới</DialogTitle>
+                    <DialogDescription className="text-gray-600">
                         Điền thông tin chi tiết cho bài học mới của bạn.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-6 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
+                        <Label htmlFor="title" className="text-right font-medium">
                             Tiêu đề
                         </Label>
                         <Input
@@ -111,7 +134,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
+                        <Label htmlFor="description" className="text-right font-medium">
                             Mô tả
                         </Label>
                         <Textarea
@@ -121,19 +144,50 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                             className="col-span-3"
                         />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="content" className="text-right">
-                            Nội dung
-                        </Label>
-                        <Textarea
-                            id="content"
-                            value={formData.content}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                    <div className="col-span-4 mt-2 p-4 border rounded-md bg-gray-50">
+                        <h3 className="text-lg font-semibold mb-4">Nội dung bài học</h3>
+                        {formData.content.map((section, index) => (
+                            <div key={index} className="grid grid-cols-4 items-center gap-4 mb-4 pb-4 border-b last:border-b-0">
+                                <Label htmlFor={`content-title-${index}`} className="text-right font-medium">
+                                    Tiêu đề phần {index + 1}
+                                </Label>
+                                <Input
+                                    id={`content-title-${index}`}
+                                    value={section.title}
+                                    onChange={(e) =>
+                                        handleContentSectionChange(index, 'title', e.target.value)
+                                    }
+                                    className="col-span-3"
+                                />
+                                <Label htmlFor={`content-text-${index}`} className="text-right font-medium mt-2">
+                                    Nội dung phần {index + 1}
+                                </Label>
+                                <Textarea
+                                    id={`content-text-${index}`}
+                                    value={section.text}
+                                    onChange={(e) =>
+                                        handleContentSectionChange(index, 'text', e.target.value)
+                                    }
+                                    className="col-span-3"
+                                />
+                                <div className="col-span-4 flex justify-end mt-2">
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => handleRemoveContentSection(index)}
+                                    >
+                                        Xóa phần này
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                        <Button type="button" onClick={handleAddContentSection} className="mt-4">
+                            Thêm phần nội dung mới
+                        </Button>
                     </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="videoUrl" className="text-right">
+                        <Label htmlFor="videoUrl" className="text-right font-medium">
                             URL Video
                         </Label>
                         <Input
@@ -144,7 +198,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="audioUrl" className="text-right">
+                        <Label htmlFor="audioUrl" className="text-right font-medium">
                             URL Âm thanh
                         </Label>
                         <Input
@@ -155,7 +209,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="imageUrl" className="text-right">
+                        <Label htmlFor="imageUrl" className="text-right font-medium">
                             URL Hình ảnh
                         </Label>
                         <Input
@@ -166,7 +220,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="duration" className="text-right">
+                        <Label htmlFor="duration" className="text-right font-medium">
                             Thời lượng (phút)
                         </Label>
                         <Input
@@ -178,7 +232,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="order" className="text-right">
+                        <Label htmlFor="order" className="text-right font-medium">
                             Thứ tự
                         </Label>
                         <Input
@@ -190,7 +244,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="isPublished" className="text-right">
+                        <Label htmlFor="isPublished" className="text-right font-medium">
                             Đã xuất bản
                         </Label>
                         <Switch
@@ -201,7 +255,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="createdBy" className="text-right">
+                        <Label htmlFor="createdBy" className="text-right font-medium">
                             Tạo bởi (ID)
                         </Label>
                         <Input

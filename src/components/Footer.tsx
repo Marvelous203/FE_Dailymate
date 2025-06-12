@@ -6,7 +6,7 @@ import { Star, Sparkles } from "lucide-react"
 
 export default function Footer() {
   return (
-    <motion.footer 
+    <motion.footer
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.8 }}
@@ -19,7 +19,7 @@ export default function Footer() {
               <div className="w-10 h-10 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-lg flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-xl">EduKids</span>
+              <span className="font-bold text-xl">DailyMates</span>
             </div>
             <p className="text-gray-300 mb-4">
               Nền tảng giáo dục kỹ năng sống hàng đầu cho trẻ em Việt Nam
@@ -62,7 +62,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-300">
-          <p>© 2025 EduKids. Tất cả quyền được bảo lưu.</p>
+          <p>© 2025 DailyMates. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </motion.footer>

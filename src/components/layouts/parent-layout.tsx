@@ -12,7 +12,7 @@ export default function ParentLayout({ children }) {
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#8b5cf6] font-bold">E</span>
             </div>
-            <span className="font-bold text-lg">EduKids Parent</span>
+            <span className="font-bold text-lg">DailyMates Parent</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-1">
@@ -49,7 +49,7 @@ export default function ParentLayout({ children }) {
 
       <footer className="bg-white py-4 border-t">
         <div className="container mx-auto px-4 text-center text-[#6b7280] text-sm">
-          <p>© 2025 EduKids. All rights reserved.</p>
+          <p>© 2025 DailyMates. All rights reserved.</p>
         </div>
       </footer>
     </div>

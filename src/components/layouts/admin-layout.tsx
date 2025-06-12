@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#f15f6c] font-bold">E</span>
             </div>
-            <span className="font-bold text-lg">EduKids</span>
+            <span className="font-bold text-lg">DailyMates</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -39,9 +39,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <AvatarFallback>A</AvatarFallback>
             </Avatar>
 
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleLogout}
               className="text-white hover:bg-white/10 flex items-center gap-2"
             >
@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <footer className="bg-white py-4 border-t">
         <div className="container mx-auto px-4 text-center text-[#6b7280] text-sm">
-          <p>© 2025 EduKids. All rights reserved.</p>
+          <p>© 2025 DailyMates. All rights reserved.</p>
         </div>
       </footer>
     </div>

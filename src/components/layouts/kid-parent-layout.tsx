@@ -12,7 +12,7 @@ export default function KidParentLayout({ children }) {
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#83d98c] font-bold text-xl">E</span>
             </div>
-            <span className="font-bold text-xl">EduKids</span>
+            <span className="font-bold text-xl">DailyMates</span>
             <span className="text-sm bg-white text-[#83d98c] px-2 py-1 rounded-full">Parent Mode</span>
           </Link>
 
@@ -53,7 +53,7 @@ export default function KidParentLayout({ children }) {
 
       <footer className="bg-white py-3 border-t">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-[#6b7280] text-sm">© 2025 EduKids</p>
+          <p className="text-[#6b7280] text-sm">© 2025 DailyMates</p>
         </div>
       </footer>
     </div>
