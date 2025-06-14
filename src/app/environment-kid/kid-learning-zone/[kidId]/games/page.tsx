@@ -1,10 +1,52 @@
+'use client'
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { GamepadIcon, Star, Trophy, Users } from "lucide-react"
+import { useParams } from "next/navigation"
 
 export default function GamesPage() {
+  const params = useParams();
+  const kidId = params.kidId;
+  const availableGames = [
+    {
+      title: "Math Game",
+      description: "Test your math skills with this interactive game.",
+      highScore: 1000,
+      stars: 4.5,
+      multiplayer: true,
+    },
+    {
+      title: "Word Puzzle",
+      description: "Solve word puzzles to unlock hidden meanings.",
+      highScore: 500,
+      stars: 4.2,
+      multiplayer: false,
+    },
+    {
+      title: "Emoji Match",
+      description: "Match emojis with their meanings to win rewards.",
+      highScore: 800,
+      stars: 4.8,
+      multiplayer: true,
+    },
+    {
+      title: "Sudoku",
+      description: "Challenge yourself with a classic Sudoku puzzle.",
+      highScore: 700,
+      stars: 4.7,
+      multiplayer: false,
+    },
+    {
+      title: "Scrabble",
+      description: "Organize and play words with Scrabble tiles.",
+      highScore: 600,
+      stars: 4.6,
+      multiplayer: true,
+    },
+  ]
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-8">
@@ -13,7 +55,7 @@ export default function GamesPage() {
           <p className="text-[#6b7280]">Have fun while learning!</p>
         </div>
         <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-          <Link href="/environment-kid/kid-learning-zone">Back to Dashboard</Link>
+          <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
         </Button>
       </div>
 

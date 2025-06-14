@@ -67,7 +67,12 @@ export function getDashboardUrl(userRole: UserRole): string {
  * @returns true nếu là public route
  */
 export function isPublicRoute(pathname: string, publicRoutes: string[]): boolean {
-  return publicRoutes.includes(pathname);
+  return publicRoutes.some(route => {
+    if (route === '/environment-kid') {
+      return pathname.startsWith('/environment-kid');
+    }
+    return pathname === route;
+  });
 }
 
 /**

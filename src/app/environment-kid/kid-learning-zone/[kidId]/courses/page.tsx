@@ -7,6 +7,7 @@ import { BookOpen, Star } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { getAllCourses } from "@/lib/api"
+import { useParams } from "next/navigation"
 
 interface Course {
   _id: string;
@@ -28,9 +29,11 @@ interface Course {
 }
 
 export default function CoursesPage() {
+  const params = useParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const kidId = params.kidId;
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -68,7 +71,7 @@ export default function CoursesPage() {
             <p className="text-[#6b7280]">Explore our learning materials</p>
           </div>
           <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-            <Link href="/environment-kid/kid-learning-zone">Back to Dashboard</Link>
+            <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
           </Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -96,7 +99,7 @@ export default function CoursesPage() {
             <p className="text-[#6b7280]">Explore our learning materials</p>
           </div>
           <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-            <Link href="/environment-kid/kid-learning-zone">Back to Dashboard</Link>
+            <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
           </Button>
         </div>
         <div className="text-center py-8">

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -32,74 +32,169 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { AddChild } from "@/components/addchild";
+import { getKidsByParentId, createKid } from "@/lib/api";
+
+// Define interfaces for type safety
+interface Kid {
+  _id: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: string;
+  points: number;
+  level: number;
+  avatar: string;
+  streak: {
+    current: number;
+    longest: number;
+  };
+  achievements: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ParentInfo {
+  parentId: string;
+  parentUserId: string;
+  parentFullName: string;
+  parentEmail: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    kids: Kid[];
+    parentInfo: ParentInfo;
+  };
+}
 
 export default function ParentDashboard() {
-  const [children, setChildren] = useState([
-    {
-      id: 1,
-      name: "Alex Johnson",
-      age: 8,
-      grade: "3rd",
-      courses: 4,
-      avatar: "/placeholder.svg?height=80&width=80",
-      totalTime: 12,
-      achievements: 8,
-      lastActive: "Today, 10:30 AM"
-    },
-    {
-      id: 2,
-      name: "Emma Johnson",
-      age: 6,
-      grade: "1st",
-      courses: 3,
-      avatar: "/placeholder.svg?height=80&width=80",
-      totalTime: 8,
-      achievements: 5,
-      lastActive: "Yesterday, 3:15 PM"
-    },
-    {
-      id: 3,
-      name: "Noah Johnson",
-      age: 5,
-      grade: "Kindergarten",
-      courses: 2,
-      avatar: "/placeholder.svg?height=80&width=80",
-      totalTime: 6,
-      achievements: 3,
-      lastActive: "2 days ago"
-    },
-  ]);
-
-  const [selectedChild, setSelectedChild] = useState(children[0]);
+  const [children, setChildren] = useState<Kid[]>([]);
+  const [parentInfo, setParentInfo] = useState<ParentInfo | null>(null);
+  const [selectedChild, setSelectedChild] = useState<Kid | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Get parent ID from localStorage
+  const getParentId = () => {
+    if (typeof window !== 'undefined') {
+      const parentData = localStorage.getItem('parentData');
+      if (parentData) {
+        try {
+          const parsed = JSON.parse(parentData);
+          // Lấy parentId từ structure của API response
+          return parsed.data?.parentId || parsed.data?._id;
+        } catch (error) {
+          console.error('Error parsing parent data:', error);
+          return null;
+        }
+      }
+    }
+    return null;
+  };
+
+  // Fetch kids data on component mount
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchKidsData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const parentId = getParentId();
+        
+        if (!parentId) {
+          throw new Error('Không tìm thấy thông tin phụ huynh. Vui lòng đăng nhập lại.');
+        }
 
-  const handleAddChild = (child: {
-    name: string;
-    age: string;
-    gender: string;
-    avatar: string;
-  }) => {
-    const newChild = {
-      id: children.length + 1,
-      name: child.name,
-      age: parseInt(child.age) || 0,
-      grade: "New",
-      courses: 0,
-      avatar: child.avatar || "/placeholder.svg?height=80&width=80",
-      totalTime: 0,
-      achievements: 0,
-      lastActive: "Never"
+        const response: ApiResponse = await getKidsByParentId(parentId);
+        
+        if (response.success) {
+          setChildren(response.data.kids || []);
+          setParentInfo(response.data.parentInfo);
+          
+          // Set first child as selected if available
+          if (response.data.kids && response.data.kids.length > 0) {
+            setSelectedChild(response.data.kids[0]);
+          }
+        } else {
+          throw new Error(response.message || 'Không thể tải dữ liệu con');
+        }
+      } catch (err) {
+        console.error('Error fetching kids data:', err);
+        setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu con');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setChildren([...children, newChild]);
+    fetchKidsData();
+  }, []);
+
+  // Handle adding new child
+  const handleAddChild = async (childData: {
+    name: string;
+    dateOfBirth: string;
+    gender: string;
+  }) => {
+    try {
+      const parentId = getParentId();
+      
+      if (!parentId) {
+        throw new Error('Không tìm thấy thông tin phụ huynh');
+      }
+
+      const kidData = {
+        fullName: childData.name,
+        dateOfBirth: childData.dateOfBirth,
+        gender: childData.gender,
+        parentId: parentId
+      };
+
+      const response = await createKid(kidData);
+      
+      if (response.success) {
+        // Refresh the kids list after successful creation
+        const updatedResponse: ApiResponse = await getKidsByParentId(parentId);
+        if (updatedResponse.success) {
+          setChildren(updatedResponse.data.kids || []);
+          
+          // Select the newly created child if it's the first one
+          if (!selectedChild && updatedResponse.data.kids && updatedResponse.data.kids.length > 0) {
+            setSelectedChild(updatedResponse.data.kids[updatedResponse.data.kids.length - 1]);
+          }
+        }
+      } else {
+        throw new Error(response.message || 'Không thể tạo hồ sơ con');
+      }
+    } catch (err) {
+      console.error('Error creating child:', err);
+      setError(err instanceof Error ? err.message : 'Không thể tạo hồ sơ con');
+      throw err; // Re-throw to handle in AddChild component
+    }
+  };
+
+  // Calculate age from date of birth
+  const calculateAge = (dateOfBirth: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  // Get grade based on age
+  const getGradeFromAge = (age: number) => {
+    if (age <= 5) return 'Mẫu giáo';
+    if (age <= 6) return 'Lớp 1';
+    if (age <= 7) return 'Lớp 2';
+    if (age <= 8) return 'Lớp 3';
+    if (age <= 9) return 'Lớp 4';
+    if (age <= 10) return 'Lớp 5';
+    return `Lớp ${age - 5}`;
   };
 
   const containerVariants = {
@@ -141,8 +236,25 @@ export default function ParentDashboard() {
               className="animate-pulse"
             />
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-purple-600">Loading Dashboard...</h2>
+          <h2 className="mt-4 text-xl font-semibold text-purple-600">Đang tải bảng điều khiển...</h2>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Có lỗi xảy ra</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            Thử lại
+          </Button>
+        </div>
       </div>
     );
   }
@@ -174,7 +286,12 @@ export default function ParentDashboard() {
                 className="w-full h-full object-contain"
               />
             </motion.div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-0">Parent Dashboard</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-0">Bảng điều khiển phụ huynh</h1>
+              {parentInfo && (
+                <p className="text-sm text-gray-500">Chào mừng trở lại, {parentInfo.parentFullName}</p>
+              )}
+            </div>
           </div>
           <p className="text-gray-600 mt-2">Theo dõi tiến trình học tập và hoạt động của con bạn</p>
         </div>
@@ -197,144 +314,82 @@ export default function ParentDashboard() {
         </div>
       </motion.div>
 
-      {/* Quick Stats Overview */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
-        variants={itemVariants}
-      >
-        <motion.div whileHover={{ y: -5, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none shadow-lg overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-400 rounded-full opacity-20 -mt-8 -mr-8"></div>
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-blue-400 rounded-full opacity-20 -mb-6 -ml-6"></div>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Tổng số trẻ</p>
-                  <p className="text-3xl font-bold">{children.length}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -5, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-none shadow-lg overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-green-400 rounded-full opacity-20 -mt-8 -mr-8"></div>
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-green-400 rounded-full opacity-20 -mb-6 -ml-6"></div>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Khóa học đang học</p>
-                  <p className="text-3xl font-bold">{children.reduce((sum, child) => sum + child.courses, 0)}</p>
-                </div>
-                <BookOpen className="h-8 w-8 text-green-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -5, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none shadow-lg overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-400 rounded-full opacity-20 -mt-8 -mr-8"></div>
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-purple-400 rounded-full opacity-20 -mb-6 -ml-6"></div>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Tổng giờ học</p>
-                  <p className="text-3xl font-bold">{children.reduce((sum, child) => sum + child.totalTime, 0)}h</p>
-                </div>
-                <Clock className="h-8 w-8 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -5, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-none shadow-lg overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-400 rounded-full opacity-20 -mt-8 -mr-8"></div>
-            <div className="absolute bottom-0 left-0 w-12 h-12 bg-orange-400 rounded-full opacity-20 -mb-6 -ml-6"></div>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">Thành tích</p>
-                  <p className="text-3xl font-bold">{children.reduce((sum, child) => sum + child.achievements, 0)}</p>
-                </div>
-                <Award className="h-8 w-8 text-orange-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
-
-      {/* Children Selection */}
-      <motion.div variants={itemVariants}>
-        <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-purple-500" />
-              Chọn trẻ
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {children.map((child) => (
-                <motion.div
-                  key={child.id}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedChild.id === child.id
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
-                    }`}
-                  onClick={() => setSelectedChild(child)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
+      {/* Children Overview Cards */}
+      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" variants={itemVariants}>
+        {children.map((child) => {
+          const age = calculateAge(child.dateOfBirth);
+          const grade = getGradeFromAge(age);
+          
+          return (
+            <motion.div
+              key={child._id}
+              className={`cursor-pointer transition-all duration-300 ${
+                selectedChild?._id === child._id
+                  ? 'ring-2 ring-purple-400 shadow-lg scale-105'
+                  : 'hover:shadow-md hover:scale-102'
+              }`}
+              onClick={() => setSelectedChild(child)}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
+                      {child.avatar && child.avatar !== 'img/default' ? (
                         <Image
                           src={child.avatar}
-                          alt={child.name}
-                          width={48}
-                          height={48}
+                          alt={child.fullName}
+                          width={64}
+                          height={64}
                           className="w-full h-full object-cover"
                         />
-                      </div>
-                      {selectedChild.id === child.id && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center"
-                        >
-                          <CheckCircle2 className="h-3 w-3 text-white" />
-                        </motion.div>
+                      ) : (
+                        <span className="text-white font-bold text-xl">
+                          {child.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{child.name}</h3>
-                      <p className="text-sm text-gray-600">{child.age} tuổi • {child.grade}</p>
-                      <p className="text-xs text-gray-500">{child.courses} khóa học</p>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{child.fullName}</h3>
+                      <p className="text-sm text-gray-500">{age} tuổi • {grade}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span className="text-sm font-medium">{child.points || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Target className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">Cấp {child.level || 1}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+        
+        {/* Show message if no children */}
+        {children.length === 0 && (
+          <motion.div
+            className="col-span-full text-center py-12"
+            variants={itemVariants}
+          >
+            <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-500 mb-2">Chưa có con nào được thêm</h3>
+            <p className="text-gray-400 mb-4">Thêm con đầu tiên để bắt đầu theo dõi tiến trình học tập</p>
+            <AddChild onAddChild={handleAddChild} />
+          </motion.div>
+        )}
       </motion.div>
-
-      {/* Selected Child Dashboard */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={selectedChild.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
+      {selectedChild && (
+        <motion.div variants={itemVariants}>
           <ChildDashboard child={selectedChild} />
         </motion.div>
-      </AnimatePresence>
+      )}
+      {/* Rest of the dashboard content... */}
     </motion.div>
   );
 }
@@ -371,13 +426,13 @@ function ChildDashboard({ child }) {
                     whileHover={{ scale: 1.05, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <Image
-                      src={child.avatar}
-                      alt={child.name}
-                      width={96}
-                      height={96}
-                      className="w-full h-full object-cover"
-                    />
+                  <Image
+                    src={child.avatar && child.avatar !== 'img/default' ? child.avatar : "/avatar_default.png"}
+                    alt={child.name || child.fullName || 'Avatar của học sinh'}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-cover"
+                  />
                   </motion.div>
                   <motion.div
                     className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-md"
@@ -580,11 +635,10 @@ function ChildDashboard({ child }) {
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <Image
-                      src="/placeholder.svg?height=64&width=64"
+                      src="/avatar_default.png"
                       alt="Teacher"
                       width={64}
                       height={64}
-                      className="w-full h-full object-cover"
                     />
                   </motion.div>
                   <div>

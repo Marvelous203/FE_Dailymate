@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Eye, EyeOff, Globe, BookOpen, Loader2 } from "lucide-react";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { loginUser, createParent } from '@/lib/api';
+import { loginUser, createParent, fetchUserDataAfterLogin, fetchKidDataAfterLogin } from '@/lib/api';
 import { useAppDispatch } from '@/redux/hook';
 import { loginStart, loginSuccess, loginFailure } from '@/redux/features/auth/authSlice';
 import { toast } from 'sonner'; // Chỉ import toast, không import Toaster
@@ -80,6 +80,39 @@ export default function LoginPage() {
       
       dispatch(loginSuccess({ user: userData }));
 
+      // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
+      if (response.user.role === 'parent' && response.user.roleData?._id) {
+        try {
+          const userCompleteData = await fetchUserDataAfterLogin(response.user.roleData._id);
+          localStorage.setItem('parentData', JSON.stringify(userCompleteData.parent));
+          localStorage.setItem('kidsData', JSON.stringify(userCompleteData.kids));
+          localStorage.setItem('kidsInfo', JSON.stringify(userCompleteData.kidsInfo));
+        } catch (dataError) {
+          console.error('Error fetching additional user data:', dataError);
+        }
+      }
+
+      // THÊM LOGIC CHO KID
+      else if (response.user.role === 'kid' && response.user.roleData?._id) {
+        try {
+          const kidCompleteData = await fetchKidDataAfterLogin(response.user.roleData._id);
+          
+          // Tạo một object mới thay vì modify object hiện tại
+          const updatedUserData = {
+            ...userData,
+            roleData: kidCompleteData.data || kidCompleteData
+          };
+          
+          // Cập nhật cookie với dữ liệu mới
+          document.cookie = `user=${JSON.stringify(updatedUserData)}; path=/; max-age=86400`;
+          
+          localStorage.setItem('kidData', JSON.stringify(kidCompleteData));
+          console.log('Kid data loaded:', kidCompleteData);
+        } catch (dataError) {
+          console.error('Error fetching kid data:', dataError);
+        }
+      }
+
       // Redirect based on role
       if (response.user.role === 'parent') {
         router.push('/parent/dashboard');
@@ -88,7 +121,7 @@ export default function LoginPage() {
       } else if (response.user.role === 'teacher') {
         router.push('/teacher/dashboard');
       } else if (response.user.role === 'kid') {
-        router.push('/envirnoment-kid/kid-learning-zone');
+        router.push('/environment-kid/kid-learning-zone'); // Sửa lỗi chính tả
       }
     } catch (error: any) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
