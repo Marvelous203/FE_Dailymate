@@ -2,7 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['example.com', 'template.canva.com', 'youtube.com'],
+    domains: [
+      'example.com',
+      'template.canva.com',
+      'youtube.com',
+      'res.cloudinary.com'
+    ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -13,6 +18,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.k12digest.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
       },

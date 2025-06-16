@@ -477,7 +477,7 @@ function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEd
     <Card className="border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
         <Image
-          src={course.thumbnailUrl || `/placeholder.svg?height=160&width=320`}
+          src={course.thumbnailUrl}
           alt={course.title}
           width={320}
           height={160}

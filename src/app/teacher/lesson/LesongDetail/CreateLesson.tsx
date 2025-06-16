@@ -14,6 +14,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { VideoUpload } from '@/components/ui/video-upload';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { AudioUpload } from '@/components/ui/audio-upload';
 
 export interface NewLessonData {
     title: string;
@@ -46,7 +49,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
         duration: 0,
         order: 0,
         isPublished: false,
-        createdBy: '',
+        createdBy: '60d21b4667d0d8992e610c86',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -115,40 +118,112 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-6">
-                <DialogHeader className="mb-4">
-                    <DialogTitle className="text-2xl font-bold">Tạo bài học mới</DialogTitle>
-                    <DialogDescription className="text-gray-600">
-                        Điền thông tin chi tiết cho bài học mới của bạn.
-                    </DialogDescription>
+                <DialogHeader className="mb-12 text-center">
+                    <DialogTitle className="text-xl font-extrabold text-gray-900 leading-tight">Tạo bài học mới</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-6 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right font-medium">
-                            Tiêu đề
-                        </Label>
-                        <Input
-                            id="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                <div className="grid gap-12 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-8 border-2 border-gray-300 rounded-lg bg-white shadow-xl">
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-4 items-center gap-6">
+                                <Label htmlFor="title" className="text-right font-semibold text-gray-800 text-lg">
+                                    Tiêu đề
+                                </Label>
+                                <Input
+                                    id="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    className="col-span-3 border-gray-400 focus:border-blue-600 focus:ring-blue-600 rounded-lg p-3 text-lg"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-start gap-6">
+                                <Label htmlFor="description" className="text-right font-semibold pt-3 text-gray-800 text-lg">
+                                    Mô tả
+                                </Label>
+                                <Textarea
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    className="col-span-3 min-h-[180px] border-gray-400 focus:border-blue-600 focus:ring-blue-600 rounded-lg p-3 text-lg"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-4 items-center gap-6">
+                                <Label htmlFor="duration" className="text-right font-semibold text-gray-800 text-lg">
+                                    Thời lượng (phút)
+                                </Label>
+                                <Input
+                                    id="duration"
+                                    type="number"
+                                    value={formData.duration}
+                                    onChange={handleNumberChange}
+                                    className="col-span-3 border-gray-400 focus:border-blue-600 focus:ring-blue-600 rounded-lg p-3 text-lg"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-6">
+                                <Label htmlFor="order" className="text-right font-semibold text-gray-800 text-lg">
+                                    Thứ tự
+                                </Label>
+                                <Input
+                                    id="order"
+                                    type="number"
+                                    value={formData.order}
+                                    onChange={handleNumberChange}
+                                    className="col-span-3 border-gray-400 focus:border-blue-600 focus:ring-blue-600 rounded-lg p-3 text-lg"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-6">
+                                <Label htmlFor="isPublished" className="text-right font-semibold text-gray-800 text-lg">
+                                    Đã xuất bản
+                                </Label>
+                                <Switch
+                                    id="isPublished"
+                                    checked={formData.isPublished}
+                                    onCheckedChange={(checked) => handleSwitchChange('isPublished', checked)}
+                                    className="col-span-3"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right font-medium">
-                            Mô tả
-                        </Label>
-                        <Textarea
-                            id="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+
+                    <div className="col-span-full p-10 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 shadow-xl">
+                        <h3 className="text-3xl font-extrabold mb-10 text-blue-800 text-center">Tài nguyên bài học</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            <div className="space-y-5 text-center">
+                                <Label htmlFor="videoUrl" className="font-bold block text-blue-700 text-xl">Video bài học</Label>
+                                <VideoUpload
+                                    onVideoUploaded={(url) => {
+                                        setFormData(prev => ({ ...prev, videoUrl: url }));
+                                    }}
+                                    initialVideoUrl={formData.videoUrl}
+                                />
+                            </div>
+                            <div className="space-y-5 text-center">
+                                <Label htmlFor="audioUrl" className="font-bold block text-blue-700 text-xl">Âm thanh bài học</Label>
+                                <AudioUpload
+                                    onAudioUploaded={(url) => {
+                                        setFormData(prev => ({ ...prev, audioUrl: url }));
+                                    }}
+                                    initialAudioUrl={formData.audioUrl}
+                                />
+                            </div>
+                            <div className="space-y-5 text-center">
+                                <Label htmlFor="imageUrl" className="font-bold block text-blue-700 text-xl">Hình ảnh bài học</Label>
+                                <ImageUpload
+                                    onImageUploaded={(url) => {
+                                        setFormData(prev => ({ ...prev, imageUrl: url }));
+                                    }}
+                                    initialImageUrl={formData.imageUrl}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="col-span-4 mt-2 p-4 border rounded-md bg-gray-50">
-                        <h3 className="text-lg font-semibold mb-4">Nội dung bài học</h3>
+
+                    <div className="col-span-full p-10 border-2 border-dashed border-green-300 rounded-lg bg-green-50 shadow-xl">
+                        <h3 className="text-3xl font-extrabold mb-10 text-green-800 text-center">Nội dung bài học</h3>
                         {formData.content.map((section, index) => (
-                            <div key={index} className="grid grid-cols-4 items-center gap-4 mb-4 pb-4 border-b last:border-b-0">
-                                <Label htmlFor={`content-title-${index}`} className="text-right font-medium">
+                            <div key={index} className="grid grid-cols-4 items-start gap-8 mb-10 pb-10 border-b-2 border-green-300 last:border-b-0 last:pb-0">
+                                <Label htmlFor={`content-title-${index}`} className="text-right font-semibold pt-3 text-green-700 text-lg">
                                     Tiêu đề phần {index + 1}
                                 </Label>
                                 <Input
@@ -157,9 +232,9 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                                     onChange={(e) =>
                                         handleContentSectionChange(index, 'title', e.target.value)
                                     }
-                                    className="col-span-3"
+                                    className="col-span-3 border-green-400 focus:border-green-600 focus:ring-green-600 rounded-lg p-3 text-lg"
                                 />
-                                <Label htmlFor={`content-text-${index}`} className="text-right font-medium mt-2">
+                                <Label htmlFor={`content-text-${index}`} className="text-right font-semibold pt-3 text-green-700 text-lg">
                                     Nội dung phần {index + 1}
                                 </Label>
                                 <Textarea
@@ -168,106 +243,25 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                                     onChange={(e) =>
                                         handleContentSectionChange(index, 'text', e.target.value)
                                     }
-                                    className="col-span-3"
+                                    className="col-span-3 min-h-[180px] border-green-400 focus:border-green-600 focus:ring-green-600 rounded-lg p-3 text-lg"
                                 />
-                                <div className="col-span-4 flex justify-end mt-2">
+                                <div className="col-span-4 flex justify-end mt-8">
                                     <Button
                                         variant="destructive"
-                                        size="sm"
+                                        size="lg"
                                         onClick={() => handleRemoveContentSection(index)}
+                                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
                                     >
                                         Xóa phần này
                                     </Button>
                                 </div>
                             </div>
                         ))}
-                        <Button type="button" onClick={handleAddContentSection} className="mt-4">
-                            Thêm phần nội dung mới
-                        </Button>
-                    </div>
-
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="videoUrl" className="text-right font-medium">
-                            URL Video
-                        </Label>
-                        <Input
-                            id="videoUrl"
-                            value={formData.videoUrl}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="audioUrl" className="text-right font-medium">
-                            URL Âm thanh
-                        </Label>
-                        <Input
-                            id="audioUrl"
-                            value={formData.audioUrl}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="imageUrl" className="text-right font-medium">
-                            URL Hình ảnh
-                        </Label>
-                        <Input
-                            id="imageUrl"
-                            value={formData.imageUrl}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="duration" className="text-right font-medium">
-                            Thời lượng (phút)
-                        </Label>
-                        <Input
-                            id="duration"
-                            type="number"
-                            value={formData.duration}
-                            onChange={handleNumberChange}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="order" className="text-right font-medium">
-                            Thứ tự
-                        </Label>
-                        <Input
-                            id="order"
-                            type="number"
-                            value={formData.order}
-                            onChange={handleNumberChange}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="isPublished" className="text-right font-medium">
-                            Đã xuất bản
-                        </Label>
-                        <Switch
-                            id="isPublished"
-                            checked={formData.isPublished}
-                            onCheckedChange={(checked) => handleSwitchChange('isPublished', checked)}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="createdBy" className="text-right font-medium">
-                            Tạo bởi (ID)
-                        </Label>
-                        <Input
-                            id="createdBy"
-                            value={formData.createdBy}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                        <Button type="button" onClick={handleAddContentSection} className="mt-10 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg text-xl">Thêm phần nội dung mới</Button>
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button type="submit" onClick={handleSubmit}>Tạo bài học</Button>
+                <DialogFooter className="mt-12 p-6 border-t border-gray-200">
+                    <Button type="submit" onClick={handleSubmit} className="w-full text-2xl py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg">Tạo bài học</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

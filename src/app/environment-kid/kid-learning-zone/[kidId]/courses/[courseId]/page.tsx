@@ -6,13 +6,13 @@ import { BookOpen, Clock, Star, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState, use } from "react"
-import { getCourseById, getLessonsByCourse, getTestsByCourse } from "@/lib/api"
+import { getCourseById, getLessonsByCourse } from "@/lib/api"
 
 interface Course {
   _id: string;
   title: string;
   description: string;
-  image?: string;
+  thumbnailUrl?: string;
 }
 
 interface Lesson {
@@ -41,19 +41,19 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
     const fetchCourseData = async () => {
       try {
         setLoading(true);
-        
+
         // Gọi song song course và lessons
         const [courseResponse, lessonsResponse] = await Promise.all([
           getCourseById(resolvedParams.courseId),
           getLessonsByCourse(resolvedParams.courseId)
         ]);
-        
+
         setCourse(courseResponse.course || courseResponse.data || courseResponse);
-        
-        const lessonsData = Array.isArray(lessonsResponse) 
-          ? lessonsResponse 
+
+        const lessonsData = Array.isArray(lessonsResponse)
+          ? lessonsResponse
           : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
-        
+
         setLessons(lessonsData);
       } catch (error) {
         console.error('Error fetching course data:', error);
@@ -108,13 +108,13 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
           </Link>
         </Button>
       </div>
-      
+
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="h-40 w-40 bg-[#d9d9d9] rounded-lg overflow-hidden">
             <Image
-              src={course.image || "/placeholder.svg?height=160&width=160"}
-              alt="Course thumbnail"
+              src={course.thumbnailUrl || "https://res.cloudinary.com/dfkb8qo66/image/upload/v1742822285/1000000018_aifdis.jpg"}
+              alt="ảnh con thỏ"
               width={160}
               height={160}
               className="w-full h-full object-cover"
@@ -170,7 +170,7 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
                         </div>
                       </div>
                       <Button className="bg-[#e5e7eb] text-[#6b7280]">
-                        <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}>
+                        <Link href={`/environment-kid/kid-learning-zone/${params.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}>
                           Start
                         </Link>
                       </Button>
