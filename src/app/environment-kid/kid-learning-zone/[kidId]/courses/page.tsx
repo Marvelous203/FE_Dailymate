@@ -71,7 +71,7 @@ export default function CoursesPage() {
             <p className="text-[#6b7280]">Explore our learning materials</p>
           </div>
           <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-            <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
+            <Link href={`/environment-kid/kid-learning-zone/${kidId}/`}>Back to Dashboard</Link>
           </Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -99,7 +99,7 @@ export default function CoursesPage() {
             <p className="text-[#6b7280]">Explore our learning materials</p>
           </div>
           <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-            <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
+            <Link href={`/environment-kid/kid-learning-zone/${kidId}/`}>Back to Dashboard</Link>
           </Button>
         </div>
         <div className="text-center py-8">

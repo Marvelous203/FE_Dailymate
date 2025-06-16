@@ -12,39 +12,60 @@ export default function GamesPage() {
   const kidId = params.kidId;
   const availableGames = [
     {
-      title: "Math Game",
-      description: "Test your math skills with this interactive game.",
-      highScore: 1000,
-      stars: 4.5,
-      multiplayer: true,
-    },
-    {
-      title: "Word Puzzle",
-      description: "Solve word puzzles to unlock hidden meanings.",
-      highScore: 500,
-      stars: 4.2,
+      id: 1,
+      title: "Math Adventure",
+      description: "Solve math problems in a fun adventure game.",
+      highScore: 2500,
+      stars: 20,
       multiplayer: false,
     },
     {
-      title: "Emoji Match",
-      description: "Match emojis with their meanings to win rewards.",
-      highScore: 800,
-      stars: 4.8,
+      id: 2,
+      title: "Word Quest",
+      description: "Build vocabulary through an exciting word game.",
+      highScore: 1800,
+      stars: 15,
       multiplayer: true,
     },
     {
-      title: "Sudoku",
-      description: "Challenge yourself with a classic Sudoku puzzle.",
-      highScore: 700,
-      stars: 4.7,
+      id: 3,
+      title: "Science Explorer",
+      description: "Learn science concepts through interactive experiments.",
+      highScore: 3000,
+      stars: 25,
       multiplayer: false,
     },
     {
-      title: "Scrabble",
-      description: "Organize and play words with Scrabble tiles.",
-      highScore: 600,
-      stars: 4.6,
+      id: 4,
+      title: "Memory Match",
+      description: "Improve memory skills with matching pairs.",
+      highScore: 1500,
+      stars: 15,
       multiplayer: true,
+    },
+    {
+      id: 5,
+      title: "Logic Puzzles",
+      description: "Enhance logical thinking with fun puzzles.",
+      highScore: 2200,
+      stars: 20,
+      multiplayer: false,
+    },
+    {
+      id: 6,
+      title: "Typing Race",
+      description: "Learn typing while racing against friends.",
+      highScore: 2800,
+      stars: 18,
+      multiplayer: true,
+    },
+    {
+      id: 7,
+      title: "Phản xạ màu chữ",
+      description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
+      highScore: 0,
+      stars: 25,
+      multiplayer: false,
     },
   ]
   return (
@@ -94,7 +115,9 @@ export default function GamesPage() {
                 </div>
               </div>
               <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/games/color-reflex` : `/environment-kid/kid-learning-zone/games/${game.id}`}>Play Now</Link>
+                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
+                  {game.id === 7 ? 'Play Now' : 'Play'}
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -104,61 +127,3 @@ export default function GamesPage() {
   )
 }
 
-const availableGames = [
-  {
-    id: 1,
-    title: "Math Adventure",
-    description: "Solve math problems in a fun adventure game.",
-    highScore: 2500,
-    stars: 20,
-    multiplayer: false,
-  },
-  {
-    id: 2,
-    title: "Word Quest",
-    description: "Build vocabulary through an exciting word game.",
-    highScore: 1800,
-    stars: 15,
-    multiplayer: true,
-  },
-  {
-    id: 3,
-    title: "Science Explorer",
-    description: "Learn science concepts through interactive experiments.",
-    highScore: 3000,
-    stars: 25,
-    multiplayer: false,
-  },
-  {
-    id: 4,
-    title: "Memory Match",
-    description: "Improve memory skills with matching pairs.",
-    highScore: 1500,
-    stars: 15,
-    multiplayer: true,
-  },
-  {
-    id: 5,
-    title: "Logic Puzzles",
-    description: "Enhance logical thinking with fun puzzles.",
-    highScore: 2200,
-    stars: 20,
-    multiplayer: false,
-  },
-  {
-    id: 6,
-    title: "Typing Race",
-    description: "Learn typing while racing against friends.",
-    highScore: 2800,
-    stars: 18,
-    multiplayer: true,
-  },
-  {
-    id: 7,
-    title: "Phản xạ màu chữ",
-    description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
-    highScore: 0,
-    stars: 25,
-    multiplayer: false,
-  },
-]

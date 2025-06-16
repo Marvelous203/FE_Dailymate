@@ -207,7 +207,7 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center gap-6 mb-8">
-          <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}`}>
+          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}`}>
             <Button
               variant="ghost"
               className="w-12 h-12 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"

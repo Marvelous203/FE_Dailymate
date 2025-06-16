@@ -102,7 +102,7 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
       {/* Back Button Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" className="p-2">
-          <Link href="/environment-kid/kid-learning-zone/courses" className="flex items-center gap-2">
+          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/`} className="flex items-center gap-2">
             <ArrowLeft className="h-6 w-6" />
             <span>Back to Courses</span>
           </Link>
