@@ -46,7 +46,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
         duration: 0,
         order: 0,
         isPublished: false,
-        createdBy: '',
+        createdBy: '60d21b4667d0d8992e610c86',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -251,17 +251,6 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                             id="isPublished"
                             checked={formData.isPublished}
                             onCheckedChange={(checked) => handleSwitchChange('isPublished', checked)}
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="createdBy" className="text-right font-medium">
-                            Tạo bởi (ID)
-                        </Label>
-                        <Input
-                            id="createdBy"
-                            value={formData.createdBy}
-                            onChange={handleChange}
                             className="col-span-3"
                         />
                     </div>
