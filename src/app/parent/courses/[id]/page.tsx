@@ -6,12 +6,226 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, CheckCircle, ChevronLeft, Clock, Play, Shield, Star, User, Heart, Download, Share2 } from "lucide-react"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { getCourseById, getLessonsByCourse } from "@/lib/api"
+import { use } from 'react';
 
-export default function ParentCourseDetail({ params }) {
-  const courseId = params.id
-  const course = courses.find((c) => c.id.toString() === courseId) || courses[0]
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  ageGroup: string;
+  thumbnailUrl?: string;
+  pointsEarned: number;
+  isPremium: boolean;
+  instructor: {
+    _id: string;
+    fullName: string;
+    specializations: string[];
+  };
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Lesson {
+  _id: string;
+  courseId: {
+    _id: string;
+    title: string;
+    category: string;
+  };
+  title: string;
+  description: string;
+  content?: {
+    sections: {
+      title: string;
+      text: string;
+    }[];
+  };
+  videoUrl?: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  duration: number;
+  order: number;
+  isPublished: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function ParentCourseDetail({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const courseId = resolvedParams.id;
+  const [course, setCourse] = useState<Course | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  // Tối ưu hóa: Gọi cả course và lessons cùng lúc với Promise.all
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Gọi song song cả course và lessons
+        const [courseResponse, lessonsResponse] = await Promise.all([
+          getCourseById(courseId),
+          getLessonsByCourse(courseId)
+        ]);
+        
+        // Xử lý course data
+        let courseData = null;
+        if (courseResponse?.success && courseResponse.data) {
+          courseData = courseResponse.data;
+        } else if (courseResponse?.data?.course) {
+          courseData = courseResponse.data.course;
+        } else if (courseResponse?.course) {
+          courseData = courseResponse.course;
+        } else if (courseResponse?._id) {
+          courseData = courseResponse;
+        }
+        
+        // Xử lý lessons data
+        let lessonsData = [];
+        if (lessonsResponse?.data?.lessons) {
+          lessonsData = lessonsResponse.data.lessons;
+        } else if (lessonsResponse?.lessons) {
+          lessonsData = lessonsResponse.lessons;
+        } else if (Array.isArray(lessonsResponse)) {
+          lessonsData = lessonsResponse;
+        }
+        
+        if (courseData) {
+          setCourse(courseData);
+          setLessons(lessonsData);
+        } else {
+          setError('Không tìm thấy thông tin khóa học');
+        }
+      } catch (err) {
+        console.error('Error fetching course data:', err);
+        setError('Không thể tải thông tin khóa học');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId) {
+      fetchCourseData();
+    }
+  }, [courseId]);
+
+  const [loadingLessons, setLoadingLessons] = useState(false);
+
+  // Fetch course details
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setLoading(true)
+        console.log('Fetching course details for ID:', courseId)
+        const response = await getCourseById(courseId)
+        console.log('Course API Response:', response)
+        
+        // Handle different response structures
+        let courseData = null
+        if (response && response.success && response.data) {
+          // API trả về {success: true, data: courseObject}
+          courseData = response.data
+        } else if (response && response.data && response.data.course) {
+          courseData = response.data.course
+        } else if (response && response.course) {
+          courseData = response.course
+        } else if (response && response._id) {
+          courseData = response
+        }
+        
+        if (courseData) {
+          setCourse(courseData)
+        } else {
+          console.error('No course data found in response:', response)
+          setError('Không tìm thấy thông tin khóa học')
+        }
+      } catch (err) {
+        console.error('Error fetching course:', err)
+        setError('Không thể tải thông tin khóa học')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (courseId) {
+      fetchCourse()
+    }
+  }, [courseId])
+
+  // Fetch lessons for the course
+  useEffect(() => {
+    const fetchLessons = async () => {
+      if (!course) return
+      
+      try {
+        setLoadingLessons(true)
+        console.log('Fetching lessons for course:', courseId)
+        const response = await getLessonsByCourse(courseId)
+        console.log('Lessons API Response:', response)
+        
+        // Handle different response structures
+        let lessonsData = []
+        if (response && response.data && response.data.lessons) {
+          lessonsData = response.data.lessons
+        } else if (response && response.lessons) {
+          lessonsData = response.lessons
+        } else if (response && Array.isArray(response)) {
+          lessonsData = response
+        }
+        
+        setLessons(lessonsData)
+      } catch (err) {
+        console.error('Error fetching lessons:', err)
+        // Don't set error for lessons, just log it
+      } finally {
+        setLoadingLessons(false)
+      }
+    }
+
+    fetchLessons()
+  }, [course, courseId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8b5cf6] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Đang tải thông tin khóa học...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error || 'Không tìm thấy khóa học'}</p>
+          <Button 
+            onClick={() => window.history.back()} 
+            className="bg-[#8b5cf6] hover:bg-[#7c3aed] mr-4"
+          >
+            Quay lại
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+          >
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fc]">
@@ -24,7 +238,7 @@ export default function ParentCourseDetail({ params }) {
         >
           <Link href="/parent/courses" className="flex items-center text-[#6b7280] mb-6 hover:text-[#8b5cf6] group">
             <ChevronLeft size={20} className="mr-1 group-hover:-translate-x-1 transition-transform" />
-            Back to Courses
+            Quay lại danh sách khóa học
           </Link>
         </motion.div>
 
@@ -41,7 +255,7 @@ export default function ParentCourseDetail({ params }) {
                 {!isVideoPlaying ? (
                   <>
                     <Image
-                      src={`/placeholder.svg?height=400&width=800`}
+                      src={course.thumbnailUrl || `/placeholder.svg?height=400&width=800`}
                       alt={course.title}
                       width={800}
                       height={400}
@@ -65,7 +279,7 @@ export default function ParentCourseDetail({ params }) {
                         className="text-white border-white hover:bg-white/10"
                         onClick={() => setIsVideoPlaying(false)}
                       >
-                        Close Video
+                        Đóng video
                       </Button>
                     </div>
                   </div>
@@ -77,19 +291,19 @@ export default function ParentCourseDetail({ params }) {
                   <div className="bg-[#f0e5fc] px-3 py-1 rounded-full text-sm text-[#8b5cf6] font-medium">
                     {course.category}
                   </div>
-                  <div className="flex items-center text-[#f59e0b]">
-                    <Star className="h-5 w-5 fill-[#f59e0b] mr-1" />
-                    <span className="font-medium">{course.rating}</span>
-                    <span className="text-[#6b7280] text-sm ml-1">({course.reviewCount} reviews)</span>
-                  </div>
                   <div className="flex items-center text-[#6b7280] text-sm">
                     <User className="h-4 w-4 mr-1" />
-                    <span>{course.students} students</span>
+                    <span>Độ tuổi: {course.ageGroup}</span>
                   </div>
                   <div className="flex items-center text-[#6b7280] text-sm">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>{course.duration}</span>
+                    <Star className="h-4 w-4 mr-1" />
+                    <span>{course.pointsEarned} điểm</span>
                   </div>
+                  {course.isPremium && (
+                    <div className="bg-[#fef3c7] px-3 py-1 rounded-full text-sm text-[#f59e0b] font-medium">
+                      Premium
+                    </div>
+                  )}
                 </div>
 
                 <h1 className="text-2xl md:text-3xl font-bold mb-4">{course.title}</h1>
@@ -99,30 +313,30 @@ export default function ParentCourseDetail({ params }) {
                 <div className="flex flex-wrap gap-4 mb-6">
                   <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <BookOpen className="h-5 w-5 text-[#8b5cf6]" />
-                    <span>{course.lessons} lessons</span>
+                    <span>{lessons.length} bài học</span>
                   </div>
                   <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <User className="h-5 w-5 text-[#8b5cf6]" />
-                    <span>Ages {course.ageRange}</span>
+                    <span>Độ tuổi {course.ageGroup}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <Clock className="h-5 w-5 text-[#8b5cf6]" />
-                    <span>{course.accessPeriod} access</span>
+                    <span>Tổng thời gian: {lessons.reduce((total, lesson) => total + lesson.duration, 0)} phút</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full flex-1 py-6 text-lg">
-                    Purchase This Course
+                    {course.isPremium ? 'Mua khóa học Premium' : 'Bắt đầu học miễn phí'}
                   </Button>
                   <div className="flex gap-2">
                     <Button variant="outline" className="rounded-full flex items-center gap-2">
                       <Heart className="h-5 w-5" />
-                      Save
+                      Yêu thích
                     </Button>
                     <Button variant="outline" className="rounded-full flex items-center gap-2">
                       <Share2 className="h-5 w-5" />
-                      Share
+                      Chia sẻ
                     </Button>
                   </div>
                 </div>
@@ -131,60 +345,80 @@ export default function ParentCourseDetail({ params }) {
 
             <Tabs defaultValue="curriculum" className="mb-8">
               <TabsList className="bg-white rounded-full p-1 w-full flex justify-between md:w-auto">
-                <TabsTrigger value="curriculum" className="rounded-full">Curriculum</TabsTrigger>
-                <TabsTrigger value="overview" className="rounded-full">Overview</TabsTrigger>
-                <TabsTrigger value="instructor" className="rounded-full">Instructor</TabsTrigger>
-                <TabsTrigger value="reviews" className="rounded-full">Reviews</TabsTrigger>
+                <TabsTrigger value="curriculum" className="rounded-full">Chương trình học</TabsTrigger>
+                <TabsTrigger value="overview" className="rounded-full">Tổng quan</TabsTrigger>
+                <TabsTrigger value="instructor" className="rounded-full">Giảng viên</TabsTrigger>
               </TabsList>
 
               <TabsContent value="curriculum" className="mt-6">
                 <Card className="border-none rounded-xl shadow-md">
                   <CardContent className="p-0">
-                    {lessons.map((lesson, index) => (
-                      <motion.div 
-                        key={index} 
-                        className="flex items-center justify-between p-5 border-b last:border-b-0 hover:bg-[#f9fafb] transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center font-semibold">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <h3 className="font-medium">{lesson.title}</h3>
-                            <div className="flex items-center text-sm text-[#6b7280]">
-                              <Clock className="h-4 w-4 mr-1" />
-                              <span>{lesson.duration}</span>
+                    {loadingLessons ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8b5cf6]"></div>
+                        <span className="ml-3 text-[#6b7280]">Đang tải danh sách bài học...</span>
+                      </div>
+                    ) : lessons.length > 0 ? (
+                      lessons.map((lesson, index) => (
+                        <motion.div 
+                          key={lesson._id} 
+                          className="flex items-center justify-between p-5 border-b last:border-b-0 hover:bg-[#f9fafb] transition-colors"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center font-semibold">
+                              {lesson.order || index + 1}
+                            </div>
+                            <div>
+                              <h3 className="font-medium">{lesson.title}</h3>
+                              <div className="flex items-center text-sm text-[#6b7280]">
+                                <Clock className="h-4 w-4 mr-1" />
+                                <span>{lesson.duration} phút</span>
+                                {lesson.videoUrl && (
+                                  <>
+                                    <span className="mx-2">•</span>
+                                    <Play className="h-4 w-4 mr-1" />
+                                    <span>Video</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        {lesson.preview ? (
-                          <Button variant="outline" size="sm" className="text-[#8b5cf6] border-[#8b5cf6] rounded-full">
-                            Preview
-                          </Button>
-                        ) : (
-                          <div className="w-8 h-8 rounded-full border border-[#e5e7eb] flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-[#6b7280]"
+                          {lesson.isPublished ? (
+                            <Link 
+                              href={`/parent/courses/${courseId}/lessons/${lesson._id}`}
+                              className="text-[#8b5cf6] hover:text-[#7c3aed] font-medium text-sm transition-colors"
                             >
-                              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
+                              Xem chi tiết →
+                            </Link>
+                          ) : (
+                            <div className="w-8 h-8 rounded-full border border-[#e5e7eb] flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-[#6b7280]"
+                              >
+                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              </svg>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-[#6b7280]">Chưa có bài học nào được thêm vào khóa học này</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -192,43 +426,43 @@ export default function ParentCourseDetail({ params }) {
               <TabsContent value="overview" className="mt-6">
                 <Card className="border-none rounded-xl shadow-md">
                   <CardContent className="p-6 md:p-8">
-                    <h2 className="text-xl font-semibold mb-6">About This Course</h2>
-                    <p className="text-[#4b5563] mb-6 leading-relaxed">{course.longDescription}</p>
+                    <h2 className="text-xl font-semibold mb-6">Về khóa học này</h2>
+                    <p className="text-[#4b5563] mb-6 leading-relaxed">{course.description}</p>
 
-                    <h3 className="text-lg font-semibold mb-4 mt-8">What Your Child Will Learn</h3>
+                    <h3 className="text-lg font-semibold mb-4 mt-8">Thông tin khóa học</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                      {course.learningOutcomes.map((outcome, index) => (
-                        <motion.div 
-                          key={index} 
-                          className="flex items-start"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                        >
-                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
-                          <span className="text-[#4b5563]">{outcome}</span>
-                        </motion.div>
-                      ))}
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-[#4b5563]">Danh mục: {course.category}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-[#4b5563]">Độ tuổi phù hợp: {course.ageGroup}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-[#4b5563]">Số bài học: {lessons.length}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-[#4b5563]">Điểm thưởng: {course.pointsEarned} điểm</span>
+                      </div>
                     </div>
 
-                    <h3 className="text-lg font-semibold mb-4">Requirements</h3>
+                    <h3 className="text-lg font-semibold mb-4">Yêu cầu</h3>
                     <ul className="space-y-3 mb-8">
-                      {course.requirements.map((requirement, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
-                          <span className="text-[#4b5563]">{requirement}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <h3 className="text-lg font-semibold mb-4">Who This Course is For</h3>
-                    <ul className="space-y-3">
-                      {course.targetAudience.map((audience, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
-                          <span className="text-[#4b5563]">{audience}</span>
-                        </li>
-                      ))}
+                      <li className="flex items-start">
+                        <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
+                        <span className="text-[#4b5563]">Không cần kiến thức trước - phù hợp cho người mới bắt đầu</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
+                        <span className="text-[#4b5563]">Máy tính hoặc tablet có kết nối internet</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
+                        <span className="text-[#4b5563]">Sự hỗ trợ của phụ huynh (khuyến khích)</span>
+                      </li>
                     </ul>
                   </CardContent>
                 </Card>
@@ -248,109 +482,26 @@ export default function ParentCourseDetail({ params }) {
                         />
                       </div>
                       <div>
-                        <h2 className="text-xl font-semibold mb-2">{course.instructor.name}</h2>
-                        <p className="text-[#8b5cf6] mb-4">{course.instructor.title}</p>
-                        <p className="text-[#4b5563] mb-6 leading-relaxed">{course.instructor.bio}</p>
+                        <h2 className="text-xl font-semibold mb-2">{course.instructor.fullName}</h2>
+                        <p className="text-[#8b5cf6] mb-4">Giảng viên chuyên nghiệp</p>
+                        <p className="text-[#4b5563] mb-6 leading-relaxed">
+                          Giảng viên có kinh nghiệm giảng dạy với chuyên môn trong các lĩnh vực: {course.instructor.specializations.join(', ')}
+                        </p>
                         <div className="flex items-center gap-8">
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.courses}+</div>
-                            <div className="text-sm text-[#6b7280]">Courses</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">5+</div>
+                            <div className="text-sm text-[#6b7280]">Khóa học</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.students}+</div>
-                            <div className="text-sm text-[#6b7280]">Students</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">100+</div>
+                            <div className="text-sm text-[#6b7280]">Học viên</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">{course.instructor.rating}</div>
-                            <div className="text-sm text-[#6b7280]">Rating</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">4.8</div>
+                            <div className="text-sm text-[#6b7280]">Đánh giá</div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="reviews" className="mt-6">
-                <Card className="border-none rounded-xl shadow-md">
-                  <CardContent className="p-6 md:p-8">
-                    <div className="flex flex-col md:flex-row gap-8 mb-10 border-b pb-8">
-                      <div className="text-center md:text-left md:border-r md:pr-8 flex-shrink-0">
-                        <div className="text-5xl font-bold text-[#1e1e1e]">{course.rating}</div>
-                        <div className="flex items-center justify-center md:justify-start mt-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-5 w-5 ${star <= Math.floor(course.rating) ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
-                                }`}
-                            />
-                          ))}
-                        </div>
-                        <div className="text-sm text-[#6b7280] mt-1">Based on {course.reviewCount} reviews</div>
-                      </div>
-
-                      <div className="flex-1">
-                        {[5, 4, 3, 2, 1].map((rating) => (
-                          <div key={rating} className="flex items-center gap-3 mb-3">
-                            <div className="text-sm text-[#6b7280] w-2">{rating}</div>
-                            <Star className="h-4 w-4 text-[#f59e0b] fill-[#f59e0b]" />
-                            <div className="flex-1 h-2 bg-[#e5e7eb] rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-[#f59e0b]"
-                                style={{
-                                  width: `${rating === 5 ? 75 : rating === 4 ? 20 : rating === 3 ? 5 : 0}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <div className="text-sm text-[#6b7280] w-10">
-                              {rating === 5 ? "75%" : rating === 4 ? "20%" : rating === 3 ? "5%" : "0%"}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sample Reviews */}
-                    <div className="space-y-8">
-                      {[1, 2, 3].map((review) => (
-                        <motion.div 
-                          key={review} 
-                          className="border-b pb-8 last:border-b-0 last:pb-0"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.4, delay: review * 0.1 }}
-                        >
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-[#f0e5fc]">
-                              <Image
-                                src={`/placeholder.svg?height=48&width=48`}
-                                alt="User"
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div>
-                              <div className="font-medium">Parent Name {review}</div>
-                              <div className="flex items-center">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-4 w-4 ${star <= 5 ? "text-[#f59e0b] fill-[#f59e0b]" : "text-[#e5e7eb]"
-                                      }`}
-                                  />
-                                ))}
-                                <span className="text-xs text-[#6b7280] ml-2">2 weeks ago</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-[#4b5563] leading-relaxed">
-                            My child loves this course! The content is engaging and easy to follow. The instructor
-                            explains concepts clearly and the interactive activities make learning fun. I've seen
-                            significant improvement in my child's understanding.
-                          </p>
-                        </motion.div>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -366,68 +517,48 @@ export default function ParentCourseDetail({ params }) {
           >
             <Card className="border-none rounded-xl shadow-md sticky top-4">
               <CardContent className="p-6">
-                <div className="text-3xl font-bold text-[#1e1e1e] mb-6">${course.price}</div>
+                <div className="text-3xl font-bold text-[#1e1e1e] mb-6">
+                  {course.isPremium ? 'Premium' : 'Miễn phí'}
+                </div>
 
                 <div className="space-y-5 mb-8">
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
-                      <p className="font-medium">Full course access</p>
-                      <p className="text-sm text-[#6b7280]">{course.lessons} lessons</p>
+                      <p className="font-medium">Truy cập đầy đủ khóa học</p>
+                      <p className="text-sm text-[#6b7280]">{lessons.length} bài học</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
-                      <p className="font-medium">Access period</p>
-                      <p className="text-sm text-[#6b7280]">{course.accessPeriod}</p>
+                      <p className="font-medium">Thời gian truy cập</p>
+                      <p className="text-sm text-[#6b7280]">Trọn đời</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
-                      <p className="font-medium">Interactive activities</p>
-                      <p className="text-sm text-[#6b7280]">Games and quizzes</p>
+                      <p className="font-medium">Hoạt động tương tác</p>
+                      <p className="text-sm text-[#6b7280]">Trò chơi và bài kiểm tra</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
-                      <p className="font-medium">Progress tracking</p>
-                      <p className="text-sm text-[#6b7280]">Monitor your child's learning</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Certificate of completion</p>
-                      <p className="text-sm text-[#6b7280]">Upon finishing the course</p>
+                      <p className="font-medium">Điểm thưởng</p>
+                      <p className="text-sm text-[#6b7280]">{course.pointsEarned} điểm</p>
                     </div>
                   </div>
                 </div>
 
-                <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-3">
-                  Purchase This Course
+                <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-4">
+                  {course.isPremium ? 'Mua ngay' : 'Bắt đầu học'}
                 </Button>
-                <Button variant="outline" className="w-full rounded-full">
-                  Add to Cart
-                </Button>
-
-                <div className="mt-6 flex items-center justify-center text-sm text-[#6b7280]">
-                  <Shield className="h-4 w-4 mr-2" />
-                  <span>30-day money-back guarantee</span>
-                </div>
                 
-                <div className="mt-6 pt-6 border-t">
-                  <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-3 rounded-full">
-                    <Download className="h-4 w-4" />
-                    Download Course Syllabus
-                  </Button>
-                  <Button variant="ghost" className="w-full flex items-center justify-center gap-2 text-[#6b7280] rounded-full">
-                    <Share2 className="h-4 w-4" />
-                    Share This Course
-                  </Button>
-                </div>
+                <p className="text-xs text-[#6b7280] text-center">
+                  Đảm bảo hoàn tiền trong 30 ngày
+                </p>
               </CardContent>
             </Card>
           </motion.div>

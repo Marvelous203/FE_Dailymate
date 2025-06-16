@@ -42,44 +42,22 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
       try {
         setLoading(true);
         
-        // Lấy thông tin khóa học
-        const courseResponse = await getCourseById(resolvedParams.courseId);
+        // Gọi song song course và lessons
+        const [courseResponse, lessonsResponse] = await Promise.all([
+          getCourseById(resolvedParams.courseId),
+          getLessonsByCourse(resolvedParams.courseId)
+        ]);
+        
         setCourse(courseResponse.course || courseResponse.data || courseResponse);
         
-        // Lấy danh sách lesson với kiểm tra array
-        const lessonsResponse = await getLessonsByCourse(resolvedParams.courseId);
-        const lessonsData = lessonsResponse.lessons || lessonsResponse.data || lessonsResponse;
+        const lessonsData = Array.isArray(lessonsResponse) 
+          ? lessonsResponse 
+          : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
         
-        // Đảm bảo lessons luôn là array
-        if (Array.isArray(lessonsData)) {
-          setLessons(lessonsData);
-        } else if (lessonsData && typeof lessonsData === 'object' && Array.isArray(lessonsData.lessons)) {
-          setLessons(lessonsData.lessons);
-        } else {
-          console.warn('Unexpected lessons API response structure:', lessonsResponse);
-          setLessons([]);
-        }
-        
-        // Lấy danh sách test với kiểm tra array
-        const testsResponse = await getTestsByCourse(resolvedParams.courseId);
-        const testsData = testsResponse.tests || testsResponse.data || testsResponse;
-        
-        // Đảm bảo tests luôn là array
-        if (Array.isArray(testsData)) {
-          setTests(testsData);
-        } else if (testsData && typeof testsData === 'object' && Array.isArray(testsData.tests)) {
-          setTests(testsData.tests);
-        } else {
-          console.warn('Unexpected tests API response structure:', testsResponse);
-          setTests([]);
-        }
-        
-      } catch (err) {
-        console.error('Error fetching course data:', err);
-        setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi khi tải dữ liệu khóa học');
-        // Đảm bảo state được reset về array rỗng khi có lỗi
-        setLessons([]);
-        setTests([]);
+        setLessons(lessonsData);
+      } catch (error) {
+        console.error('Error fetching course data:', error);
+        setError('Không thể tải thông tin khóa học');
       } finally {
         setLoading(false);
       }

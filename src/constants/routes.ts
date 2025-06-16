@@ -21,8 +21,10 @@ export const PUBLIC_ROUTES = [
   '/',
   '/login',
   '/forgot-password',
+  '/verify-email',
   '/auth/role-select',
   '/environment-kid/login',
+  '/environment-kid', // Thêm dòng này
   '/kid-login'
 ];
 

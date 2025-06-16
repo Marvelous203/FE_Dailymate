@@ -1,11 +1,58 @@
-import Image from "next/image"
+"use client"
+
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Clock, Star, Trophy } from "lucide-react"
 import { RewardDisplay } from "@/components/rewards/RewardDisplay"
+import { useState, useEffect } from "react"
 
 export default function KidLearningZonePage() {
+  const [kidData, setKidData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Load kid data from localStorage
+    const storedKidData = localStorage.getItem('kidData')
+    if (storedKidData) {
+      try {
+        const parsedData = JSON.parse(storedKidData)
+        setKidData(parsedData)
+      } catch (error) {
+        console.error('Error parsing kid data:', error)
+      }
+    }
+    setLoading(false)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#83d98c] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Đang tải...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const kid = kidData?.data
+  const user = kid?.userId
+
+  // Calculate age from dateOfBirth
+  const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth) return 'N/A'
+    const today = new Date()
+    const birthDate = new Date(dateOfBirth)
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -13,7 +60,7 @@ export default function KidLearningZonePage() {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-[#83d98c] rounded-full flex items-center justify-center">
             <Image
-              src="/placeholder.svg?height=48&width=48"
+              src={kid?.avatar ? `/avatars/${kid.avatar}.png` : "/placeholder.svg?height=48&width=48"}
               alt="Avatar"
               width={48}
               height={48}
@@ -21,10 +68,43 @@ export default function KidLearningZonePage() {
             />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Chào bạn nhỏ! 👋</h1>
+            <h1 className="text-2xl font-bold">Chào {kid?.fullName || 'bạn nhỏ'}! 👋</h1>
             <p className="text-[#6b7280]">Hôm nay bạn muốn học gì?</p>
+            <div className="flex items-center gap-4 mt-2 text-sm">
+              <span className="bg-[#ebfdf4] text-[#10b981] px-2 py-1 rounded-full">
+                Level {kid?.level || 1}
+              </span>
+              <span className="bg-[#fef3c7] text-[#d97706] px-2 py-1 rounded-full">
+                {kid?.points || 0} điểm
+              </span>
+              <span className="bg-[#e0f2fe] text-[#0369a1] px-2 py-1 rounded-full">
+                Streak: {kid?.streak?.current || 0} ngày
+              </span>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Kid Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-[#10b981]">{kid?.points || 0}</div>
+            <div className="text-sm text-[#6b7280]">Tổng điểm</div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-[#f59e0b]">{kid?.streak?.current || 0}</div>
+            <div className="text-sm text-[#6b7280]">Streak hiện tại</div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-[#8b5cf6]">{kid?.achievements?.length || 0}</div>
+            <div className="text-sm text-[#6b7280]">Thành tích</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Reward Display */}

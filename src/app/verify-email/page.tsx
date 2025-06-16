@@ -9,18 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { sendVerificationEmail, resetPassword } from '@/lib/api';
+import { sendVerificationEmail, verifyEmail } from '@/lib/api';
 import { toast } from 'sonner';
-import { CheckCircle, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Mail, ArrowLeft } from 'lucide-react';
 
-type StepType = 'email' | 'verification' | 'newPassword' | 'success';
+type StepType = 'email' | 'verification' | 'success';
 
-export default function ForgotPassword() {
+export default function VerifyEmail() {
   const [step, setStep] = useState<StepType>('email');
   const [email, setEmail] = useState('');
   const [verifyCode, setVerifyCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -45,8 +43,8 @@ export default function ForgotPassword() {
     setError('');
     
     try {
-      await sendVerificationEmail(email, true); // true = forgot password mode
-      toast.success('Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư của bạn.');
+      await sendVerificationEmail(email, false); // false = verification mode
+      toast.success('Email xác thực đã được gửi! Vui lòng kiểm tra hộp thư của bạn.');
       setStep('verification');
     } catch (error: any) {
       console.error('Send email error:', error);
@@ -68,45 +66,11 @@ export default function ForgotPassword() {
     setError('');
     
     try {
-      // Chuyển sang bước nhập mật khẩu mới
-      setStep('newPassword');
-      toast.success('Mã xác thực hợp lệ! Vui lòng nhập mật khẩu mới.');
-    } catch (error: any) {
-      console.error('Verify code error:', error);
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newPassword || !confirmPassword) {
-      setError('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      await resetPassword(email, verifyCode, newPassword);
-      toast.success('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.');
+      await verifyEmail(email, verifyCode);
+      toast.success('Xác thực tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ.');
       setStep('success');
     } catch (error: any) {
-      console.error('Reset password error:', error);
+      console.error('Verify code error:', error);
       setError(error.message);
       toast.error(error.message);
     } finally {
@@ -117,28 +81,24 @@ export default function ForgotPassword() {
   const getTitle = () => {
     switch (step) {
       case 'email':
-        return 'Quên mật khẩu';
+        return 'Xác thực tài khoản';
       case 'verification':
         return 'Nhập mã xác thực';
-      case 'newPassword':
-        return 'Đặt mật khẩu mới';
       case 'success':
-        return 'Thành công!';
+        return 'Xác thực thành công!';
       default:
-        return 'Quên mật khẩu';
+        return 'Xác thực tài khoản';
     }
   };
   
   const getSubtitle = () => {
     switch (step) {
       case 'email':
-        return 'Nhập email để đặt lại mật khẩu';
+        return 'Nhập email để nhận mã xác thực tài khoản';
       case 'verification':
         return `Mã xác thực đã được gửi đến ${email}`;
-      case 'newPassword':
-        return 'Nhập mật khẩu mới cho tài khoản của bạn';
       case 'success':
-        return 'Mật khẩu đã được đặt lại thành công!';
+        return 'Tài khoản của bạn đã được xác thực thành công!';
       default:
         return '';
     }
@@ -168,7 +128,7 @@ export default function ForgotPassword() {
               disabled={loading}
             >
               <Mail size={18} />
-              Gửi email đặt lại
+              Gửi mã xác thực
             </Button>
           </form>
         );
@@ -196,7 +156,7 @@ export default function ForgotPassword() {
               disabled={loading}
             >
               <CheckCircle size={18} />
-              Xác nhận mã
+              Xác thực tài khoản
             </Button>
             <Button 
               type="button"
@@ -206,46 +166,6 @@ export default function ForgotPassword() {
               disabled={loading}
             >
               Gửi lại mã
-            </Button>
-          </form>
-        );
-        
-      case 'newPassword':
-        return (
-          <form onSubmit={handleResetPassword} className="w-full space-y-4">
-            <div>
-              <Label htmlFor="newPassword" className="text-[#374151] font-medium">Mật khẩu mới</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full border border-[#d9d9d9] bg-white rounded-md px-4 py-2 focus:border-[#10b981] focus:ring-[#10b981]/20"
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword" className="text-[#374151] font-medium">Xác nhận mật khẩu</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-[#d9d9d9] bg-white rounded-md px-4 py-2 focus:border-[#10b981] focus:ring-[#10b981]/20"
-                required
-                disabled={loading}
-              />
-            </div>
-            <Button 
-              type="submit"
-              className="w-full bg-[#10b981] hover:bg-[#059669] text-white py-2 rounded-md flex items-center justify-center gap-2"
-              disabled={loading}
-            >
-              <Lock size={18} />
-              Đặt lại mật khẩu
             </Button>
           </form>
         );
@@ -327,7 +247,7 @@ export default function ForgotPassword() {
             {step !== 'success' && (
               <div className="text-center mt-4">
                 <p className="text-[#4b5563] text-sm">
-                  Nhớ mật khẩu?{" "}
+                  Đã có tài khoản?{" "}
                   <Link href="/login" className="text-[#10b981] font-medium hover:underline">
                     Đăng nhập
                   </Link>
@@ -335,7 +255,7 @@ export default function ForgotPassword() {
               </div>
             )}
             
-            {step !== 'email' && step !== 'success' && (
+            {step === 'verification' && (
               <Button
                 variant="ghost"
                 onClick={() => setStep('email')}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Eye, EyeOff, Globe, BookOpen, Loader2 } from "lucide-react";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { loginUser, createParent } from '@/lib/api';
+import { loginUser, createParent, fetchUserDataAfterLogin, fetchKidDataAfterLogin } from '@/lib/api';
 import { useAppDispatch } from '@/redux/hook';
 import { loginStart, loginSuccess, loginFailure } from '@/redux/features/auth/authSlice';
 import { toast } from 'sonner'; // Chỉ import toast, không import Toaster
@@ -31,6 +31,17 @@ export default function LoginPage() {
   const [signupError, setSignupError] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Thêm useEffect để tự động điền email từ URL parameters
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+      // Tự động chuyển sang tab login nếu đang ở tab signup
+      setActiveTab('login');
+    }
+  }, [searchParams]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -69,6 +80,39 @@ export default function LoginPage() {
       
       dispatch(loginSuccess({ user: userData }));
 
+      // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
+      if (response.user.role === 'parent' && response.user.roleData?._id) {
+        try {
+          const userCompleteData = await fetchUserDataAfterLogin(response.user.roleData._id);
+          localStorage.setItem('parentData', JSON.stringify(userCompleteData.parent));
+          localStorage.setItem('kidsData', JSON.stringify(userCompleteData.kids));
+          localStorage.setItem('kidsInfo', JSON.stringify(userCompleteData.kidsInfo));
+        } catch (dataError) {
+          console.error('Error fetching additional user data:', dataError);
+        }
+      }
+
+      // THÊM LOGIC CHO KID
+      else if (response.user.role === 'kid' && response.user.roleData?._id) {
+        try {
+          const kidCompleteData = await fetchKidDataAfterLogin(response.user.roleData._id);
+          
+          // Tạo một object mới thay vì modify object hiện tại
+          const updatedUserData = {
+            ...userData,
+            roleData: kidCompleteData.data || kidCompleteData
+          };
+          
+          // Cập nhật cookie với dữ liệu mới
+          document.cookie = `user=${JSON.stringify(updatedUserData)}; path=/; max-age=86400`;
+          
+          localStorage.setItem('kidData', JSON.stringify(kidCompleteData));
+          console.log('Kid data loaded:', kidCompleteData);
+        } catch (dataError) {
+          console.error('Error fetching kid data:', dataError);
+        }
+      }
+
       // Redirect based on role
       if (response.user.role === 'parent') {
         router.push('/parent/dashboard');
@@ -77,7 +121,7 @@ export default function LoginPage() {
       } else if (response.user.role === 'teacher') {
         router.push('/teacher/dashboard');
       } else if (response.user.role === 'kid') {
-        router.push('/envirnoment-kid/kid-learning-zone');
+        router.push('/environment-kid/kid-learning-zone'); // Sửa lỗi chính tả
       }
     } catch (error: any) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
@@ -128,27 +172,38 @@ export default function LoginPage() {
 
       const response = await createParent(parentData);
 
-      // Toast đơn giản và đồng nhất
-      toast.success('Đăng ký thành công! Email đã được điền sẵn, vui lòng nhập mật khẩu để đăng nhập.');
-
-      // Chuyển về tab login và điền email
-      setActiveTab('login');
-      setEmail(signupEmail);
-
-      // Reset signup form
-      setName('');
-      setSignupEmail('');
-      setSignupPassword('');
-      setConfirmPassword('');
-      setGender('');
-
-      // Focus vào password field sau khi chuyển tab
-      setTimeout(() => {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput) {
-          passwordInput.focus();
+      // Toast với action buttons
+      toast.success(
+        <div className="flex flex-col gap-2">
+          <span>Đăng ký thành công! 🎉</span>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                toast.dismiss();
+                router.push(`/verify-email?email=${encodeURIComponent(signupEmail)}`);
+              }}
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              Xác thực ngay
+            </button>
+            <button 
+              onClick={() => {
+                toast.dismiss();
+                setActiveTab('login');
+                setEmail(signupEmail);
+                // Reset form...
+              }}
+              className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+            >
+              Đăng nhập
+            </button>
+          </div>
+        </div>,
+        {
+          duration: 8000,
+          position: 'top-center'
         }
-      }, 100);
+      );
 
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -206,18 +261,20 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-[#10b981] to-[#3b82f6] rounded-full blur opacity-70"></div>
-                    <div className="relative bg-white rounded-full p-2">
-                      <Image
-                        src="/globe.svg"
-                        alt="Logo"
-                        width={80}
-                        height={80}
-                        className="rounded-full p-2"
-                      />
+                  <Link href="/" className="block">
+                    <div className="relative cursor-pointer">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-[#10b981] to-[#3b82f6] rounded-full blur opacity-70"></div>
+                      <div className="relative bg-white rounded-full p-2">
+                        <Image
+                          src="/globe.svg"
+                          alt="Logo - Quay về trang chủ"
+                          width={80}
+                          height={80}
+                          className="rounded-full p-2"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </motion.div>
               </div>
               <motion.h1
