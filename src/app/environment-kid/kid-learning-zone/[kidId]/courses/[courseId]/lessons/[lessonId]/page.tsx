@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, CheckCircle, Play, BookOpen, Trophy, Star, Clock, Users, Target } from "lucide-react"
 import Link from "next/link"
 import { InteractiveVideo } from "@/components/interactive-video/InteractiveVideo"
-import { InteractiveLesson } from "@/components/interactive-lesson/InteractiveLesson"
 import { getLessonById, getTestsByLesson } from "@/lib/api"
 
 interface LessonData {
@@ -44,7 +43,7 @@ interface TestData {
   difficulty?: string;
 }
 
-export default function LessonPage({ params }: { params: Promise<{ courseId: string; lessonId: string }> }) {
+export default function LessonPage({ params }: { params: Promise<{ kidId: string; courseId: string; lessonId: string }> }) {
   const resolvedParams = use(params);
   const [lessonCompleted, setLessonCompleted] = useState(false)
   const [videoCompleted, setVideoCompleted] = useState(false)
@@ -59,10 +58,10 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
     const fetchLessonData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch lesson data
         const lessonResult = await getLessonById(resolvedParams.lessonId);
-        
+
         if (lessonResult.success && lessonResult.data) {
           setLessonData(lessonResult.data);
         } else {
@@ -74,10 +73,10 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
         try {
           const testsResult = await getTestsByLesson(resolvedParams.lessonId);
           if (testsResult.success && testsResult.data) {
-            const tests = Array.isArray(testsResult.data.tests) 
-              ? testsResult.data.tests 
-              : Array.isArray(testsResult.data) 
-                ? testsResult.data 
+            const tests = Array.isArray(testsResult.data.tests)
+              ? testsResult.data.tests
+              : Array.isArray(testsResult.data)
+                ? testsResult.data
                 : [];
             setTestsData(tests);
           }
@@ -85,7 +84,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
           console.warn('Không tìm thấy bài kiểm tra cho bài học này:', testError);
           setTestsData([]);
         }
-        
+
       } catch (err) {
         console.error('Lỗi khi tải bài học:', err);
         setError('Lỗi khi tải bài học');
@@ -105,7 +104,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
     if (testsData.length > 0 && lessonCompleted) progress += 20;
     setCurrentProgress(progress);
   }, [videoCompleted, interactiveCompleted, lessonCompleted, testsData.length]);
-  
+
   // Interactive video data
   const videoInteractions = [
     {
@@ -144,7 +143,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
     console.log(`Điểm video: ${score}%`)
     setVideoCompleted(true)
   }
-  
+
   const handleLessonComplete = (score: number) => {
     console.log(`Điểm bài học: ${score}%`)
     setInteractiveCompleted(true)
@@ -185,8 +184,8 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
             <p className="text-red-500 mb-6">{error || 'Không tìm thấy bài học'}</p>
             <div className="space-y-3">
-              <Button 
-                onClick={() => window.location.reload()} 
+              <Button
+                onClick={() => window.location.reload()}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
               >
                 Thử lại
@@ -209,8 +208,8 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
         {/* Header */}
         <div className="flex items-center gap-6 mb-8">
           <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}`}>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-12 h-12 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
             >
               <ArrowLeft className="h-6 w-6 text-blue-600" />
@@ -239,7 +238,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                 <span>{lessonData.courseId.category}</span>
               </div>
             </div>
-            
+
             {/* Progress Bar */}
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
@@ -247,7 +246,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                 <span className="text-sm font-bold text-blue-600">{currentProgress}%</span>
               </div>
               <Progress value={currentProgress} className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500 ease-out rounded-full"
                   style={{ width: `${currentProgress}%` }}
                 />
@@ -264,7 +263,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
               <CardContent className="p-0">
                 <div className="relative">
                   <InteractiveVideo
-                    videoSrc={lessonData.videoUrl?.trim().replace(/`/g, '') || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+                    videoSrc={lessonData.videoUrl?.trim().replace(/`/g, '') || "https://www.youtube.com/watch?v=LIN8GpWQ5rM"}
                     interactions={videoInteractions}
                     onComplete={handleVideoComplete}
                   />
@@ -279,7 +278,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Lesson Content */}
             <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm">
               <CardContent className="p-8">
@@ -289,10 +288,10 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800">Nội dung bài học</h3>
                 </div>
-                
+
                 <div className="prose prose-lg max-w-none">
                   <p className="text-gray-600 text-lg leading-relaxed mb-8">{lessonData.description}</p>
-                  
+
                   {lessonData.content?.sections && (
                     <div className="space-y-6">
                       {lessonData.content.sections.map((section, index) => (
@@ -309,31 +308,6 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Interactive Lesson */}
-            <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                    <Play className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800">Hoạt động tương tác</h3>
-                  {interactiveCompleted && (
-                    <Badge className="bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Hoàn thành
-                    </Badge>
-                  )}
-                </div>
-                
-                <InteractiveLesson
-                  title={lessonData.title}
-                  content={lessonData.description}
-                  questions={lessonQuestions}
-                  onComplete={handleLessonComplete}
-                />
-              </CardContent>
-            </Card>
 
             {/* Tests Section */}
             {testsData.length > 0 && (
@@ -348,7 +322,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                       {testsData.length} bài test
                     </Badge>
                   </div>
-                  
+
                   <div className="grid gap-4">
                     {testsData.map((test, index) => (
                       <div key={test._id} className="group">
@@ -378,7 +352,7 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                               </div>
                             </div>
                           </div>
-                          <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}/lessons/${resolvedParams.lessonId}/tests/${test._id}`}>
+                          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${resolvedParams.lessonId}/tests/${test._id}`}>
                             <Button className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
                               <Play className="w-4 h-4 mr-2" />
                               Làm bài test
@@ -394,19 +368,18 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
 
             {/* Navigation */}
             <div className="flex justify-between items-center pt-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="px-8 py-3 rounded-xl border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Bài trước
               </Button>
-              <Button 
-                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  currentProgress >= 80 
-                    ? 'bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white shadow-lg' 
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+              <Button
+                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${currentProgress >= 80
+                  ? 'bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 disabled={currentProgress < 80}
               >
                 Bài tiếp theo
@@ -461,20 +434,18 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
                     const IconComponent = step.icon;
                     return (
                       <div key={index} className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                          step.completed 
-                            ? 'bg-gradient-to-r from-green-400 to-blue-500 text-white' 
-                            : 'bg-gray-200 text-gray-400'
-                        }`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${step.completed
+                          ? 'bg-gradient-to-r from-green-400 to-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-400'
+                          }`}>
                           {step.completed ? (
                             <CheckCircle className="w-4 h-4" />
                           ) : (
                             <IconComponent className="w-4 h-4" />
                           )}
                         </div>
-                        <span className={`font-medium transition-colors ${
-                          step.completed ? 'text-gray-800' : 'text-gray-500'
-                        }`}>
+                        <span className={`font-medium transition-colors ${step.completed ? 'text-gray-800' : 'text-gray-500'
+                          }`}>
                           {step.title}
                         </span>
                       </div>
@@ -507,32 +478,3 @@ export default function LessonPage({ params }: { params: Promise<{ courseId: str
     </div>
   )
 }
-
-const lessonQuestions = [
-  {
-    id: "q1",
-    type: "multiple-choice" as const,
-    question: "Khi gặp vấn đề, bước đầu tiên nên làm gì?",
-    options: [
-      "Hoảng sợ và bỏ cuộc",
-      "Bình tĩnh và phân tích vấn đề",
-      "Hỏi ngay người khác",
-      "Làm ngẫu nhiên"
-    ],
-    correctAnswer: 1,
-    explanation: "Bình tĩnh và phân tích vấn đề giúp chúng ta hiểu rõ tình huống và tìm ra giải pháp phù hợp."
-  },
-  {
-    id: "q2",
-    type: "multiple-choice" as const,
-    question: "Điều gì quan trọng nhất khi học một kỹ năng mới?",
-    options: [
-      "Học nhanh nhất có thể",
-      "Thực hành đều đặn",
-      "Chỉ đọc lý thuyết",
-      "So sánh với người khác"
-    ],
-    correctAnswer: 1,
-    explanation: "Thực hành đều đặn giúp củng cố kiến thức và phát triển kỹ năng một cách bền vững."
-  }
-]

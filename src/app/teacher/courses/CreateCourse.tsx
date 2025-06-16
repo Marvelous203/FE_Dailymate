@@ -16,6 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Course } from './page'; // Adjust path if necessary
+import { Upload, Image as ImageIcon } from 'lucide-react';
+import { handleUploadFile } from '@/utils/upload';
+import Image from 'next/image';
 
 interface CreateCourseModalProps {
     isOpen: boolean;
@@ -61,8 +64,8 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
         instructor: '',
         isPublished: false,
     });
-
-
+    const [isUploading, setIsUploading] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
         console.log('=== DEBUG CREATE COURSE ===');
@@ -101,7 +104,6 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
         }
     }, [isOpen]);
 
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
         setFormData((prev) => ({
@@ -122,6 +124,27 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
             ...prev,
             [id]: checked,
         }));
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setIsUploading(true);
+            const imageUrl = await handleUploadFile(file, 'image');
+            if (imageUrl) {
+                setFormData(prev => ({
+                    ...prev,
+                    thumbnailUrl: imageUrl
+                }));
+                setPreviewImage(imageUrl);
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const handleSubmit = () => {
@@ -214,16 +237,73 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                     </div>
 
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="thumbnailUrl" className="text-right">
-                            URL hình ảnh
+                        <Label htmlFor="thumbnail" className="text-right">
+                            Hình ảnh
                         </Label>
-                        <Input
-                            id="thumbnailUrl"
-                            value={formData.thumbnailUrl}
-                            onChange={handleChange}
-                            className="col-span-3"
-                            placeholder="https://example.com/image.jpg"
-                        />
+                        <div className="col-span-3">
+                            <div className="flex flex-col items-center gap-4">
+                                {previewImage ? (
+                                    <div className="relative w-full aspect-video">
+                                        <Image
+                                            src={previewImage}
+                                            alt="Course thumbnail"
+                                            fill
+                                            className="object-cover rounded-lg"
+                                        />
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="absolute top-2 right-2"
+                                            onClick={() => {
+                                                setPreviewImage(null);
+                                                setFormData(prev => ({ ...prev, thumbnailUrl: '' }));
+                                            }}
+                                        >
+                                            Xóa
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6">
+                                        <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                                        <p className="text-sm text-gray-500 mb-2">
+                                            Kéo thả hoặc click để chọn ảnh
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            PNG, JPG, GIF (tối đa 5MB)
+                                        </p>
+                                    </div>
+                                )}
+                                <div className="w-full">
+                                    <Input
+                                        id="thumbnail"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        disabled={isUploading}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => document.getElementById('thumbnail')?.click()}
+                                        disabled={isUploading}
+                                    >
+                                        {isUploading ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                                                Đang tải lên...
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <Upload className="w-4 h-4" />
+                                                Chọn ảnh
+                                            </div>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -280,7 +360,11 @@ export default function CreateCourseModal({ isOpen, onClose, onCreate }: CreateC
                     <Button variant="outline" onClick={onClose}>
                         Hủy
                     </Button>
-                    <Button type="submit" onClick={handleSubmit} disabled={!formData.title || !formData.category || !formData.ageGroup}>
+                    <Button
+                        type="submit"
+                        onClick={handleSubmit}
+                        disabled={!formData.title || !formData.category || !formData.ageGroup || !formData.thumbnailUrl}
+                    >
                         Tạo khóa học
                     </Button>
                 </DialogFooter>

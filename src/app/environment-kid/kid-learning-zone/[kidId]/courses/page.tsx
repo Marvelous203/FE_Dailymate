@@ -40,7 +40,7 @@ export default function CoursesPage() {
       try {
         setLoading(true);
         const response = await getAllCourses(1, 20);
-        
+
         // Handle the specific API response structure
         if (response && response.success && response.data && Array.isArray(response.data.courses)) {
           // Filter only published courses for kids
@@ -128,7 +128,7 @@ export default function CoursesPage() {
         {courses.length > 0 ? (
           courses.map((course) => {
             const isNew = new Date(course.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            
+
             return (
               <Card key={course._id} className="border-none shadow-sm overflow-hidden">
                 <div className="h-48 bg-[#d9d9d9] relative">
@@ -172,7 +172,7 @@ export default function CoursesPage() {
                     <p className="text-xs text-[#6b7280] mb-4">Instructor: {course.instructor.fullName}</p>
                   )}
                   <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                    <Link href={`/environment-kid/kid-learning-zone/courses/${course._id}`}>
+                    <Link href={`/environment-kid/kid-learning-zone/${kidId}/courses/${course._id}`}>
                       Start Learning
                     </Link>
                   </Button>

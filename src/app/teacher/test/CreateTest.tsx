@@ -85,11 +85,6 @@ export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
             return;
         }
 
-        if (questions.length === 0) {
-            toast.error('Vui lòng thêm ít nhất một câu hỏi');
-            return;
-        }
-
         try {
             const testData = {
                 lessonId,
