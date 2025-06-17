@@ -67,6 +67,14 @@ export default function GamesPage() {
       stars: 25,
       multiplayer: false,
     },
+    {
+      id: 8,
+      title: "Xếp hình",
+      description: "Học xếp hình và giải trí trí tuệ",
+      highScore: 0,
+      stars: 25,
+      multiplayer: false,
+    },
   ]
   return (
     <div className="space-y-6">
@@ -115,7 +123,7 @@ export default function GamesPage() {
                 </div>
               </div>
               <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
+                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : game.id === 8 ? `/environment-kid/kid-learning-zone/${kidId}/games/block-puzzle` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
                   {game.id === 7 ? 'Play Now' : 'Play'}
                 </Link>
               </Button>
