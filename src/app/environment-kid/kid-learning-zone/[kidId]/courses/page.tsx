@@ -28,6 +28,28 @@ interface Course {
   updatedAt: string;
 }
 
+// Thêm function helper để rút gọn text
+const truncateText = (text: string, maxLines: number = 3): string => {
+  if (!text) return '';
+  
+  // Ước tính số ký tự cho mỗi dòng (khoảng 50-60 ký tự/dòng)
+  const maxCharsPerLine = 55;
+  const maxChars = maxLines * maxCharsPerLine;
+  
+  if (text.length <= maxChars) {
+    return text;
+  }
+  
+  // Cắt text và thêm "..."
+  const truncated = text.substring(0, maxChars - 3).trim();
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  // Cắt tại từ cuối cùng để tránh cắt giữa từ
+  return lastSpaceIndex > 0 
+    ? truncated.substring(0, lastSpaceIndex) + '...'
+    : truncated + '...';
+};
+
 export default function CoursesPage() {
   const params = useParams();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -124,13 +146,13 @@ export default function CoursesPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-start">
         {courses.length > 0 ? (
           courses.map((course) => {
             const isNew = new Date(course.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
             return (
-              <Card key={course._id} className="border-none shadow-sm overflow-hidden">
+              <Card key={course._id} className="border-none shadow-sm overflow-hidden h-full">
                 <div className="h-48 bg-[#d9d9d9] relative">
                   <Image
                     src={course.thumbnailUrl?.trim().replace(/`/g, '') || `/placeholder.svg?height=192&width=384`}
@@ -154,28 +176,37 @@ export default function CoursesPage() {
                     </div>
                   )}
                 </div>
-                <CardContent className="p-6">
+                <CardContent className="p-6 flex flex-col h-full">
                   <h3 className="font-semibold text-lg mb-2">{course.title}</h3>
-                  <p className="text-[#6b7280] text-sm mb-2">{course.description}</p>
-                  <p className="text-[#83d98c] text-xs mb-4 font-medium">{course.category} • {course.ageGroup}</p>
-                  <div className="flex items-center justify-between text-sm mb-4">
-                    <div className="flex items-center text-[#6b7280]">
-                      <BookOpen size={16} className="mr-1" />
-                      <span>Lessons</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-[#f59e0b] fill-[#f59e0b] mr-1" />
-                      <span>{course.pointsEarned} points</span>
-                    </div>
+                  
+                  {/* FIX: Rút gọn mô tả và cố định chiều cao */}
+                  <div className="flex-1">
+                    <p className="text-[#6b7280] text-sm mb-2 leading-relaxed line-clamp-3">
+                      {truncateText(course.description, 3)}
+                    </p>
                   </div>
-                  {course.instructor && (
-                    <p className="text-xs text-[#6b7280] mb-4">Instructor: {course.instructor.fullName}</p>
-                  )}
-                  <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                    <Link href={`/environment-kid/kid-learning-zone/${kidId}/courses/${course._id}`}>
-                      Start Learning
-                    </Link>
-                  </Button>
+                  
+                  <div className="mt-auto">
+                    <p className="text-[#83d98c] text-xs mb-4 font-medium">{course.category} • {course.ageGroup}</p>
+                    <div className="flex items-center justify-between text-sm mb-4">
+                      <div className="flex items-center text-[#6b7280]">
+                        <BookOpen size={16} className="mr-1" />
+                        <span>Lessons</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-[#f59e0b] fill-[#f59e0b] mr-1" />
+                        <span>{course.pointsEarned} points</span>
+                      </div>
+                    </div>
+                    {course.instructor && (
+                      <p className="text-xs text-[#6b7280] mb-4">Instructor: {course.instructor.fullName}</p>
+                    )}
+                    <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
+                      <Link href={`/environment-kid/kid-learning-zone/${kidId}/courses/${course._id}`}>
+                        Start Learning
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );

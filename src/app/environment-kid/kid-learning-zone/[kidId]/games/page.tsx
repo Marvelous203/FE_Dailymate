@@ -75,6 +75,14 @@ export default function GamesPage() {
       stars: 25,
       multiplayer: false,
     },
+    {
+      id: 9,
+      title: "Phán đoán tình huống",
+      description: "Phán đoán tình huống trong cuộc sống",
+      highScore: 0,
+      stars: 25,
+      multiplayer: false,
+    }
   ]
   return (
     <div className="space-y-6">
@@ -123,7 +131,7 @@ export default function GamesPage() {
                 </div>
               </div>
               <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : game.id === 8 ? `/environment-kid/kid-learning-zone/${kidId}/games/block-puzzle` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
+                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : game.id === 8 ? `/environment-kid/kid-learning-zone/${kidId}/games/block-puzzle` : game.id === 9 ? `/environment-kid/kid-learning-zone/${kidId}/games/decision-making` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
                   {game.id === 7 ? 'Play Now' : 'Play'}
                 </Link>
               </Button>

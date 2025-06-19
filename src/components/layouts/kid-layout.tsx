@@ -25,6 +25,7 @@ export default function KidLayout({ children }) {
       try {
         const parsedData = JSON.parse(storedKidData);
         setKidData(parsedData);
+        console.log('Kid data loaded:', parsedData); // Debug log
       } catch (error) {
         console.error('Error parsing kid data:', error);
       }
@@ -33,6 +34,9 @@ export default function KidLayout({ children }) {
 
   const kid = kidData?.data;
   const user = kid?.userId;
+  
+  // Đảm bảo hiển thị đúng kid ID
+  console.log('Current kid ID:', kid?._id); // Debug log
   
   // Tạo base URL với kid ID
   const kidBaseUrl = kid?._id ? `/environment-kid/kid-learning-zone/${kid._id}` : '/environment-kid/kid-learning-zone';
@@ -70,14 +74,13 @@ export default function KidLayout({ children }) {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
                   <Avatar className="h-10 w-10 border-2 border-white/30">
                     <AvatarImage 
-                      src={kid?.avatar ? `/avatars/${kid.avatar}.png` : '/placeholder.svg?height=40&width=40'} 
+                      src={kid?.avatar  || '/placeholder.svg?height=40&width=40'} 
                       alt={kid?.fullName || 'Kid'} 
                     />
                     <AvatarFallback className="bg-white text-[#83d98c] font-bold">
                       {kid?.fullName ? kid.fullName.charAt(0).toUpperCase() : 'K'}
                     </AvatarFallback>
                   </Avatar>
-                  {/* Online status indicator */}
                   <div className="absolute bottom-0 right-0 h-3 w-3 bg-[#10b981] border-2 border-white rounded-full"></div>
                 </Button>
               </DropdownMenuTrigger>
@@ -96,7 +99,7 @@ export default function KidLayout({ children }) {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{kid?.fullName || 'Kid Name'}</p>
-                      <p className="text-sm text-white/80 truncate">{user?.email || 'kid@example.com'}</p>
+                      
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
                           Level {kid?.level || 1}
@@ -112,7 +115,7 @@ export default function KidLayout({ children }) {
                 {/* Menu Items */}
                 <div className="p-2">
                   <DropdownMenuItem asChild>
-                    <Link href="/kid/profile" className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                    <Link href={`${kidBaseUrl}/profile`} className="flex items-center gap-3 px-3 py-2 cursor-pointer">
                       <div className="w-8 h-8 bg-[#ebfdf4] rounded-full flex items-center justify-center">
                         <User className="h-4 w-4 text-[#10b981]" />
                       </div>
