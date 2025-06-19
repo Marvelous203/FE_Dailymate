@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { Course, CourseUpdatePayload } from './page'; // Adjust path if necessary
 
 interface EditCourseModalProps {
@@ -84,27 +85,28 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[800px]">
                 <DialogHeader>
-                    <DialogTitle>Chỉnh sửa khóa học</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-2xl font-bold">Chỉnh sửa khóa học</DialogTitle>
+                    <DialogDescription className="text-lg">
                         Thực hiện chỉnh sửa khóa học tại đây. Nhấp lưu khi hoàn tất.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-6 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
-                            Tiêu đề
+                        <Label htmlFor="title" className="text-right font-semibold">
+                            Tiêu đề <span className="text-red-500">*</span>
                         </Label>
                         <Input
                             id="title"
                             value={formData.title}
                             onChange={handleChange}
                             className="col-span-3"
+                            required
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
+                        <Label htmlFor="description" className="text-right font-semibold">
                             Mô tả
                         </Label>
                         <Textarea
@@ -115,7 +117,7 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="category" className="text-right">
+                        <Label htmlFor="category" className="text-right font-semibold">
                             Danh mục
                         </Label>
                         <Input
@@ -126,7 +128,7 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="ageGroup" className="text-right">
+                        <Label htmlFor="ageGroup" className="text-right font-semibold">
                             Độ tuổi
                         </Label>
                         <Input
@@ -137,18 +139,20 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="thumbnailUrl" className="text-right">
-                            URL hình ảnh
+                        <Label htmlFor="thumbnailUrl" className="text-right font-semibold">
+                            Hình ảnh
                         </Label>
-                        <Input
-                            id="thumbnailUrl"
-                            value={formData.thumbnailUrl}
-                            onChange={handleChange}
-                            className="col-span-3"
-                        />
+                        <div className="col-span-3">
+                            <ImageUpload
+                                onImageUploaded={(url) => {
+                                    setFormData(prev => ({ ...prev, thumbnailUrl: url }));
+                                }}
+                                initialImageUrl={formData.thumbnailUrl}
+                            />
+                        </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="pointsEarned" className="text-right">
+                        <Label htmlFor="pointsEarned" className="text-right font-semibold">
                             Điểm kiếm được
                         </Label>
                         <Input
@@ -160,7 +164,7 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="isPremium" className="text-right">
+                        <Label htmlFor="isPremium" className="text-right font-semibold">
                             Premium
                         </Label>
                         <Switch
@@ -171,7 +175,7 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="isPublished" className="text-right">
+                        <Label htmlFor="isPublished" className="text-right font-semibold">
                             Đã xuất bản
                         </Label>
                         <Switch
@@ -183,7 +187,7 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleSubmit}>Lưu thay đổi</Button>
+                    <Button type="submit" onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Lưu thay đổi</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

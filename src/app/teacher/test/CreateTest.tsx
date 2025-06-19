@@ -85,6 +85,14 @@ export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
             return;
         }
 
+        if (questions.length === 0) {
+            if (!currentQuestion.questionText.trim()) {
+                toast.error('Vui lòng nhập ít nhất một câu hỏi');
+                return;
+            }
+            setQuestions([currentQuestion]);
+        }
+
         try {
             const testData = {
                 lessonId,
@@ -93,8 +101,8 @@ export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
                 timeLimit,
                 passingScore,
                 attempts,
-                questions,
-                createdBy: "6843bd2fc9c53e526c15e0be" // TODO: Lấy từ context hoặc props
+                questions: questions.length > 0 ? questions : [currentQuestion],
+                createdBy: "6843bd2fc9c53e526c15e0be"
             };
 
             const response = await fetch('http://localhost:8386/api/test', {

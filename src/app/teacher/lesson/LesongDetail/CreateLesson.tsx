@@ -99,7 +99,29 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
     };
 
     const handleSubmit = () => {
-        onCreate(courseId, formData);
+        // Kiểm tra tiêu đề
+        if (!formData.title.trim()) {
+            alert('Vui lòng nhập tiêu đề bài học');
+            return;
+        }
+
+        // Tạo dữ liệu bài học mới, cho phép các trường tài nguyên để trống
+        const newLessonData = {
+            ...formData,
+            videoUrl: formData.videoUrl || '',
+            audioUrl: formData.audioUrl || '',
+            imageUrl: formData.imageUrl || '',
+            description: formData.description || '',
+            duration: formData.duration || 0,
+            order: formData.order || 0,
+            content: formData.content || [],
+            isPublished: formData.isPublished || false
+        };
+
+        // Gọi hàm tạo bài học
+        onCreate(courseId, newLessonData);
+
+        // Đóng modal và reset form
         onClose();
         setFormData({
             title: '',
@@ -111,8 +133,8 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
             duration: 0,
             order: 0,
             isPublished: false,
-            createdBy: '',
-        }); // Reset form after submission
+            createdBy: '60d21b4667d0d8992e610c86',
+        });
     };
 
     return (
@@ -126,13 +148,14 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         <div className="space-y-8">
                             <div className="grid grid-cols-4 items-center gap-6">
                                 <Label htmlFor="title" className="text-right font-semibold text-gray-800 text-lg">
-                                    Tiêu đề
+                                    Tiêu đề <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                     id="title"
                                     value={formData.title}
                                     onChange={handleChange}
                                     className="col-span-3 border-gray-400 focus:border-blue-600 focus:ring-blue-600 rounded-lg p-3 text-lg"
+                                    required
                                 />
                             </div>
                             <div className="grid grid-cols-4 items-start gap-6">
@@ -150,7 +173,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                         <div className="space-y-8">
                             <div className="grid grid-cols-4 items-center gap-6">
                                 <Label htmlFor="duration" className="text-right font-semibold text-gray-800 text-lg">
-                                    Thời lượng (phút)
+                                    Thời lượng
                                 </Label>
                                 <Input
                                     id="duration"
@@ -187,10 +210,10 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                     </div>
 
                     <div className="col-span-full p-10 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 shadow-xl">
-                        <h3 className="text-3xl font-extrabold mb-10 text-blue-800 text-center">Tài nguyên bài học</h3>
+                        <h3 className="text-3xl font-extrabold mb-10 text-blue-800 text-center">Tài nguyên bài học </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                             <div className="space-y-5 text-center">
-                                <Label htmlFor="videoUrl" className="font-bold block text-blue-700 text-xl">Video bài học</Label>
+                                <Label htmlFor="videoUrl" className="font-bold block text-blue-700 text-xl">Video bài học </Label>
                                 <VideoUpload
                                     onVideoUploaded={(url) => {
                                         setFormData(prev => ({ ...prev, videoUrl: url }));
@@ -199,7 +222,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                                 />
                             </div>
                             <div className="space-y-5 text-center">
-                                <Label htmlFor="audioUrl" className="font-bold block text-blue-700 text-xl">Âm thanh bài học</Label>
+                                <Label htmlFor="audioUrl" className="font-bold block text-blue-700 text-xl">Âm thanh bài học </Label>
                                 <AudioUpload
                                     onAudioUploaded={(url) => {
                                         setFormData(prev => ({ ...prev, audioUrl: url }));
@@ -208,7 +231,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                                 />
                             </div>
                             <div className="space-y-5 text-center">
-                                <Label htmlFor="imageUrl" className="font-bold block text-blue-700 text-xl">Hình ảnh bài học</Label>
+                                <Label htmlFor="imageUrl" className="font-bold block text-blue-700 text-xl">Hình ảnh bài học </Label>
                                 <ImageUpload
                                     onImageUploaded={(url) => {
                                         setFormData(prev => ({ ...prev, imageUrl: url }));
@@ -220,7 +243,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
                     </div>
 
                     <div className="col-span-full p-10 border-2 border-dashed border-green-300 rounded-lg bg-green-50 shadow-xl">
-                        <h3 className="text-3xl font-extrabold mb-10 text-green-800 text-center">Nội dung bài học</h3>
+                        <h3 className="text-3xl font-extrabold mb-10 text-green-800 text-center">Nội dung bài học </h3>
                         {formData.content.map((section, index) => (
                             <div key={index} className="grid grid-cols-4 items-start gap-8 mb-10 pb-10 border-b-2 border-green-300 last:border-b-0 last:pb-0">
                                 <Label htmlFor={`content-title-${index}`} className="text-right font-semibold pt-3 text-green-700 text-lg">

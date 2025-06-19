@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
       'example.com',
       'template.canva.com',
       'youtube.com',
-      'res.cloudinary.com'
+      'res.cloudinary.com',
+      'tinhdoanquangninh.vn'
     ],
     remotePatterns: [
       {
