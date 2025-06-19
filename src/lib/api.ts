@@ -742,3 +742,115 @@ export async function createKid(kidData: {
     throw new Error('Đã xảy ra lỗi khi tạo hồ sơ con');
   }
 }
+
+// Update parent information
+export async function updateParent(parentId: string, parentData: {
+  fullName?: string;
+  phoneNumber?: string;
+  address?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  image?: string;
+}) {
+  try {
+    const response = await fetch(`${API_URL}/api/parent/${parentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(parentData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Update parent error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi cập nhật thông tin phụ huynh');
+  }
+}
+
+
+// Update kid information (for parents)
+export async function updateKid(kidId: string, kidData: {
+  fullName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  avatar?: string;
+  age?: number;
+}) {
+  try {
+    const response = await fetch(`${API_URL}/api/kid/${kidId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(kidData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Update kid error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi cập nhật thông tin trẻ em');
+  }
+}
+
+// Delete kid
+export async function deleteKid(kidId: string) {
+  try {
+    const response = await fetch(`${API_URL}/api/kid/${kidId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Delete kid error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi xóa thông tin trẻ em');
+  }
+}

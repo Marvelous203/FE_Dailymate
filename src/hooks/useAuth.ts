@@ -48,12 +48,24 @@ export function useAuth() {
       // Clear local state
       dispatch(setUserFromSession(null));
       
+      // Clear tất cả localStorage items liên quan đến authentication
+      localStorage.removeItem('user');
+      localStorage.removeItem('parentData');
+      localStorage.removeItem('kidsInfo');
+      localStorage.removeItem('kidsData');
+      localStorage.removeItem('kidData');
+      
       // Redirect to login
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       // Vẫn clear local state ngay cả khi API call thất bại
       dispatch(setUserFromSession(null));
+      localStorage.removeItem('user');
+      localStorage.removeItem('parentData');
+      localStorage.removeItem('kidsInfo');
+      localStorage.removeItem('kidsData');
+      localStorage.removeItem('kidData');
       window.location.href = '/login';
     }
   };
