@@ -29,7 +29,7 @@ interface Test {
   lessonId?: string;
 }
 
-export default function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
+export default function CoursePage({ params }: { params: Promise<{ courseId: string; kidId: string }> }) {
   const resolvedParams = use(params);
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -55,6 +55,9 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
           : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
 
         setLessons(lessonsData);
+        
+        // Initialize tests as empty array for now
+        setTests([]);
       } catch (error) {
         console.error('Error fetching course data:', error);
         setError('Không thể tải thông tin khóa học');
@@ -170,7 +173,7 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
                         </div>
                       </div>
                       <Button className="bg-[#e5e7eb] text-[#6b7280]">
-                        <Link href={`/environment-kid/kid-learning-zone/${params.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}>
+                        <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}>
                           Start
                         </Link>
                       </Button>

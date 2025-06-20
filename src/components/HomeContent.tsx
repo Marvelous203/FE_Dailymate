@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from "framer-motion"
-import Image from "next/image"
+// Remove unused Image import
+// import Image from "next/image" // Remove this line
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { setUserFromSession } from '@/redux/features/auth/authSlice';
 
@@ -9,15 +9,10 @@ export function useAuth() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, user, loading, error } = useAppSelector(state => state.auth);
 
-  // Kiểm tra session khi component mount
-  useEffect(() => {
-    checkSession();
-  }, []);
-
   /**
    * Kiểm tra session từ server riêng
    */
-  const checkSession = async () => {
+  const checkSession = useCallback(async () => {
     try {
         // Thay vì gọi API, chỉ lấy từ localStorage
         const storedUser = localStorage.getItem('user');
@@ -32,12 +27,17 @@ export function useAuth() {
         console.error('Error loading from localStorage:', error);
         dispatch(setUserFromSession(null));
     }
-};
+  }, [dispatch]);
+
+  // Kiểm tra session khi component mount
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
 
   /**
    * Logout user và destroy session
    */
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Gọi API logout từ server riêng
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
@@ -68,14 +68,14 @@ export function useAuth() {
       localStorage.removeItem('kidData');
       window.location.href = '/login';
     }
-  };
+  }, [dispatch]);
 
   /**
    * Refresh session data
    */
-  const refreshSession = () => {
+  const refreshSession = useCallback(() => {
     checkSession();
-  };
+  }, [checkSession]);
 
   return {
     isAuthenticated,

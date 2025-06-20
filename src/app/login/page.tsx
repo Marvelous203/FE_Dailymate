@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,7 +15,24 @@ import { loginUser, createParent, fetchUserDataAfterLogin, fetchKidDataAfterLogi
 import { useAppDispatch } from '@/redux/hook';
 import { loginStart, loginSuccess, loginFailure } from '@/redux/features/auth/authSlice';
 import { toast } from 'sonner'; // Chỉ import toast, không import Toaster
-export default function LoginPage() {
+
+// Component to handle search params
+function SearchParamsHandler({ setEmail, setActiveTab }: { setEmail: (email: string) => void; setActiveTab: (tab: string) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+      // Tự động chuyển sang tab login nếu đang ở tab signup
+      setActiveTab('login');
+    }
+  }, [searchParams, setEmail, setActiveTab]);
+  
+  return null;
+}
+
+function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,17 +48,6 @@ export default function LoginPage() {
   const [signupError, setSignupError] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Thêm useEffect để tự động điền email từ URL parameters
-  useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(emailParam);
-      // Tự động chuyển sang tab login nếu đang ở tab signup
-      setActiveTab('login');
-    }
-  }, [searchParams]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -67,11 +73,16 @@ export default function LoginPage() {
       ]);
 
       const userData = {
-        id: response.user._id,
+        _id: response.user._id,
         name: response.user.username,
         email: response.user.email,
         role: response.user.role,
-        roleData: response.user.roleData
+        isActive: response.user.isActive || true,
+        isVerified: response.user.isVerified || false,
+        avatar: response.user.avatar,
+        roleData: response.user.roleData,
+        createdAt: response.user.createdAt || new Date().toISOString(),
+        updatedAt: response.user.updatedAt || new Date().toISOString()
       };
       
       // Lưu user info vào cookie để middleware có thể đọc (tạm thời)
@@ -123,7 +134,7 @@ export default function LoginPage() {
       } else if (response.user.role === 'kid') {
         router.push('/environment-kid/kid-learning-zone'); // Sửa lỗi chính tả
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
@@ -133,8 +144,9 @@ export default function LoginPage() {
       }
 
       console.error('Login error:', error);
-      dispatch(loginFailure(error.message));
-      setError(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      dispatch(loginFailure(errorMessage));
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -170,6 +182,7 @@ export default function LoginPage() {
         gender: gender
       };
 
+      
       const response = await createParent(parentData);
 
       // Toast với action buttons
@@ -205,13 +218,15 @@ export default function LoginPage() {
         }
       );
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Đã có lỗi xảy ra khi đăng ký';
 
       // Toast lỗi đơn giản
-      toast.error(error.message || 'Đã có lỗi xảy ra khi đăng ký');
+      toast.error(errorMessage);
 
-      setSignupError(error.message);
+      setSignupError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -235,6 +250,9 @@ export default function LoginPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler setEmail={setEmail} setActiveTab={setActiveTab} />
+      </Suspense>
       {/* Sử dụng Loading Component */}
       <AnimatePresence>
         <LoadingOverlay
@@ -586,6 +604,21 @@ export default function LoginPage() {
         </motion.footer>
       </div>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#e8f5e8] to-[#c8e6c9] flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10b981] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
 

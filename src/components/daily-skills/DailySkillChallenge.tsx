@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Star, Calendar, Heart } from "lucide-react";
+import { CheckCircle, Star, Calendar, Heart, Trophy, Target } from "lucide-react";
 
 interface DailyChallenge {
   id: string;
@@ -67,26 +67,6 @@ export function DailySkillChallenge() {
   const [completedChallenges, setCompletedChallenges] = useState<string[]>([]);
   const [showTips, setShowTips] = useState(false);
 
-  useEffect(() => {
-    // Get today's challenge based on date
-    const today = new Date().toDateString();
-    const savedChallenge = localStorage.getItem(`dailyChallenge_${today}`);
-    const completed = localStorage.getItem(`completedChallenges`) || '[]';
-    
-    setCompletedChallenges(JSON.parse(completed));
-    
-    if (savedChallenge) {
-      const challenge = JSON.parse(savedChallenge);
-      setTodayChallenge(challenge);
-      setIsCompleted(completedChallenges.includes(challenge.id));
-    } else {
-      // Select random challenge for today
-      const randomChallenge = dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
-      setTodayChallenge(randomChallenge);
-      localStorage.setItem(`dailyChallenge_${today}`, JSON.stringify(randomChallenge));
-    }
-  }, []);
-
   const completeChallenge = () => {
     if (!todayChallenge) return;
     
@@ -116,6 +96,26 @@ export function DailySkillChallenge() {
       default: return 'from-gray-400 to-gray-600';
     }
   };
+// Fix useEffect dependency
+useEffect(() => {
+  // Get today's challenge based on date
+  const today = new Date().toDateString();
+  const savedChallenge = localStorage.getItem(`dailyChallenge_${today}`);
+  const completed = localStorage.getItem(`completedChallenges`) || '[]';
+  
+  setCompletedChallenges(JSON.parse(completed));
+  
+  if (savedChallenge) {
+    const challenge = JSON.parse(savedChallenge);
+    setTodayChallenge(challenge);
+    setIsCompleted(completedChallenges.includes(challenge.id));
+  } else {
+    // Select random challenge for today
+    const randomChallenge = dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
+    setTodayChallenge(randomChallenge);
+    localStorage.setItem(`dailyChallenge_${today}`, JSON.stringify(randomChallenge));
+  }
+}, [completedChallenges]) // Add completedChallenges to dependencies
 
   const getCategoryName = (category: string) => {
     switch (category) {
@@ -224,3 +224,5 @@ export function DailySkillChallenge() {
     </div>
   );
 }
+
+

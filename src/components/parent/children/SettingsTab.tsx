@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Lock, Eye, Globe, Clock, Volume2, Moon, Sun, Languages, Shield } from "lucide-react";
+import { Bell, Lock, Eye, Clock, Volume2, Moon, Sun, Languages, Shield } from "lucide-react";
+
 
 export function SettingsTab() {
   return (

@@ -322,7 +322,8 @@ export function ColorReflexGame() {
               {/* Các lựa chọn */}
               <div className="grid grid-cols-2 gap-4">
                 {options.slice(0, 4).map((option, index) => {
-                  const optionColor = COLORS.find(c => c.name === option)?.color;
+                  // Remove unused variable
+                  // const optionColor = ... // Remove this line
                   return (
                     <Button
                       key={index}

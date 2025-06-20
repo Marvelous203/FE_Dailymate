@@ -25,9 +25,9 @@ export function InteractiveLesson({ title, content, questions, onComplete }: Int
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, any>>({})
   const [showResults, setShowResults] = useState(false)
-  const [selectedAnswer, setSelectedAnswer] = useState<string | number | null>(null)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | number | boolean | null>(null)
 
-  const handleAnswer = (answer: string | number) => {
+  const handleAnswer = (answer: string | number | boolean) => {
     setSelectedAnswer(answer)
     setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: answer }))
   }

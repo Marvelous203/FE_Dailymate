@@ -36,14 +36,8 @@ export function LearningCalendar() {
       <Calendar
         mode="single"
         selected={date}
-        onSelect={setDate}
+        onSelect={(selectedDate) => setDate(selectedDate || undefined)}
         className="rounded-md border"
-        modifiers={{
-          event: (day) => hasEvent(day),
-        }}
-        modifiersClassNames={{
-          event: 'bg-[#8b5cf6]/10 font-bold text-[#8b5cf6]',
-        }}
       />
 
       {date && (

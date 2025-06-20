@@ -3,17 +3,74 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Volume2, VolumeX, Trophy, Star, Brain, Target, Lightbulb, Sparkles, Zap, Shuffle } from 'lucide-react'
+import { Badge as UIBadge } from '@/components/ui/badge'
+import { Volume2, VolumeX, Trophy, Star, Brain, Target, Sparkles, Zap, Shuffle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+// Define proper interfaces
+// Cách 1: Cập nhật interface PlayerChoice
+interface PlayerChoice {
+  theme?: string;
+  difficulty?: string;
+  score?: number; // Thay đổi từ required thành optional
+  timestamp: number;
+  choice?: string;
+  points?: number;
+  consequence?: string;
+  isAIGenerated?: boolean;
+}
+
+interface Character {
+  name: string;
+  personality: string;
+  interests: string[];
+  avatar?: string;
+  mood?: string;
+}
+
+interface Scenario {
+  id: string | number;
+  theme: string;
+  setting: string;
+  character: Character;
+  situation: string;
+  choices: Choice[];
+  difficulty: string;
+  isAIGenerated?: boolean;
+  timestamp?: Date;
+}
+
+interface Choice {
+  text: string;
+  consequence: string;
+  points: number;
+  feedback: string;
+}
+
+interface GameBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+}
+
+interface GameRecord {
+  scenario?: string;
+  choice: string;
+  points: number;
+  consequence: string;
+  theme?: string;
+  difficulty?: string;
+  isAIGenerated?: boolean;
+  timestamp: Date;
+}
 
 // Advanced AI Scenario Generator với khả năng tạo nội dung động
 class AdvancedAIGenerator {
   private themes = ['friendship', 'honesty', 'kindness', 'responsibility', 'courage', 'teamwork', 'empathy', 'fairness', 'perseverance', 'respect']
   private settings = ['school', 'home', 'playground', 'library', 'park', 'store', 'restaurant', 'bus', 'classroom', 'cafeteria']
-  private characters = [
+  private characters: Character[] = [
     { name: 'Alex', personality: 'shy', interests: ['reading', 'art'] },
     { name: 'Sam', personality: 'outgoing', interests: ['sports', 'music'] },
     { name: 'Jordan', personality: 'helpful', interests: ['science', 'animals'] },
@@ -47,8 +104,38 @@ class AdvancedAIGenerator {
     creative: ['Find a creative solution', 'Try a different approach', 'Think outside the box']
   }
 
+  // Generate choices method
+  generateChoices(theme: string, difficulty: string, ): Choice[] {
+    const baseChoices = [
+      { text: 'Help directly', consequence: 'You helped solve the problem', points: 8, feedback: 'Great choice!' },
+      { text: 'Ask for advice', consequence: 'You got good guidance', points: 6, feedback: 'Smart thinking!' },
+      { text: 'Wait and see', consequence: 'The situation resolved itself', points: 4, feedback: 'Sometimes patience works' },
+      { text: 'Ignore it', consequence: 'The problem got worse', points: 2, feedback: 'Maybe try a different approach next time' }
+    ];
+    
+    // Adjust points based on difficulty
+    const difficultyMultiplier = difficulty === 'hard' ? 1.2 : difficulty === 'easy' ? 0.8 : 1;
+    
+    return baseChoices.map(choice => ({
+      ...choice,
+      points: Math.round(choice.points * difficultyMultiplier)
+    }));
+  }
+
+  // Generate scenario chain method
+  generateScenarioChain(playerHistory: PlayerChoice[] = [], difficulty: string = 'medium'): Scenario[] {
+    // Generate a chain of 3 related scenarios
+    const scenarios: Scenario[] = [];
+    
+    for (let i = 0; i < 3; i++) {
+      scenarios.push(this.generateDynamicScenario(playerHistory, difficulty));
+    }
+    
+    return scenarios;
+  }
+
   // Tạo tình huống hoàn toàn mới bằng AI
-  generateDynamicScenario(playerHistory: any[] = [], difficulty: string = 'medium'): any {
+  generateDynamicScenario(playerHistory: PlayerChoice[] = [], difficulty: string = 'medium'): Scenario {
     // Phân tích lịch sử người chơi để tạo nội dung phù hợp
     const preferredThemes = this.analyzePlayerPreferences(playerHistory)
     const theme = preferredThemes.length > 0 ? 
@@ -60,7 +147,7 @@ class AdvancedAIGenerator {
     const conflict = this.conflicts[Math.floor(Math.random() * this.conflicts.length)]
     const emotion = this.emotions[Math.floor(Math.random() * this.emotions.length)]
     
-    // Tạo tình huống dựa trên các yếu tố ngẫu nhiên
+    // Tạo tình huống dựa trên các yếu tống ngẫu nhiên
     const scenario = this.constructScenario(theme, setting, character, conflict, emotion, difficulty)
     
     return {
@@ -71,7 +158,8 @@ class AdvancedAIGenerator {
         name: character.name,
         avatar: this.generateCharacterAvatar(character),
         mood: emotion,
-        personality: character.personality
+        personality: character.personality,
+        interests: character.interests
       },
       situation: scenario.situation,
       choices: scenario.choices,
@@ -82,7 +170,7 @@ class AdvancedAIGenerator {
   }
 
   // Phân tích sở thích của người chơi
-  private analyzePlayerPreferences(history: any[]): string[] {
+  private analyzePlayerPreferences(history: PlayerChoice[]): string[] {
     if (history.length < 3) return []
     
     const themeCount: { [key: string]: number } = {}
@@ -101,8 +189,8 @@ class AdvancedAIGenerator {
   }
 
   // Tạo avatar cho nhân vật
-  private generateCharacterAvatar(character: any): string {
-    const avatars = {
+  private generateCharacterAvatar(character: Character): string {
+    const avatars: { [key: string]: string } = {
       shy: '😊', outgoing: '😄', helpful: '🤝', creative: '🎨',
       curious: '🤔', kind: '💝', brave: '💪', smart: '🧠'
     }
@@ -110,8 +198,8 @@ class AdvancedAIGenerator {
   }
 
   // Xây dựng tình huống cụ thể
-  private constructScenario(theme: string, setting: string, character: any, conflict: string, emotion: string, difficulty: string): any {
-    const situations = {
+  private constructScenario(theme: string, setting: string, character: Character, conflict: string, emotion: string, difficulty: string): { situation: string; choices: Choice[] } {
+    const situations: { [key: string]: string[] } = {
       friendship: [
         `At the ${setting}, you notice ${character.name} looks ${emotion} because ${conflict}.`,
         `During ${setting} time, ${character.name} seems ${emotion} when ${conflict}.`,
@@ -133,174 +221,17 @@ class AdvancedAIGenerator {
     const situation = situationTemplates[Math.floor(Math.random() * situationTemplates.length)]
     
     // Tạo lựa chọn dựa trên độ khó
-    const choices = this.generateChoices(theme, difficulty, character)
+    const choices = this.generateChoices(theme, difficulty)
     
     return { situation, choices }
   }
-
-  // Tạo lựa chọn động
-  private generateChoices(theme: string, difficulty: string, character: any): any[] {
-    const baseChoices = [
-      {
-        type: 'direct',
-        points: difficulty === 'easy' ? 8 : difficulty === 'medium' ? 6 : 4,
-        consequences: [
-          'You handle the situation quickly and effectively',
-          'Your direct approach resolves the issue',
-          'Taking immediate action helps everyone involved'
-        ]
-      },
-      {
-        type: 'thoughtful',
-        points: difficulty === 'easy' ? 10 : difficulty === 'medium' ? 8 : 6,
-        consequences: [
-          'Your careful thinking leads to the best solution',
-          'Taking time to consider helps you make a wise choice',
-          'Your thoughtful approach impresses everyone'
-        ]
-      },
-      {
-        type: 'collaborative',
-        points: difficulty === 'easy' ? 9 : difficulty === 'medium' ? 7 : 5,
-        consequences: [
-          'Working together creates an even better solution',
-          'Getting help from others makes everything easier',
-          'Teamwork leads to success for everyone'
-        ]
-      },
-      {
-        type: 'avoidant',
-        points: difficulty === 'easy' ? -3 : difficulty === 'medium' ? -5 : -7,
-        consequences: [
-          'Avoiding the problem makes it worse',
-          'The situation doesn\'t improve without action',
-          'Others are disappointed by your lack of involvement'
-        ]
-      }
-    ]
-    
-    // Chọn 3 lựa chọn ngẫu nhiên và tùy chỉnh theo theme
-    const selectedChoices = this.shuffleArray(baseChoices).slice(0, 3)
-    
-    return selectedChoices.map(choice => ({
-      text: this.customizeChoiceText(choice.type, theme, character),
-      points: choice.points + this.getRandomVariation(),
-      consequence: choice.consequences[Math.floor(Math.random() * choice.consequences.length)]
-    }))
-  }
-
-  // Tùy chỉnh text lựa chọn theo theme
-  private customizeChoiceText(type: string, theme: string, character: any): string {
-    const customizations = {
-      friendship: {
-        direct: `Go talk to ${character.name} right away`,
-        thoughtful: `Think about how ${character.name} might be feeling`,
-        collaborative: `Ask other friends to help ${character.name}`,
-        avoidant: `It's not your problem to solve`
-      },
-      honesty: {
-        direct: 'Tell the truth immediately',
-        thoughtful: 'Consider the best way to be honest',
-        collaborative: 'Ask a trusted adult for guidance',
-        avoidant: 'Keep quiet and hope no one finds out'
-      },
-      kindness: {
-        direct: `Immediately help ${character.name}`,
-        thoughtful: `Think of the kindest way to help`,
-        collaborative: `Get others to join in helping ${character.name}`,
-        avoidant: `Someone else will probably help`
-      }
-    }
-    
-    const themeChoices = customizations[theme] || customizations.friendship
-    return themeChoices[type] || this.choiceTemplates[type][0]
-  }
-
-  // Thêm biến thể ngẫu nhiên cho điểm
-  private getRandomVariation(): number {
-    return Math.floor(Math.random() * 3) - 1 // -1, 0, hoặc 1
-  }
-
-  // Trộn mảng
-  private shuffleArray(array: any[]): any[] {
-    const shuffled = [...array]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-    return shuffled
-  }
-
-  // Tạo chuỗi tình huống liên kết
-  generateScenarioChain(playerHistory: any[], difficulty: string): any[] {
-    const mainScenario = this.generateDynamicScenario(playerHistory, difficulty)
-    const followUpScenarios = []
-    
-    // Tạo 2-3 tình huống tiếp theo dựa trên tình huống chính
-    for (let i = 0; i < Math.floor(Math.random() * 2) + 2; i++) {
-      const followUp = this.generateFollowUpScenario(mainScenario, i + 1)
-      followUpScenarios.push(followUp)
-    }
-    
-    return [mainScenario, ...followUpScenarios]
-  }
-
-  // Tạo tình huống tiếp theo
-  private generateFollowUpScenario(baseScenario: any, step: number): any {
-    const followUpSituations = [
-      `After your previous choice, ${baseScenario.character.name} reacts. What happens next?`,
-      `The situation develops further. How do you continue?`,
-      `Others notice what's happening. What's your next move?`,
-      `The consequences of your choice become clear. What do you do now?`
-    ]
-    
-    return {
-      ...baseScenario,
-      id: baseScenario.id + step,
-      situation: followUpSituations[Math.min(step - 1, followUpSituations.length - 1)],
-      choices: this.generateChoices(baseScenario.theme, baseScenario.difficulty, baseScenario.character),
-      step: step + 1
-    }
-  }
-}
-
-interface Character {
-  name: string
-  avatar: string
-  mood: string
-  personality?: string
-}
-
-interface Choice {
-  text: string
-  points: number
-  consequence: string
-}
-
-interface Scenario {
-  id: number
-  situation: string
-  character: Character
-  choices: Choice[]
-  theme?: string
-  isAIGenerated?: boolean
-  difficulty?: string
-  step?: number
-}
-
-interface Badge {
-  id: string
-  name: string
-  description: string
-  icon: string
-  earned: boolean
 }
 
 export default function DecisionMakingGame() {
   const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null)
   const [score, setScore] = useState(0)
   const [level, setLevel] = useState(1)
-  const [badges, setBadges] = useState<Badge[]>([
+  const [badges, setBadges] = useState<GameBadge[]>([
     { id: 'first-choice', name: 'First Decision', description: 'Made your first choice', icon: '🎯', earned: false },
     { id: 'ai-master', name: 'AI Master', description: 'Completed 5 AI-generated scenarios', icon: '🤖', earned: false },
     { id: 'creative-thinker', name: 'Creative Thinker', description: 'Found unique solutions', icon: '💡', earned: false },
@@ -308,7 +239,7 @@ export default function DecisionMakingGame() {
     { id: 'problem-solver', name: 'Problem Solver', description: 'Solved complex situations', icon: '🧩', earned: false },
     { id: 'dynamic-learner', name: 'Dynamic Learner', description: 'Adapted to new challenges', icon: '⚡', earned: false }
   ])
-  const [gameHistory, setGameHistory] = useState<any[]>([])
+  const [gameHistory, setGameHistory] = useState<GameRecord[]>([])
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [aiGenerator] = useState(new AdvancedAIGenerator())
@@ -316,7 +247,8 @@ export default function DecisionMakingGame() {
   const [currentDifficulty, setCurrentDifficulty] = useState('medium')
 
   // Text-to-Speech
-  const speakText = (text: string) => {
+  // Wrap speakText and playSound in useCallback
+  const speakText = useCallback((text: string) => {
     if (!soundEnabled) return
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text)
@@ -324,13 +256,14 @@ export default function DecisionMakingGame() {
       utterance.rate = 0.8
       speechSynthesis.speak(utterance)
     }
-  }
-
-  // Sound effects
-  const playSound = (type: 'correct' | 'wrong' | 'badge' | 'ai') => {
+  }, [soundEnabled])
+  
+  const playSound = useCallback((type: 'correct' | 'wrong' | 'badge' | 'ai') => {
     if (!soundEnabled) return
     console.log(`Playing ${type} sound`)
-  }
+  }, [soundEnabled])
+  
+
 
   // AI Difficulty Adjustment
   const adjustDifficulty = useCallback(() => {
@@ -349,7 +282,7 @@ export default function DecisionMakingGame() {
   }, [gameHistory])
 
   // Tạo tình huống AI hoàn toàn mới
-  const generateNewAIScenario = () => {
+  const generateNewAIScenario = useCallback(() => {
     setIsLoading(true)
     
     // Simulate AI processing time
@@ -357,7 +290,19 @@ export default function DecisionMakingGame() {
       const difficulty = adjustDifficulty()
       setCurrentDifficulty(difficulty)
       
-      const newScenario = aiGenerator.generateDynamicScenario(gameHistory, difficulty)
+      // Convert GameRecord[] to PlayerChoice[] format
+      const playerChoices: PlayerChoice[] = gameHistory.map(record => ({
+        theme: record.theme,
+        difficulty: record.difficulty,
+        score: record.points,
+        timestamp: record.timestamp.getTime(), // Convert Date to number
+        choice: record.choice,
+        points: record.points,
+        consequence: record.consequence,
+        isAIGenerated: record.isAIGenerated
+      }))
+      
+      const newScenario = aiGenerator.generateDynamicScenario(playerChoices, difficulty)
       setCurrentScenario(newScenario)
       setAiScenarioCount(prev => prev + 1)
       setIsLoading(false)
@@ -372,15 +317,27 @@ export default function DecisionMakingGame() {
         ))
       }
     }, 2000) // Longer delay to simulate real AI processing
-  }
+  }, [aiGenerator, adjustDifficulty, gameHistory, aiScenarioCount, speakText, playSound])
 
   // Tạo chuỗi tình huống liên kết
-  const generateScenarioChain = () => {
+  const generateScenarioChain = useCallback(() => {
     setIsLoading(true)
     
     setTimeout(() => {
       const difficulty = adjustDifficulty()
-      const scenarioChain = aiGenerator.generateScenarioChain(gameHistory, difficulty)
+      // Convert GameRecord[] to PlayerChoice[] format
+      const playerChoices: PlayerChoice[] = gameHistory.map(record => ({
+        theme: record.theme,
+        difficulty: record.difficulty,
+        score: record.points,
+        timestamp: record.timestamp.getTime(), // Convert Date to number
+        choice: record.choice,
+        points: record.points,
+        consequence: record.consequence,
+        isAIGenerated: record.isAIGenerated
+      }))
+      
+      const scenarioChain = aiGenerator.generateScenarioChain(playerChoices, difficulty)
       
       // Start with first scenario in chain
       setCurrentScenario(scenarioChain[0])
@@ -389,15 +346,15 @@ export default function DecisionMakingGame() {
       speakText(scenarioChain[0].situation)
       playSound('ai')
     }, 1500)
-  }
+  }, [aiGenerator, adjustDifficulty, gameHistory, speakText, playSound])
 
   // Handle choice selection
-  const handleChoice = (choice: Choice) => {
+  const handleChoice = useCallback((choice: Choice) => {
     const newScore = Math.max(0, score + choice.points)
     setScore(newScore)
     
     // Add to game history with more details
-    const choiceRecord = {
+    const choiceRecord: GameRecord = {
       scenario: currentScenario?.situation,
       choice: choice.text,
       points: choice.points,
@@ -428,10 +385,10 @@ export default function DecisionMakingGame() {
     setTimeout(() => {
       generateNewAIScenario()
     }, 3000)
-  }
+  }, [score, currentScenario, playSound, speakText, level, generateNewAIScenario])
 
   // Enhanced badge checking
-  const checkBadgeAwards = (choice: Choice, newScore: number, record: any) => {
+  const checkBadgeAwards = useCallback((choice: Choice, newScore: number, record: GameRecord) => {
     setBadges(prev => prev.map(badge => {
       if (badge.earned) return badge
       
@@ -470,12 +427,12 @@ export default function DecisionMakingGame() {
       }
       return badge
     }))
-  }
+  }, [gameHistory, playSound])
 
   // Initialize game
   useEffect(() => {
     generateNewAIScenario()
-  }, [])
+  }, [generateNewAIScenario])
 
   if (isLoading) {
     return (
@@ -583,52 +540,62 @@ export default function DecisionMakingGame() {
                     <CardHeader className="text-center pb-4">
                       <div className="flex items-center justify-center gap-4 mb-4">
                         <motion.div
-                          animate={{ rotate: [0, 5, -5, 0] }}
+                          className="text-6xl"
+                          animate={{ rotate: [0, 10, -10, 0] }}
                           transition={{ repeat: Infinity, duration: 3 }}
                         >
-                          <Avatar className="w-16 h-16 ring-4 ring-purple-400">
-                            <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-500">
-                              {currentScenario.character.avatar}
-                            </AvatarFallback>
-                          </Avatar>
+                          {currentScenario.character.avatar}
                         </motion.div>
-                        <div>
+                        <div className="text-left">
                           <h3 className="text-xl font-bold text-gray-800">{currentScenario.character.name}</h3>
-                          <div className="flex gap-2 mt-1">
-                            <Badge variant="outline" className="bg-blue-100">
-                              {currentScenario.character.mood}
-                            </Badge>
-                            {currentScenario.isAIGenerated && (
-                              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                                🤖 AI Generated
-                              </Badge>
-                            )}
-                          </div>
+                          <p className="text-gray-600 capitalize">{currentScenario.character.personality}</p>
+                          <p className="text-sm text-gray-500">Mood: {currentScenario.character.mood}</p>
                         </div>
                       </div>
-                      <CardTitle className="text-xl text-gray-800 leading-relaxed bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                      
+                      <div className="flex justify-center gap-2 mb-4">
+                        <UIBadge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {currentScenario.theme}
+                        </UIBadge>
+                        <UIBadge variant="secondary" className="bg-green-100 text-green-800">
+                          {currentScenario.setting}
+                        </UIBadge>
+                        <UIBadge variant="secondary" className="bg-purple-100 text-purple-800">
+                          {currentScenario.difficulty}
+                        </UIBadge>
+                        {currentScenario.isAIGenerated && (
+                          <UIBadge variant="secondary" className="bg-orange-100 text-orange-800">
+                            🤖 AI Generated
+                          </UIBadge>
+                        )}
+                      </div>
+                      
+                      <CardTitle className="text-lg text-gray-800 leading-relaxed">
                         {currentScenario.situation}
                       </CardTitle>
                     </CardHeader>
                     
                     <CardContent className="space-y-3">
+                      <h4 className="font-semibold text-gray-700 mb-3">What would you do?</h4>
                       {currentScenario.choices.map((choice, index) => (
                         <motion.div
                           key={index}
-                          whileHover={{ scale: 1.02, x: 5 }}
+                          whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
                         >
                           <Button
                             onClick={() => handleChoice(choice)}
-                            className="w-full p-4 h-auto text-left justify-start bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg border-2 border-white/20 hover:border-white/40"
-                            variant="default"
+                            variant="outline"
+                            className="w-full p-4 h-auto text-left justify-start bg-white hover:bg-blue-50 border-2 hover:border-blue-300 transition-all duration-200"
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-2xl">💭</span>
-                              <span className="text-lg font-medium">{choice.text}</span>
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
+                                {String.fromCharCode(65 + index)}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-800">{choice.text}</p>
+                                <p className="text-sm text-gray-500 mt-1">Points: +{choice.points}</p>
+                              </div>
                             </div>
                           </Button>
                         </motion.div>
@@ -638,86 +605,64 @@ export default function DecisionMakingGame() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Enhanced AI Controls */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Action Buttons */}
+            <div className="mt-6 flex gap-4 justify-center">
               <Button
                 onClick={generateNewAIScenario}
-                className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold py-4 shadow-lg"
                 disabled={isLoading}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
               >
-                <Sparkles className="w-5 h-5 mr-2" />
-                🎲 Tạo tình huống AI mới
+                <Sparkles className="w-4 h-4 mr-2" />
+                New AI Scenario
               </Button>
               
               <Button
                 onClick={generateScenarioChain}
-                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold py-4 shadow-lg"
                 disabled={isLoading}
+                variant="outline"
+                className="border-purple-300 text-purple-600 hover:bg-purple-50"
               >
-                <Shuffle className="w-5 h-5 mr-2" />
-                🔗 Chuỗi tình huống liên kết
+                <Shuffle className="w-4 h-4 mr-2" />
+                Scenario Chain
+              </Button>
+              
+              <Button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </Button>
             </div>
-
-            {/* AI Info */}
-            <Card className="mt-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-md border-purple-300/30">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-purple-700 mb-2">
-                  <Brain className="w-5 h-5" />
-                  <span className="font-semibold">🤖 AI Dynamic Generation</span>
-                </div>
-                <p className="text-sm text-purple-600">
-                  Mỗi tình huống được AI tạo ra hoàn toàn mới dựa trên lịch sử chơi của bạn. 
-                  Không có câu hỏi nào lặp lại - luôn là trải nghiệm độc đáo!
-                </p>
-              </CardContent>
-            </Card>
           </div>
-
-          {/* Enhanced Sidebar */}
+          
+          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Sound Control */}
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardContent className="p-4">
-                <Button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  variant="ghost"
-                  className="w-full text-white hover:bg-white/20"
-                >
-                  {soundEnabled ? <Volume2 className="w-5 h-5 mr-2" /> : <VolumeX className="w-5 h-5 mr-2" />}
-                  {soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Enhanced Badges */}
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            {/* Badges */}
+            <Card className="bg-white/90 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
                   <Trophy className="w-5 h-5" />
-                  Huy hiệu AI
+                  Achievements
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 max-h-80 overflow-y-auto">
-                {badges.map((badge) => (
+              <CardContent className="space-y-3">
+                {badges.map(badge => (
                   <motion.div
                     key={badge.id}
-                    className={`p-3 rounded-lg border transition-all ${
+                    className={`p-3 rounded-lg border-2 transition-all ${
                       badge.earned 
-                        ? 'bg-yellow-400/20 border-yellow-400 text-yellow-100' 
-                        : 'bg-gray-600/20 border-gray-500 text-gray-400'
+                        ? 'bg-yellow-50 border-yellow-300 shadow-md' 
+                        : 'bg-gray-50 border-gray-200 opacity-60'
                     }`}
-                    whileHover={{ scale: badge.earned ? 1.05 : 1 }}
-                    animate={badge.earned ? { 
-                      boxShadow: ['0 0 0 rgba(255,255,0,0)', '0 0 20px rgba(255,255,0,0.3)', '0 0 0 rgba(255,255,0,0)'] 
-                    } : {}}
-                    transition={{ duration: 2, repeat: badge.earned ? Infinity : 0 }}
+                    animate={badge.earned ? { scale: [1, 1.05, 1] } : {}}
+                    transition={{ duration: 0.3 }}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{badge.icon}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{badge.icon}</span>
                       <div>
-                        <p className="font-semibold text-sm">{badge.name}</p>
+                        <h4 className="font-semibold text-sm">{badge.name}</h4>
                         <p className="text-xs opacity-80">{badge.description}</p>
                       </div>
                     </div>
@@ -725,67 +670,37 @@ export default function DecisionMakingGame() {
                 ))}
               </CardContent>
             </Card>
-
-            {/* AI Analytics */}
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            
+            {/* Recent History */}
+            <Card className="bg-white/90 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
                   <Brain className="w-5 h-5" />
-                  Phân tích AI
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-white/80 text-sm">
-                  <div className="flex justify-between">
-                    <span>Tình huống AI:</span>
-                    <span className="font-bold">{aiScenarioCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Độ khó hiện tại:</span>
-                    <span className="font-bold capitalize">{currentDifficulty}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tổng quyết định:</span>
-                    <span className="font-bold">{gameHistory.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Điểm trung bình:</span>
-                    <span className="font-bold">
-                      {gameHistory.length > 0 
-                        ? (gameHistory.reduce((sum, h) => sum + h.points, 0) / gameHistory.length).toFixed(1)
-                        : '0'
-                      }
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent AI History */}
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  Lịch sử AI gần đây
+                  Recent Choices
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 max-h-64 overflow-y-auto">
-                {gameHistory.filter(h => h.isAIGenerated).slice(-5).reverse().map((record, index) => (
-                  <div key={index} className="p-2 bg-white/5 rounded text-white/80 text-sm border border-purple-400/20">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs">🤖</span>
-                      <span className="font-medium text-xs">{record.theme}</span>
-                      <Badge variant="outline" className="text-xs px-1 py-0">
-                        {record.difficulty}
-                      </Badge>
+                {gameHistory.slice(-5).reverse().map((record, index) => (
+                  <div key={index} className="p-2 bg-gray-50 rounded border">
+                    <div className="flex justify-between items-start">
+                      <p className="text-sm font-medium text-gray-700">{record.choice}</p>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        record.points > 5 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                      }`}>
+                        +{record.points}
+                      </span>
                     </div>
-                    <p className="font-medium">{record.choice}</p>
-                    <p className="text-xs opacity-70">+{record.points} điểm</p>
+                    <p className="text-xs text-gray-500 mt-1">{record.consequence}</p>
+                    {record.isAIGenerated && (
+                      <span className="text-xs bg-orange-100 text-orange-600 px-1 rounded mt-1 inline-block">
+                        🤖 AI
+                      </span>
+                    )}
                   </div>
                 ))}
-                {gameHistory.filter(h => h.isAIGenerated).length === 0 && (
-                  <p className="text-white/60 text-sm text-center py-4">
-                    Chưa có tình huống AI nào
+                {gameHistory.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">
+                    No choices made yet. Start playing!
                   </p>
                 )}
               </CardContent>

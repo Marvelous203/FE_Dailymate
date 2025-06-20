@@ -854,3 +854,32 @@ export async function deleteKid(kidId: string) {
     throw new Error('Đã xảy ra lỗi khi xóa thông tin trẻ em');
   }
 }
+
+// Replace 'any' types with proper interfaces
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface ErrorResponse {
+  success: false;
+  error: string;
+  message: string;
+}
+
+interface ProcessedData {
+  [key: string]: unknown;
+}
+
+export const handleApiError = (error: Error | ErrorResponse): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return error.message;
+}
+
+export const processData = (data: Record<string, unknown>): ProcessedData => {
+  return data;
+}

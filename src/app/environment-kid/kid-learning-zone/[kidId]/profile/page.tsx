@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,14 +23,46 @@ import { Toaster } from "@/components/ui/sonner";
 import { updateKid, getKidById } from "@/lib/api";
 import { useParams } from "next/navigation";
 
+// Add proper TypeScript interfaces
+interface KidData {
+  _id: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | '';
+  avatar: string;
+  level?: number;
+  points?: number;
+  streak?: {
+    current: number;
+  };
+  achievements?: {
+    _id: string;
+    name: string;
+    description: string;
+    points: number;
+  }[];
+  userId?: string;
+}
+
+interface KidResponse {
+  data: KidData;
+}
+
+interface KidForm {
+  fullName: string;
+  dateOfBirth: string;
+  gender: string;
+  avatar: string;
+}
+
 export default function KidProfilePage() {
   const params = useParams();
   const kidId = params.kidId as string;
   
-  const [kidData, setKidData] = useState(null);
+  const [kidData, setKidData] = useState<KidResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [kidForm, setKidForm] = useState({
+  const [kidForm, setKidForm] = useState<KidForm>({
     fullName: '',
     dateOfBirth: '',
     gender: '',
@@ -38,7 +70,7 @@ export default function KidProfilePage() {
   });
 
   // Calculate age from dateOfBirth
-  const calculateAge = (dateOfBirth: string) => {
+  const calculateAge = (dateOfBirth: string): number | string => {
     if (!dateOfBirth) return 'N/A';
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -50,41 +82,30 @@ export default function KidProfilePage() {
     return age;
   };
 
-  useEffect(() => {
-    loadKidData();
-  }, [kidId]);
-
-  const loadKidData = async () => {
+  // Fix useEffect dependency with useCallback
+  const loadKidData = useCallback(async () => {
     try {
       // Load from localStorage first
       const storedKidData = localStorage.getItem('kidData');
       if (storedKidData) {
-        const parsedData = JSON.parse(storedKidData);
+        const parsedData = JSON.parse(storedKidData) as KidResponse;
         setKidData(parsedData);
         
-        const kid = parsedData.data;
-        setKidForm({
-          fullName: kid?.fullName || '',
-          dateOfBirth: kid?.dateOfBirth || '',
-          gender: kid?.gender || '',
-          avatar: kid?.avatar || ''
-        });
-      }
-      
-      // Then fetch fresh data from API if kidId is available
-      if (kidId) {
-        const response = await getKidById(kidId);
-        if (response.success) {
-          const updatedData = { data: response.data };
-          setKidData(updatedData);
-          localStorage.setItem('kidData', JSON.stringify(updatedData));
-          
-          setKidForm({
-            fullName: response.data.fullName || '',
-            dateOfBirth: response.data.dateOfBirth || '',
-            gender: response.data.gender || '',
-            avatar: response.data.avatar || ''
-          });
+        // Then fetch fresh data from API if kidId is available
+        if (kidId) {
+          const response = await getKidById(kidId);
+          if (response.success) {
+            const updatedData: KidResponse = { data: response.data };
+            setKidData(updatedData);
+            localStorage.setItem('kidData', JSON.stringify(updatedData));
+            
+            setKidForm({
+              fullName: response.data.fullName || '',
+              dateOfBirth: response.data.dateOfBirth || '',
+              gender: response.data.gender || '',
+              avatar: response.data.avatar || ''
+            });
+          }
         }
       }
     } catch (error) {
@@ -93,7 +114,7 @@ export default function KidProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [kidId]); // Add kidId as dependency
 
   const handleUpdateKid = async () => {
     try {
@@ -102,7 +123,7 @@ export default function KidProfilePage() {
         return;
       }
 
-      const updateData = {};
+      const updateData: Partial<KidData> = {};
       const currentKid = kidData?.data;
       
       if (kidForm.fullName !== currentKid?.fullName) {
@@ -112,7 +133,7 @@ export default function KidProfilePage() {
         updateData.dateOfBirth = kidForm.dateOfBirth;
       }
       if (kidForm.gender !== currentKid?.gender) {
-        updateData.gender = kidForm.gender;
+        updateData.gender = kidForm.gender as 'male' | 'female' | '';
       }
       if (kidForm.avatar !== currentKid?.avatar) {
         updateData.avatar = kidForm.avatar;
@@ -136,6 +157,11 @@ export default function KidProfilePage() {
     }
   };
 
+  // Fix useEffect with proper dependency
+  useEffect(() => {
+    loadKidData();
+  }, [loadKidData]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -148,7 +174,8 @@ export default function KidProfilePage() {
   }
 
   const kid = kidData?.data;
-  const user = kid?.userId;
+  // Remove unused user variable
+  // const user = kid?.userId;
 
   return (
     <div className="space-y-6">
@@ -225,7 +252,7 @@ export default function KidProfilePage() {
                   <div className="w-full space-y-3">
                     <div className="flex items-center gap-3 text-sm">
                       <Calendar className="h-4 w-4 text-[#83d98c]" />
-                      <span>Tuổi: {calculateAge(kid?.dateOfBirth)} tuổi</span>         
+                      <span>Tuổi: {calculateAge(kid?.dateOfBirth || '')} tuổi</span>         
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <User className="h-4 w-4 text-[#83d98c]" />
@@ -343,3 +370,6 @@ export default function KidProfilePage() {
     </div>
   );
 }
+
+// Remove unused user variable
+// const [user, setUser] = useState(null); // Remove if not used

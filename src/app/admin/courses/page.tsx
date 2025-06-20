@@ -105,7 +105,20 @@ export default function CoursesPage() {
   );
 }
 
-function CourseCard({ course }: { course: any }) {
+interface Course {
+  id: number;
+  title: string;
+  description?: string;  // Make optional since it's not in the data
+  category: string;
+  rating: number;
+  duration: string;
+  lessons: number;
+  status: string;
+  thumbnail?: string;
+  level?: string;
+}
+
+function CourseCard({ course }: { course: Course }) {
   return (
     <Card className="border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">

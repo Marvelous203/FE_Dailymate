@@ -20,7 +20,7 @@ export default function PremiumPlans() {
               Choose the Perfect Plan
             </h1>
             <p className="text-[#64748b] text-xl leading-relaxed">
-              Unlock premium educational content and features to enhance your child's learning experience with our comprehensive platform.
+              Unlock premium educational content and features to enhance your child`s learning experience with our comprehensive platform.
             </p>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function PremiumPlans() {
             <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] bg-clip-text text-transparent">
               Compare All Features
             </h2>
-            <p className="text-[#64748b] text-lg">See what's included in each plan</p>
+            <p className="text-[#64748b] text-lg">See what`s included in each plan</p>
           </div>
 
           <div className="overflow-x-auto">
@@ -307,10 +307,10 @@ export default function PremiumPlans() {
                 </div>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Ready to start your child's learning journey?
+                Ready to start your child`s learning journey?
               </h2>
               <p className="mb-8 text-white/90 text-lg leading-relaxed">
-                Join thousands of parents who have enhanced their children's education with our interactive learning platform. Start your free trial today!
+                Join thousands of parents who have enhanced their children`s education with our interactive learning platform. Start your free trial today!
               </p>
               <Button className="bg-white text-[#8b5cf6] hover:bg-white/90 font-bold py-4 px-8 text-lg shadow-xl transform hover:scale-105 transition-all duration-300">
                 Get Started Today
@@ -323,7 +323,7 @@ export default function PremiumPlans() {
   );
 }
 
-function PlanFeature({ children, included = false, icon }) {
+function PlanFeature({ children, included = false, icon = null }: { children: React.ReactNode; included?: boolean; icon?: React.ReactNode | null }) {
   return (
     <div className="flex items-center gap-3">
       <div className={`flex-shrink-0 ${included ? 'text-current' : 'text-[#64748b]'}`}>

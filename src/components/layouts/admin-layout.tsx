@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   )
 }
 
-function NavItem({ href, icon, label }) {
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <li>
       <Link href={href}>

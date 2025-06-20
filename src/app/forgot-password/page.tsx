@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,7 +15,21 @@ import { CheckCircle, Mail, Lock, ArrowLeft } from 'lucide-react';
 
 type StepType = 'email' | 'verification' | 'newPassword' | 'success';
 
-export default function ForgotPassword() {
+// Component to handle search params
+function SearchParamsHandler({ setEmail }: { setEmail: (email: string) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams, setEmail]);
+  
+  return null;
+}
+
+function ForgotPasswordContent() {
   const [step, setStep] = useState<StepType>('email');
   const [email, setEmail] = useState('');
   const [verifyCode, setVerifyCode] = useState('');
@@ -25,14 +39,6 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   
   const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(emailParam);
-    }
-  }, [searchParams]);
   
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +50,28 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     
+    // Replace 'any' with proper error types
     try {
-      await sendVerificationEmail(email, true); // true = forgot password mode
+      await sendVerificationEmail(email, true);
       toast.success('Email đặt lại mật khẩu đã được gửi! Vui lòng kiểm tra hộp thư của bạn.');
       setStep('verification');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Send email error:', error);
-      setError(error.message);
-      toast.error(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+    
+    // Apply same pattern to other catch blocks
+    try {
+      // Chuyển sang bước nhập mật khẩu mới
+      setStep('newPassword');
+      toast.success('Mã xác thực hợp lệ! Vui lòng nhập mật khẩu mới.');
+    } catch (error: unknown) {
+      console.error('Verify code error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -71,10 +91,11 @@ export default function ForgotPassword() {
       // Chuyển sang bước nhập mật khẩu mới
       setStep('newPassword');
       toast.success('Mã xác thực hợp lệ! Vui lòng nhập mật khẩu mới.');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Verify code error:', error);
-      setError(error.message);
-      toast.error(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -105,10 +126,11 @@ export default function ForgotPassword() {
       await resetPassword(email, verifyCode, newPassword);
       toast.success('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.');
       setStep('success');
-    } catch (error: any) {
+    } catch (error ) {
       console.error('Reset password error:', error);
-      setError(error.message);
-      toast.error(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -273,6 +295,9 @@ export default function ForgotPassword() {
   
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler setEmail={setEmail} />
+      </Suspense>
       <AnimatePresence>
         <LoadingOverlay 
           isVisible={loading}
@@ -364,3 +389,38 @@ export default function ForgotPassword() {
     </>
   );
 }
+
+export default function ForgotPassword() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-[#e6fffa] to-[#eafff4] flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10b981] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    }>
+      <ForgotPasswordContent />
+    </Suspense>
+  );
+}
+
+
+// Replace any types with proper interfaces
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data?: Record<string, unknown>; // Replace 'any' with proper type
+}
+
+// Remove unused FormData interface and handleError function if not used
+interface FormData {
+  email: string;
+  code?: string;
+  newPassword?: string;
+}
+
+// Replace any with proper types in error handlers
+const handleError = (error: Error | ApiResponse) => {
+  // ... existing code ...
+};

@@ -283,7 +283,7 @@ export default function PremiumPlans() {
   );
 }
 
-function PlanFeature({ children, included = false }) {
+function PlanFeature({ children, included = false }: { children: React.ReactNode; included?: boolean }) {
   return (
     <div className="flex items-center">
       {included ? (

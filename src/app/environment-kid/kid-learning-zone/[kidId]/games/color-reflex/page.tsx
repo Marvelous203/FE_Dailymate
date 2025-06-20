@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Star, Trophy } from "lucide-react"
+import { ArrowLeft } from "lucide-react" // Remove Star, Trophy
 import { ColorReflexGame } from "@/components/mini-games/ColorReflexGame"
 
 export default function ColorReflexPage() {

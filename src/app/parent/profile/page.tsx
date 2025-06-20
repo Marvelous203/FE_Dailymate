@@ -26,16 +26,102 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { handleUploadFile } from '@/utils/upload';
+import { handleUploadFile } from '../../../utils/upload';
+
+// TypeScript interfaces
+interface ParentData {
+    data?: {
+        _id: string;
+        fullName?: string;
+        phoneNumber?: string;
+        address?: string;
+        dateOfBirth?: string;
+        gender?: string;
+        image?: string;
+        subscriptionType?: string;
+        subscriptionExpiry?: string;
+        createdAt?: string;
+        userId?: {
+            email?: string;
+        };
+    };
+    _id?: string;
+    roleData?: {
+        fullName?: string;
+        phoneNumber?: string;
+        address?: string;
+        dateOfBirth?: string;
+        gender?: string;
+    };
+    image?: string;
+}
+
+interface KidData {
+    _id: string;
+    fullName?: string;
+    name?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    avatar?: string;
+    image?: string;
+    age?: number;
+    points?: number;
+    level?: number;
+    streak?: number;
+}
+
+interface ChildListItem {
+    id: string;
+    name: string;
+    fullName?: string;
+    dateOfBirth: string;
+    gender: string;
+    avatar: string;
+    courses: number;
+    points?: number;
+    level?: number;
+    streak?: {
+        current?: number;
+    };
+}
+
+interface ParentForm {
+    fullName: string;
+    phoneNumber: string;
+    address: string;
+    dateOfBirth: string;
+    gender: string;
+    image: string;
+}
+
+interface KidForm {
+    fullName: string;
+    dateOfBirth: string;
+    gender: string;
+    avatar: string;
+    image: string;
+    age?: number;
+}
+
+interface UpdateData {
+    fullName?: string;
+    phoneNumber?: string;
+    address?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    image?: string;
+    avatar?: string;
+    age?: number;
+}
 
 export default function ParentProfile() {
-    const [childrenList, setChildrenList] = useState([]);
-    const [parentData, setParentData] = useState(null);
-    const [kidsData, setKidsData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [editingParent, setEditingParent] = useState(false);
-    const [editingKid, setEditingKid] = useState(null);
-    const [parentForm, setParentForm] = useState({
+    const [childrenList, setChildrenList] = useState<ChildListItem[]>([]);
+    const [parentData, setParentData] = useState<ParentData | null>(null);
+    const [kidsData, setKidsData] = useState<KidData[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [editingParent, setEditingParent] = useState<boolean>(false);
+    const [editingKid, setEditingKid] = useState<string | null>(null);
+    const [parentForm, setParentForm] = useState<ParentForm>({
         fullName: '',
         phoneNumber: '',
         address: '',
@@ -43,9 +129,9 @@ export default function ParentProfile() {
         gender: '',
         image: ''
     });
-    const [kidForm, setKidForm] = useState({
+    const [kidForm, setKidForm] = useState<KidForm>({
         fullName: '',
-        dateOfBirth: '', // Thêm field này
+        dateOfBirth: '',
         gender: '',
         avatar: '',
         image: ''
@@ -87,7 +173,7 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
                                 ...parent,
                                 ...apiParentData.data
                             };
-                            setParentData(updatedParentData);
+                            setParentData(updatedParentData as ParentData);
                             
                             // Cập nhật localStorage với dữ liệu mới
                             localStorage.setItem('parentData', JSON.stringify(updatedParentData));
@@ -163,13 +249,17 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
                 if (Array.isArray(kidsArray)) {
                     setKidsData(kidsArray);
                     
-                    const updatedChildren = kidsArray.map((kid: any) => ({
+                    const updatedChildren = kidsArray.map((kid: KidData): ChildListItem => ({
                         id: kid._id,
                         name: kid.fullName || kid.name || 'Unknown',
+                        fullName: kid.fullName,
                         dateOfBirth: kid.dateOfBirth || '',
                         gender: kid.gender || '',
                         avatar: kid.avatar || '/avatar_default.png',
-                        courses: 0
+                        courses: 0,
+                        points: kid.points,
+                        level: kid.level,
+                        streak: kid.streak ? { current: kid.streak } : undefined
                     }));
                     setChildrenList(updatedChildren);
                 }
@@ -189,7 +279,7 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
             }
 
             // Chỉ gửi những trường đã thay đổi
-            const updateData: any = {};
+            const updateData: UpdateData = {};
             
             if (parentForm.fullName !== (parentData?.data?.fullName || parentData?.roleData?.fullName || '')) {
                 updateData.fullName = parentForm.fullName;
@@ -227,13 +317,14 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
                     }
                 };
                 localStorage.setItem('parentData', JSON.stringify(updatedParentData));
-                setParentData(updatedParentData);
+                setParentData(updatedParentData as ParentData);
                 setEditingParent(false);
                 toast.success('Cập nhật thông tin thành công!');
             }
         } catch (error) {
             console.error('Error updating parent:', error);
-            toast.error(error.message || 'Có lỗi khi cập nhật thông tin');
+            const errorMessage = error instanceof Error ? error.message : 'Có lỗi khi cập nhật thông tin';
+            toast.error(errorMessage);
         }
     };
 
@@ -260,7 +351,7 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
             console.log('Current kid data from server:', currentKidData);
     
             // Bước 2: So sánh và chỉ gửi những field đã thay đổi
-            const updateData = {};
+            const updateData: UpdateData = {};
             
             if (kidForm.fullName !== currentKidData.fullName) {
                 updateData.fullName = kidForm.fullName;
@@ -326,7 +417,9 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
             if (response.success) {
                 // Reload kids data
                 const parentId = parentData?.data?._id || parentData?._id;
-                await loadKidsData(parentId);
+                if (parentId) {
+                    await loadKidsData(parentId);
+                }
                 setEditingKid(null);
                 toast.success('Cập nhật thông tin con thành công!');
             } else {
@@ -338,13 +431,14 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
             console.error('Error updating kid:', error);
             
             // Log chi tiết hơn về lỗi
-            if (error.response) {
-                console.error('Error response:', error.response);
-                console.error('Error status:', error.response.status);
-                console.error('Error data:', error.response.data);
+            if (error instanceof Error && 'response' in error) {
+                const axiosError = error as any;
+                console.error('Error response:', axiosError.response);
+                console.error('Error status:', axiosError.response.status);
+                console.error('Error data:', axiosError.response.data);
             }
             
-            toast.error(error.message || 'Có lỗi khi cập nhật thông tin con');
+            toast.error(error instanceof Error ? error.message : 'Có lỗi khi cập nhật thông tin con');
         }
     };
 
@@ -358,20 +452,21 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
             if (response.success) {
                 // Reload kids data
                 const parentId = parentData?.data?._id || parentData?._id;
-                await loadKidsData(parentId);
+                if (parentId) {
+                    await loadKidsData(parentId);
+                }
                 toast.success('Xóa thông tin con thành công!');
             }
         } catch (error) {
             console.error('Error deleting kid:', error);
-            toast.error(error.message || 'Có lỗi khi xóa thông tin con');
+            toast.error(error instanceof Error ? error.message : 'Có lỗi khi xóa thông tin con');
         }
     };
 
     const handleAddChild = async (child: {
         name: string;
-        age: string;
+        dateOfBirth: string;
         gender: string;
-        avatar: string;
     }) => {
         // Reload kids data after adding new child
         const parentId = parentData?.data?._id || parentData?._id;
@@ -391,7 +486,7 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
         
         return age;
     };
-    const startEditingKid = async (kid) => {
+    const startEditingKid = async (kid: ChildListItem) => {
         try {
             console.log('Starting to edit kid:', kid);
             setEditingKid(kid.id);

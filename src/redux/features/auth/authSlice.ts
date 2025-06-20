@@ -22,6 +22,7 @@ const initialState: AuthState = {
   error: null,
 }
 
+// Remove unused parameter
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -84,8 +85,8 @@ const authSlice = createSlice({
         state.user = null;
       }
     },
-  },
-})
+  }
+});
 
 export const { 
   loginStart, 

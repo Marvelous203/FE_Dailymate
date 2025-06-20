@@ -128,7 +128,7 @@ export default function ParentCourses() {
         }
         
         // Filter only published courses
-        const publishedCourses = coursesData.filter(course => course.isPublished === true);
+        const publishedCourses = coursesData.filter((course: Course) => course.isPublished === true);
         
         console.log('Courses data:', coursesData);
         console.log('Published courses:', publishedCourses);

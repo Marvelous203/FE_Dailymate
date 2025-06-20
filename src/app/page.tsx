@@ -8,8 +8,6 @@ import HomeContent from "@/components/HomeContent"
 import CoursesContent from "@/components/CoursesContent"
 import FeaturesContent from "@/components/FeaturesContent"
 import PremiumContent from "@/components/PremiumContent"
-import AboutContent from "@/components/AboutContent"
-
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home')

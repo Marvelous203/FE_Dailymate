@@ -1,6 +1,4 @@
-'use client';
-
-import { BlockPuzzleGame } from '@/components/mini-games/BlockPuzzleGame';
+'use client'
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';

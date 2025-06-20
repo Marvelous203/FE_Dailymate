@@ -8,8 +8,10 @@ import { ChevronLeft, Save, Plus, Trash, Clock, BookOpen, User } from "lucide-re
 import Image from "next/image"
 import Link from "next/link"
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
-  const courseId = params.id
+// Update the component to handle async params
+export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const courseId = resolvedParams.id
   const course = courses.find((c) => c.id.toString() === courseId) || courses[0]
 
   return (

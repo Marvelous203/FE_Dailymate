@@ -38,16 +38,23 @@ interface TestData {
   _id: string;
   title: string;
   description: string;
-  questions: any[];
+  questions: Question[];
   duration?: number;
   difficulty?: string;
 }
 
+interface Question {
+  _id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
 export default function LessonPage({ params }: { params: Promise<{ kidId: string; courseId: string; lessonId: string }> }) {
   const resolvedParams = use(params);
-  const [lessonCompleted, setLessonCompleted] = useState(false)
+  const [lessonCompleted, ] = useState(false)
   const [videoCompleted, setVideoCompleted] = useState(false)
-  const [interactiveCompleted, setInteractiveCompleted] = useState(false)
+  const [interactiveCompleted,] = useState(false)
   const [lessonData, setLessonData] = useState<LessonData | null>(null)
   const [testsData, setTestsData] = useState<TestData[]>([])
   const [loading, setLoading] = useState(true)
@@ -142,12 +149,6 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
   const handleVideoComplete = (score: number) => {
     console.log(`Điểm video: ${score}%`)
     setVideoCompleted(true)
-  }
-
-  const handleLessonComplete = (score: number) => {
-    console.log(`Điểm bài học: ${score}%`)
-    setInteractiveCompleted(true)
-    setLessonCompleted(true)
   }
 
   if (loading) {

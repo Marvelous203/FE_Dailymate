@@ -34,6 +34,10 @@ export function InteractiveVideo({
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showFeedback, setShowFeedback] = useState(false);
 
+  // Remove unused 'use' import
+  // import { use } from "react" // Remove this line
+  
+  // Fix useEffect dependencies
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;

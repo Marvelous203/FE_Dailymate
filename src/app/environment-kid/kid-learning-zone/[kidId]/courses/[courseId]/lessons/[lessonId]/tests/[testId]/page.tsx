@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Clock, } from "lucide-react"
@@ -38,6 +38,8 @@ export default function TestPage({ params }: {
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [totalPoints, setTotalPoints] = useState(0);
+  // Thêm state để theo dõi việc hoàn thành bài học
+  const [lessonCompleted, setLessonCompleted] = useState(false);
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -80,9 +82,13 @@ export default function TestPage({ params }: {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  const handleSubmitTest = () => {
+  // Fix useCallback with proper dependencies
+  const handleSubmitTest = useCallback(() => {
     if (!testData) return;
-
+    
+    // Đánh dấu bài học đã hoàn thành
+    setLessonCompleted(true);
+    
     let totalScore = 0;
     testData.questions.forEach((question, index) => {
       const selectedOption = question.options[answers[index]];
@@ -90,10 +96,19 @@ export default function TestPage({ params }: {
         totalScore += question.points;
       }
     });
-
+  
     setScore(totalScore);
     setShowResults(true);
-  };
+  }, [testData, answers]);
+
+  // Thêm useEffect để xử lý khi lessonCompleted thay đổi
+  useEffect(() => {
+    if (lessonCompleted) {
+      // Thực hiện các hành động khi bài học hoàn thành
+      console.log('Bài học đã hoàn thành');
+      // Có thể thêm API call để cập nhật trạng thái hoàn thành bài học
+    }
+  }, [lessonCompleted]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -101,6 +116,8 @@ export default function TestPage({ params }: {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // ... phần còn lại của component không thay đổi
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -301,3 +318,4 @@ export default function TestPage({ params }: {
     </div>
   );
 }
+

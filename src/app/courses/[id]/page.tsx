@@ -13,8 +13,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/sidebar";
 
-export default function CourseDetail({ params }: { params: { id: string } }) {
-  const courseId = params.id;
+// Update the component to handle async params
+export default async function CourseDetail({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const courseId = resolvedParams.id;
   const course =
     courses.find((c) => c.id.toString() === courseId) || courses[0];
 

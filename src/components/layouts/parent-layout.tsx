@@ -1,9 +1,10 @@
+
 import Link from "next/link"
 import { Bell, BookOpen, CreditCard, Home, MessageSquare, Settings, Users, BarChart2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function ParentLayout({ children }) {
+export default function ParentLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-[#8b5cf6] text-white border-b border-[#7c3aed]">
@@ -56,7 +57,7 @@ export default function ParentLayout({ children }) {
   )
 }
 
-function NavItem({ href, icon, label }) {
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <Link href={href}>
       <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex gap-1 items-center">

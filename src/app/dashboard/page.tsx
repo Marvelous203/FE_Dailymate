@@ -77,7 +77,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-[#1e1e1e]">Dashboard</h1>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="rounded-full">
-              <Bell size={20} />
+              <Bell size={24} />
             </Button>
             <div className="w-10 h-10 bg-[#d9d9d9] rounded-full"></div>
           </div>
@@ -170,13 +170,14 @@ export default function Dashboard() {
   );
 }
 
-function Bell(props: React.SVGProps<SVGSVGElement>) {
+function Bell(props: React.SVGProps<SVGSVGElement> & { size?: number }) {
+  const { size = 24, ...svgProps } = props;
   return (
     <svg
-      {...props}
+      {...svgProps}
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

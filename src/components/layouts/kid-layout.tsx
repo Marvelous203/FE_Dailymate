@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function KidLayout({ children }) {
-  const [kidData, setKidData] = useState(null);
+export default function KidLayout({ children }: { children: React.ReactNode }) {
+  const [kidData, setKidData] = useState<any>(null);
   const { logout } = useAuth();
 
   useEffect(() => {
@@ -42,12 +42,9 @@ export default function KidLayout({ children }) {
   const kidBaseUrl = kid?._id ? `/environment-kid/kid-learning-zone/${kid._id}` : '/environment-kid/kid-learning-zone';
 
   // Cập nhật các liên kết navigation
-  const navItems = [
-    { href: kidBaseUrl, label: "Home", icon: Home },
-    { href: `${kidBaseUrl}/courses`, label: "Courses", icon: BookOpen },
-    { href: `${kidBaseUrl}/games`, label: "Games", icon: Gamepad2 },
-    { href: `${kidBaseUrl}/rewards`, label: "Rewards", icon: Gift },
-  ];
+  // Remove unused variables
+  // const user = ... // Remove if not used
+  // const navItems = ... // Remove if not used
   const handleLogout = () => {
     logout();
   };
@@ -169,7 +166,7 @@ export default function KidLayout({ children }) {
   );
 }
 
-function NavItem({ href, icon, label }) {
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <Link href={href}>
       <Button

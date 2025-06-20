@@ -3,8 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Calendar, Trophy, Target, Zap } from "lucide-react";
-import { ChildProfile } from "@/components/parent/children/ChildProfile";
-import { ChildProgressData } from "@/components/parent/children/types";
+// import { ChildProgressData } from "@/components/parent/children/types";
 import { useEffect, useState } from "react";
 import { getKidsByParentId } from "@/lib/api";
 import { useSelector } from "react-redux";
@@ -20,7 +19,9 @@ interface Child {
   level: number;
   avatar: string;
   unlockedAvatars: string[];
-  achievements: any[];
+  achievements: {
+    name: string;
+  }[];
   streak: {
     current: number;
     longest: number;
@@ -38,51 +39,51 @@ interface Child {
   __v: number;
 }
 
-interface ApiResponse {
-  success: boolean;
-  data: {
-    kids: Child[];
-    parentInfo: {
-      parentId: string;
-      parentUserId: string;
-      parentFullName: string;
-      parentEmail: string;
-    };
-  };
-  message?: string;
-}
+// interface ApiResponse {
+//   success: boolean;
+//   data: {
+//     kids: Child[];
+//     parentInfo: {
+//       parentId: string;
+//       parentUserId: string;
+//       parentFullName: string;
+//       parentEmail: string;
+//     };
+//   };
+//   message?: string;
+// }
 
-// Dữ liệu mẫu cho tiến độ học tập
-const sampleProgressData: ChildProgressData = {
-  subjects: [
-    { subject: 'Toán', progress: 65, lastActivity: '2023-06-10', timeSpent: 320, score: 85 },
-    { subject: 'Khoa học', progress: 42, lastActivity: '2023-06-08', timeSpent: 180, score: 78 },
-    { subject: 'Ngôn ngữ', progress: 78, lastActivity: '2023-06-12', timeSpent: 240, score: 92 },
-    { subject: 'Lịch sử', progress: 30, lastActivity: '2023-06-05', timeSpent: 120, score: 70 },
-    { subject: 'Nghệ thuật', progress: 55, lastActivity: '2023-06-09', timeSpent: 150, score: 88 },
-  ],
-  skills: [
-    { name: 'Tư duy phản biện', level: 4, progress: 65 },
-    { name: 'Giải quyết vấn đề', level: 3, progress: 45 },
-    { name: 'Sáng tạo', level: 5, progress: 80 },
-    { name: 'Giao tiếp', level: 4, progress: 70 },
-  ],
-  weeklyActivity: [
-    { day: 'CN', minutes: 30 },
-    { day: 'T2', minutes: 45 },
-    { day: 'T3', minutes: 60 },
-    { day: 'T4', minutes: 30 },
-    { day: 'T5', minutes: 75 },
-    { day: 'T6', minutes: 45 },
-    { day: 'T7', minutes: 90 },
-  ],
-  monthlyProgress: [
-    { week: 'Tuần 1', progress: 25 },
-    { week: 'Tuần 2', progress: 40 },
-    { week: 'Tuần 3', progress: 55 },
-    { week: 'Tuần 4', progress: 65 },
-  ],
-};
+// // Dữ liệu mẫu cho tiến độ học tập
+// const sampleProgressData: ChildProgressData = {
+//   subjects: [
+//     { subject: 'Toán', progress: 65, lastActivity: '2023-06-10', timeSpent: 320, score: 85 },
+//     { subject: 'Khoa học', progress: 42, lastActivity: '2023-06-08', timeSpent: 180, score: 78 },
+//     { subject: 'Ngôn ngữ', progress: 78, lastActivity: '2023-06-12', timeSpent: 240, score: 92 },
+//     { subject: 'Lịch sử', progress: 30, lastActivity: '2023-06-05', timeSpent: 120, score: 70 },
+//     { subject: 'Nghệ thuật', progress: 55, lastActivity: '2023-06-09', timeSpent: 150, score: 88 },
+//   ],
+//   skills: [
+//     { name: 'Tư duy phản biện', level: 4, progress: 65 },
+//     { name: 'Giải quyết vấn đề', level: 3, progress: 45 },
+//     { name: 'Sáng tạo', level: 5, progress: 80 },
+//     { name: 'Giao tiếp', level: 4, progress: 70 },
+//   ],
+//   weeklyActivity: [
+//     { day: 'CN', minutes: 30 },
+//     { day: 'T2', minutes: 45 },
+//     { day: 'T3', minutes: 60 },
+//     { day: 'T4', minutes: 30 },
+//     { day: 'T5', minutes: 75 },
+//     { day: 'T6', minutes: 45 },
+//     { day: 'T7', minutes: 90 },
+//   ],
+//   monthlyProgress: [
+//     { week: 'Tuần 1', progress: 25 },
+//     { week: 'Tuần 2', progress: 40 },
+//     { week: 'Tuần 3', progress: 55 },
+//     { week: 'Tuần 4', progress: 65 },
+//   ],
+// };
 
 export default function ParentChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
@@ -150,7 +151,7 @@ export default function ParentChildrenPage() {
         setLoading(true);
         setError(null);
         
-        const response: any = await getKidsByParentId(parentId);
+        const response = await getKidsByParentId(parentId);
         
         console.log('API Response:', response);
         

@@ -12,7 +12,7 @@ import { loginUser, fetchUserDataAfterLogin, fetchKidDataAfterLogin } from "@/li
 export default function KidLoginPage() {
   const [parentEmail, setParentEmail] = useState('')
   const [parentPassword, setParentPassword] = useState('')
-  const [kidsInfo, setKidsInfo] = useState(null)
+  const [kidsInfo, setKidsInfo] = useState<{ data: { kids: Array<{ _id: string; fullName: string }> } } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showParentModal, setShowParentModal] = useState(false)
@@ -50,7 +50,7 @@ export default function KidLoginPage() {
   }, [])
 
   // Handle parent login
-  const handleParentLogin = async (e) => {
+  const handleParentLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -80,14 +80,14 @@ export default function KidLoginPage() {
       }
     } catch (error) {
       console.error('Parent login error:', error)
-      setError(error.message || 'Login failed. Please try again.')
+      setError(error instanceof Error ? error.message : 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   // Handle kid login (no password required)
-  const handleKidLogin = async (kidId, kidName) => {
+  const handleKidLogin = async (kidId: string, kidName: string) => {
     setLoading(true)
     setError('')
 
@@ -159,7 +159,7 @@ export default function KidLoginPage() {
     )
   }
 
-  function getKidColor(index) {
+  function getKidColor(index: number) {
     const colors = [
       'bg-[#d1fae5]', // green
       'bg-[#feccd6]', // pink
@@ -171,7 +171,13 @@ export default function KidLoginPage() {
     return colors[index % colors.length]
   }
   
-  function KidLoginOption({ name, color, onClick, isAdd = false, disabled = false }) {
+  function KidLoginOption({ name, color, onClick, isAdd = false, disabled = false }: {
+    name: string;
+    color: string;
+    onClick: () => void;
+    isAdd?: boolean;
+    disabled?: boolean;
+  }) {
     return (
       <div
         onClick={disabled ? undefined : onClick}
@@ -193,7 +199,7 @@ export default function KidLoginPage() {
     )
   }
   
-  function UserIcon(props) {
+  function UserIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg
         {...props}
@@ -213,7 +219,7 @@ export default function KidLoginPage() {
     )
   }
   
-  function PlusCircleIcon(props) {
+  function PlusCircleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg
         {...props}
@@ -234,7 +240,7 @@ export default function KidLoginPage() {
     )
   }
   
-  function XIcon(props) {
+  function XIcon(props : React.SVGProps<SVGSVGElement>) {
     return (
       <svg
         {...props}

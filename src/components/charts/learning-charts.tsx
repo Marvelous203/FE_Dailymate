@@ -29,7 +29,7 @@ ChartJS.register(
 );
 
 // Biểu đồ Hoạt động Hàng tuần
-export function WeeklyActivityChart({ data }) {
+export function WeeklyActivityChart({ data }: { data: Array<{ day: string; minutes: number }> }) {
   const chartData = {
     labels: data.map(item => item.day),
     datasets: [
@@ -74,7 +74,7 @@ export function WeeklyActivityChart({ data }) {
 }
 
 // Biểu đồ Tiến độ Môn học
-export function SubjectProgressChart({ data }) {
+export function SubjectProgressChart({ data }: { data: Array<{ subject: string; progress: number }> }) {
   const chartData = {
     labels: data.map(item => item.subject),
     datasets: [
@@ -111,7 +111,7 @@ export function SubjectProgressChart({ data }) {
 }
 
 // Biểu đồ Xu hướng Tiến độ
-export function ProgressTrendChart({ data }) {
+export function ProgressTrendChart({ data }: { data: Array<{ week: string; progress: number }> }) {
   const chartData = {
     labels: data.map(item => item.week),
     datasets: [

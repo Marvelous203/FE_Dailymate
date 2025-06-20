@@ -128,7 +128,7 @@ export default function UsersPage() {
   );
 }
 
-function getRoleBadgeColor(role) {
+function getRoleBadgeColor(role: string) {
   switch (role) {
     case "Admin":
       return "bg-red-100 text-red-800";

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/useAuth"
 
-export default function TeacherLayout({ children }) {
+export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   const { logout, user } = useAuth();
 
   const handleLogout = () => {
@@ -98,7 +98,7 @@ export default function TeacherLayout({ children }) {
   )
 }
 
-function NavItem({ href, icon, label }) {
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <li>
       <Link href={href}>

@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, Play, Star, CheckCircle, Lock } from "lucide-react"
 
-export default function KidCourseDetailPage({ params }) {
-  const courseId = params.id
+interface PageParams {
+  id: string;
+}
+
+interface KidCourseDetailPageProps {
+  params: Promise<PageParams>;
+}
+
+export default async function KidCourseDetailPage({ params }: KidCourseDetailPageProps) {
+  const resolvedParams = await params;
+  const courseId = resolvedParams.id
   const course = courses.find((c) => c.id.toString() === courseId) || courses[0]
 
   return (

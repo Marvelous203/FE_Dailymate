@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,14 +15,8 @@ import { CheckCircle, Mail, ArrowLeft } from 'lucide-react';
 
 type StepType = 'email' | 'verification' | 'success';
 
-export default function VerifyEmail() {
-  const [step, setStep] = useState<StepType>('email');
-  const [email, setEmail] = useState('');
-  const [verifyCode, setVerifyCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const router = useRouter();
+// Component to handle search params
+function SearchParamsHandler({ setEmail }: { setEmail: (email: string) => void }) {
   const searchParams = useSearchParams();
   
   useEffect(() => {
@@ -30,7 +24,19 @@ export default function VerifyEmail() {
     if (emailParam) {
       setEmail(emailParam);
     }
-  }, [searchParams]);
+  }, [searchParams, setEmail]);
+  
+  return null;
+}
+
+function VerifyEmailContent() {
+  const [step, setStep] = useState<StepType>('email');
+  const [email, setEmail] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const router = useRouter();
   
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +199,9 @@ export default function VerifyEmail() {
   
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler setEmail={setEmail} />
+      </Suspense>
       <AnimatePresence>
         <LoadingOverlay 
           isVisible={loading}
@@ -282,5 +291,20 @@ export default function VerifyEmail() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#e8f5e8] to-[#c8e6c9] flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10b981] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

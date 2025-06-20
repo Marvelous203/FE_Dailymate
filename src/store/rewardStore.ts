@@ -28,10 +28,8 @@ interface RewardState {
   resetProgress: () => void
 }
 
-type RewardPersist = (
-  config: StateCreatorParams<RewardState>,
-  options: PersistOptions<RewardState>
-) => StateCreatorParams<RewardState>
+// Remove unused RewardPersist
+// const RewardPersist = ... // Remove this line
 
 type StateCreatorParams<T> = (
   set: (state: T | ((state: T) => T)) => void,

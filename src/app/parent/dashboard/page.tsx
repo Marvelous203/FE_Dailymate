@@ -394,7 +394,7 @@ export default function ParentDashboard() {
   );
 }
 
-function ChildDashboard({ child }) {
+function ChildDashboard({ child }: { child: Kid }) {
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
@@ -428,7 +428,7 @@ function ChildDashboard({ child }) {
                   >
                   <Image
                     src={child.avatar && child.avatar !== 'img/default' ? child.avatar : "/avatar_default.png"}
-                    alt={child.name || child.fullName || 'Avatar của học sinh'}
+                    alt={child.fullName || 'Avatar của học sinh'}
                     width={96}
                     height={96}
                     className="w-full h-full object-cover"
@@ -444,9 +444,9 @@ function ChildDashboard({ child }) {
                   </motion.div>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{child.name}</h2>
-                  <p className="text-gray-600 text-lg">{child.age} tuổi • Lớp {child.grade}</p>
-                  <p className="text-sm text-gray-500 mt-1">Hoạt động gần đây: {child.lastActive}</p>
+                  <h2 className="text-2xl font-bold text-gray-900">{child.fullName}</h2>
+                  <p className="text-gray-600 text-lg">Cấp độ {child.level}</p>
+                  <p className="text-sm text-gray-500 mt-1">Điểm: {child.points}</p>
                 </div>
               </div>
 
@@ -459,7 +459,7 @@ function ChildDashboard({ child }) {
                       </div>
                       <span className="font-semibold text-gray-900">Khóa học</span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">{child.courses}</p>
+                    <p className="text-3xl font-bold text-gray-900">0</p>
                     <p className="text-sm text-gray-600">Đang học</p>
                   </div>
                 </motion.div>
@@ -472,7 +472,7 @@ function ChildDashboard({ child }) {
                       </div>
                       <span className="font-semibold text-gray-900">Thời gian</span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">{child.totalTime}h</p>
+                    <p className="text-3xl font-bold text-gray-900">0h</p>
                     <p className="text-sm text-gray-600">Tuần này</p>
                   </div>
                 </motion.div>

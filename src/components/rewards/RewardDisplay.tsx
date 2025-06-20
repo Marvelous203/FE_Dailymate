@@ -56,3 +56,6 @@ export function RewardDisplay() {
     </div>
   )
 }
+
+// Remove unused skillPoints variable
+// const skillPoints = ... // Remove this line

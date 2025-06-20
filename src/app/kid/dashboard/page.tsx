@@ -1,8 +1,10 @@
-import Image from "next/image";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, Star } from "lucide-react";
+"use client"
+
+import Image from "next/image"
+import Link from "next/link"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { BookOpen, Clock, Star } from "lucide-react"
 
 export default function KidDashboard() {
   return (
@@ -119,7 +121,7 @@ export default function KidDashboard() {
               </div>
             </div>
             <p className="mb-4">
-              Complete today's math puzzle and earn extra stars!
+              Complete today&apos;s math puzzle and earn extra stars!
             </p>
             <Button className="bg-white text-[#10b981] hover:bg-white/90">
               <Link href="/kid/challenges/daily">Start Challenge</Link>

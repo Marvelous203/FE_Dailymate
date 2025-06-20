@@ -1,12 +1,13 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+// Remove unused Image import
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowLeft, Star, Trophy } from "lucide-react"
 
-export default function GamePage({ params }: { params: { gameId: string } }) {
+export default function GamePage() {
   const [cards, setCards] = useState<number[]>([])
   const [flipped, setFlipped] = useState<boolean[]>([])
   const [matched, setMatched] = useState<boolean[]>([])
@@ -49,10 +50,10 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
         setFlipped(new Array(16).fill(false))
       } else {
         setTimeout(() => {
-          const newFlipped = [...newFlipped]
-          newFlipped[flippedCards[0]] = false
-          newFlipped[flippedCards[1]] = false
-          setFlipped(newFlipped)
+          const resetFlipped = [...flipped]
+          resetFlipped[flippedCards[0]] = false
+          resetFlipped[flippedCards[1]] = false
+          setFlipped(resetFlipped)
         }, 1000)
       }
     }

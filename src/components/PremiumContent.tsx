@@ -13,7 +13,6 @@ import {
   BookOpen,
   Award,
   Headphones,
-  Smartphone
 } from "lucide-react"
 
 export default function PremiumContent() {

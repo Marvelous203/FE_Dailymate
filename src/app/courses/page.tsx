@@ -7,6 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/sidebar";
 
+// Cập nhật interface Course để khớp với dữ liệu thực tế
+interface Course {
+  id: number;
+  title: string;
+  category: string;
+  rating: number;
+  duration: string;
+  progress: number;
+  saved: boolean;
+}
+
 export default function Courses() {
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex">
@@ -98,7 +109,7 @@ export default function Courses() {
   );
 }
 
-function CourseCard({ course }: { course: any }) {
+function CourseCard({ course }: { course: Course }) {
   return (
     <Card className="bg-white border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
@@ -149,13 +160,15 @@ function CourseCard({ course }: { course: any }) {
   );
 }
 
-function Bell(props: React.SVGProps<SVGSVGElement>) {
+// Sửa component Bell để hỗ trợ prop size
+function Bell(props: React.SVGProps<SVGSVGElement> & { size?: number }) {
+  const { size = 24, ...svgProps } = props;
   return (
     <svg
-      {...props}
+      {...svgProps}
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

@@ -8,8 +8,28 @@ import { BookOpen, Clock, Star, Trophy, User, Calendar, Award, Target, Zap } fro
 import { RewardDisplay } from "@/components/rewards/RewardDisplay"
 import { useState, useEffect } from "react"
 
+interface KidData {
+  data: {
+    id: string;
+    fullName: string;
+    avatar?: string;
+    level?: number;
+    dateOfBirth?: string;
+    gender?: string;
+    points?: number;
+    streak?: {
+      current: number;
+    };
+    achievements?: any[];
+    userId?: {
+      id: string;
+      email: string;
+    };
+  };
+}
+
 export default function KidLearningZonePage() {
-  const [kidData, setKidData] = useState(null)
+  const [kidData, setKidData] = useState<KidData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -38,7 +58,7 @@ export default function KidLearningZonePage() {
   }
 
   const kid = kidData?.data
-  const user = kid?.userId
+  // const user = kid?.userId
 
   // Calculate age from dateOfBirth
   const calculateAge = (dateOfBirth: string) => {
@@ -96,7 +116,7 @@ export default function KidLearningZonePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="flex items-center justify-center md:justify-start gap-3 bg-white/20 rounded-lg p-3">
                     <Calendar size={20} className="text-yellow-300" />
-                    <span className="font-medium">Tuổi: {calculateAge(kid?.dateOfBirth)} tuổi</span>
+                    <span className="font-medium">Tuổi: {calculateAge(kid?.dateOfBirth || '')} tuổi</span>
                   </div>
                   
                   <div className="flex items-center justify-center md:justify-start gap-3 bg-white/20 rounded-lg p-3">

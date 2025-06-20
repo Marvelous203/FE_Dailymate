@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, ChevronLeft, Clock, Play, User, Download, Share2, Volume2 } from "lucide-react"
+import { BookOpen, ChevronLeft, Clock, Play, Download, Share2, Volume2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getLessonById } from "@/lib/api"
 import { use } from 'react';
@@ -46,7 +46,7 @@ export default function ParentLessonDetail({
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [, setIsVideoPlaying] = useState(false);
 
   // Fetch lesson details
   useEffect(() => {

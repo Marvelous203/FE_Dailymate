@@ -1,27 +1,57 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   User, 
   Calendar, 
   Star, 
   Trophy, 
-  Target, 
   Flame, 
   Gift,
   Settings,
   Shield,
   Crown
-} from "lucide-react";
+} from "lucide-react"
+
+interface KidData {
+  data: {
+    id: string;
+    fullName: string;
+    avatar?: string;
+    level?: number;
+    dateOfBirth?: string;
+    gender?: string;
+    points?: number;
+    streak?: {
+      current: number;
+      longest: number;
+    };
+    userId?: {
+      id: string;
+      email: string;
+      isActive?: boolean;
+      isVerified?: boolean;
+    };
+    createAt: string
+    unlockedAvatars?: string[];
+    achievements?: {
+      id: string;
+      name: string;
+      description?: string;
+      points: number;
+      icon?: string;
+    }[];
+  };
+}
 
 export default function KidProfilePage() {
-  const [kidData, setKidData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [kidData, setKidData] = useState<KidData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Lấy dữ liệu kid từ localStorage
@@ -52,7 +82,7 @@ export default function KidProfilePage() {
   const user = kid?.userId;
 
   // Tính tuổi từ dateOfBirth
-  const calculateAge = (dateOfBirth) => {
+  const calculateAge = (dateOfBirth: string) => {
     if (!dateOfBirth) return 'N/A';
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -65,9 +95,13 @@ export default function KidProfilePage() {
   };
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -84,9 +118,6 @@ export default function KidProfilePage() {
                   width={80}
                   height={80}
                   className="rounded-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/placeholder.svg?height=80&width=80';
-                  }}
                 />
               ) : (
                 <User className="h-12 w-12 text-white" />
@@ -102,7 +133,7 @@ export default function KidProfilePage() {
             <div className="flex items-center gap-4 text-white/80">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{calculateAge(kid?.dateOfBirth)} tuổi</span>
+                <span>{calculateAge(kid?.dateOfBirth || '')} tuổi</span>
               </div>
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4" />
@@ -119,7 +150,7 @@ export default function KidProfilePage() {
             <Badge className="bg-white/20 text-white border-white/30 mb-2">
               Level {kid?.level || 1}
             </Badge>
-            <p className="text-sm text-white/80">Thành viên từ {formatDate(kid?.createdAt)}</p>
+            <p className="text-sm text-white/80">Thành viên từ {formatDate(kid?.createAt || '')}</p>
           </div>
         </div>
       </div>
@@ -199,11 +230,11 @@ export default function KidProfilePage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#6b7280]">Ngày sinh</label>
-                  <p className="text-base font-medium">{formatDate(kid?.dateOfBirth)}</p>
+                  <p className="text-base font-medium">{formatDate(kid?.dateOfBirth || '')}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#6b7280]">Tuổi</label>
-                  <p className="text-base font-medium">{calculateAge(kid?.dateOfBirth)} tuổi</p>
+                  <p className="text-base font-medium">{calculateAge(kid?.dateOfBirth || '')} tuổi</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#6b7280]">Email</label>
@@ -236,13 +267,13 @@ export default function KidProfilePage() {
               </h3>
               {kid?.achievements && kid.achievements.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {kid.achievements.map((achievement, index) => (
+                  {kid.achievements.map((achievement: { id: string; name: string; description?: string; points: number; icon?: string }, index: number) => (
                     <div key={index} className="bg-[#f8fafc] rounded-lg p-4 text-center">
                       <div className="w-16 h-16 bg-[#10b981] rounded-full flex items-center justify-center mx-auto mb-3">
                         <Trophy className="h-8 w-8 text-white" />
                       </div>
                       <h4 className="font-medium mb-1">{achievement.name}</h4>
-                      <p className="text-sm text-[#6b7280]">{achievement.description}</p>
+                      <p className="text-sm text-[#6b7280]">{achievement.description || 'Không có mô tả'}</p>
                     </div>
                   ))}
                 </div>
@@ -265,7 +296,7 @@ export default function KidProfilePage() {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {kid?.unlockedAvatars && kid.unlockedAvatars.length > 0 ? (
-                  kid.unlockedAvatars.map((avatar, index) => (
+                  kid.unlockedAvatars.map((avatar: string, index: number) => (
                     <div 
                       key={index} 
                       className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -281,9 +312,6 @@ export default function KidProfilePage() {
                           width={64}
                           height={64}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/placeholder.svg?height=64&width=64';
-                          }}
                         />
                       </div>
                       <p className="text-xs text-center font-medium">{avatar.replace('_', ' ')}</p>

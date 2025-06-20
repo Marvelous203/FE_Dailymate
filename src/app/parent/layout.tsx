@@ -17,7 +17,7 @@ import { useEffect, useState } from "react"
 
 export default function ParentLayout({  children }: { children: React.ReactNode }) {
   const { logout, user } = useAuth();
-  const [parentData, setParentData] = useState(null);
+  const [parentData, setParentData] = useState<any>(null);
 
   // Load parent data từ localStorage
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function ParentLayout({  children }: { children: React.ReactNode 
   )
 }
 
-function NavItem({ href, icon, label }) {
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <Link href={href}>
       <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex items-center gap-2 group transition-all duration-300 overflow-hidden">

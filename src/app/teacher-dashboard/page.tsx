@@ -88,7 +88,7 @@ export default function TeacherDashboardPage() {
   )
 }
 
-function ClassDashboard({ name }) {
+function ClassDashboard({ name }: { name: string }) {
   return (
     <div className="space-y-6">
       {/* Class Overview */}
@@ -265,7 +265,7 @@ function ClassDashboard({ name }) {
   )
 }
 
-function StatCard({ title, value, change, icon, bgColor }) {
+function StatCard({ title, value, change, icon, bgColor }: { title: string; value: string; change: string; icon: React.ReactNode; bgColor: string }) {
   return (
     <Card className="border-none shadow-sm">
       <CardContent className="p-6">
@@ -282,7 +282,7 @@ function StatCard({ title, value, change, icon, bgColor }) {
   )
 }
 
-function getScoreColor(score) {
+function getScoreColor(score: number) {
   if (score >= 90) {
     return "text-[#10b981]"
   } else if (score >= 70) {
