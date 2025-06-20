@@ -67,7 +67,10 @@ interface KidData {
     age?: number;
     points?: number;
     level?: number;
-    streak?: number;
+    streak?: {
+        current: number;
+        longest: number;
+    };
 }
 
 interface ChildListItem {
@@ -257,9 +260,9 @@ const [previewKidImage, setPreviewKidImage] = useState<string>('');
                         gender: kid.gender || '',
                         avatar: kid.avatar || '/avatar_default.png',
                         courses: 0,
-                        points: kid.points,
-                        level: kid.level,
-                        streak: kid.streak ? { current: kid.streak } : undefined
+                        points: kid.points || 0,
+                        level: kid.level || 0,
+                        streak: kid.streak 
                     }));
                     setChildrenList(updatedChildren);
                 }

@@ -6,14 +6,14 @@ interface CloudinaryConfig {
   }
   
   const cloudinaryConfig: CloudinaryConfig = {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
-    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
-    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET || ''
+    uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
   }
   
   // Validation để đảm bảo tất cả biến môi trường được cung cấp
-  if (!cloudinaryConfig.cloudName || !cloudinaryConfig.apiKey || !cloudinaryConfig.apiSecret || !cloudinaryConfig.uploadPreset) {
+  if (!cloudinaryConfig.cloudName || !cloudinaryConfig.apiKey || !cloudinaryConfig.uploadPreset) {
     throw new Error('Missing required Cloudinary environment variables. Please check your .env file.')
   }
   
