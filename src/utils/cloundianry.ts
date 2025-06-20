@@ -6,10 +6,15 @@ interface CloudinaryConfig {
   }
   
   const cloudinaryConfig: CloudinaryConfig = {
-    cloudName: 'dfkb8qo66',
-    apiKey: '434572591946919',
-    apiSecret: 'RM5MRTIFmOZIl2XloTBWLyAAg2s',
-    uploadPreset: 'trungnguyen'
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET || ''
+  }
+  
+  // Validation để đảm bảo tất cả biến môi trường được cung cấp
+  if (!cloudinaryConfig.cloudName || !cloudinaryConfig.apiKey || !cloudinaryConfig.apiSecret || !cloudinaryConfig.uploadPreset) {
+    throw new Error('Missing required Cloudinary environment variables. Please check your .env file.')
   }
   
   export default cloudinaryConfig
