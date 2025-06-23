@@ -7,7 +7,7 @@ import { Play, Pause, RotateCcw } from "lucide-react";
 
 interface VideoInteraction {
   timestamp: number; // seconds
-  type: 'question' | 'choice';
+  type: "question" | "choice";
   content: {
     question: string;
     options: string[];
@@ -20,23 +20,28 @@ interface InteractiveVideoProps {
   videoSrc: string;
   interactions: VideoInteraction[];
   onComplete: (score: number) => void;
+  onInteractionComplete?: (answered: number, total: number) => void;
+  onDurationLoad?: (duration: number) => void;
 }
 
-export function InteractiveVideo({ 
-  videoSrc, 
-  interactions, 
-  onComplete 
+export function InteractiveVideo({
+  videoSrc,
+  interactions,
+  onComplete,
+  onInteractionComplete,
+  onDurationLoad,
 }: InteractiveVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [activeInteraction, setActiveInteraction] = useState<VideoInteraction | null>(null);
+  const [activeInteraction, setActiveInteraction] =
+    useState<VideoInteraction | null>(null);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showFeedback, setShowFeedback] = useState(false);
 
   // Remove unused 'use' import
   // import { use } from "react" // Remove this line
-  
+
   // Fix useEffect dependencies
   useEffect(() => {
     const video = videoRef.current;
@@ -45,13 +50,31 @@ export function InteractiveVideo({
     const handleTimeUpdate = () => {
       const time = video.currentTime;
       setCurrentTime(time);
-      
+
+      // Debug: Log video progress and check for interactions
+      if (Math.floor(time) % 10 === 0 && time > 0) {
+        console.log("🎥 Video time:", {
+          currentTime: Math.floor(time),
+          duration: Math.floor(video.duration || 0),
+          interactions: interactions.map((int) => ({
+            timestamp: int.timestamp,
+            answered: !!answers[int.timestamp],
+          })),
+        });
+      }
+
       // Check for interactions
       const interaction = interactions.find(
-        int => Math.abs(int.timestamp - time) < 0.5 && !answers[int.timestamp]
+        (int) => Math.abs(int.timestamp - time) < 0.5 && !answers[int.timestamp]
       );
-      
+
       if (interaction) {
+        console.log(
+          "🎯 Interaction triggered at",
+          time,
+          "for timestamp",
+          interaction.timestamp
+        );
         video.pause();
         setIsPlaying(false);
         setActiveInteraction(interaction);
@@ -60,15 +83,34 @@ export function InteractiveVideo({
 
     const handleEnded = () => {
       const score = calculateScore();
+      console.log("🎬 Video ended, final score:", score);
       onComplete(score);
     };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
+    const handleLoadedMetadata = () => {
+      const duration = video.duration;
+      console.log("📹 Video loaded:", {
+        duration: duration,
+        src: video.src,
+        totalInteractions: interactions.length,
+        interactionTimestamps: interactions.map((int) => int.timestamp),
+      });
+
+      // Call duration callback to generate interactions
+      if (onDurationLoad && duration > 0) {
+        console.log("🔄 Sending duration to parent:", duration);
+        onDurationLoad(duration);
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("ended", handleEnded);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [interactions, answers]);
 
@@ -86,14 +128,37 @@ export function InteractiveVideo({
 
   const handleAnswer = (optionIndex: number) => {
     if (!activeInteraction) return;
-    
-    setAnswers(prev => ({ 
-      ...prev, 
-      [activeInteraction.timestamp]: optionIndex 
-    }));
-    
+
+    console.log("🎯 User answered interaction:", {
+      timestamp: activeInteraction.timestamp,
+      selectedOption: optionIndex,
+      correctAnswer: activeInteraction.content.correctAnswer,
+      isCorrect: optionIndex === activeInteraction.content.correctAnswer,
+    });
+
+    const newAnswers = {
+      ...answers,
+      [activeInteraction.timestamp]: optionIndex,
+    };
+
+    setAnswers(newAnswers);
     setShowFeedback(true);
-    
+
+    // Call interaction complete callback
+    const answeredCount = Object.keys(newAnswers).length;
+    console.log("📊 Interaction progress:", {
+      answeredCount,
+      totalInteractions: interactions.length,
+      hasCallback: !!onInteractionComplete,
+    });
+
+    if (onInteractionComplete) {
+      console.log("🔄 Calling onInteractionComplete callback...");
+      onInteractionComplete(answeredCount, interactions.length);
+    } else {
+      console.warn("⚠️ onInteractionComplete callback not provided!");
+    }
+
     setTimeout(() => {
       setShowFeedback(false);
       setActiveInteraction(null);
@@ -104,7 +169,7 @@ export function InteractiveVideo({
 
   const calculateScore = () => {
     const correct = interactions.filter(
-      int => answers[int.timestamp] === int.content.correctAnswer
+      (int) => answers[int.timestamp] === int.content.correctAnswer
     ).length;
     return Math.round((correct / interactions.length) * 100);
   };
@@ -119,7 +184,7 @@ export function InteractiveVideo({
             className="w-full h-auto"
             controls={false}
           />
-          
+
           {/* Video Controls */}
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-black/50 rounded-lg p-4">
             <Button
@@ -128,20 +193,26 @@ export function InteractiveVideo({
               onClick={togglePlay}
               className="text-white hover:bg-white/20"
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              {isPlaying ? (
+                <Pause className="h-6 w-6" />
+              ) : (
+                <Play className="h-6 w-6" />
+              )}
             </Button>
-            
+
             <div className="flex-1 mx-4">
               <div className="w-full bg-white/30 h-2 rounded-full">
-                <div 
+                <div
                   className="bg-[#83d98c] h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(currentTime / (videoRef.current?.duration || 1)) * 100}%` 
+                  style={{
+                    width: `${
+                      (currentTime / (videoRef.current?.duration || 1)) * 100
+                    }%`,
                   }}
                 />
               </div>
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -184,10 +255,10 @@ export function InteractiveVideo({
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-bold mb-4">
-                  {answers[activeInteraction.timestamp] === activeInteraction.content.correctAnswer
+                  {answers[activeInteraction.timestamp] ===
+                  activeInteraction.content.correctAnswer
                     ? "Chính xác! 🎉"
-                    : "Chưa đúng! 😊"
-                  }
+                    : "Chưa đúng! 😊"}
                 </h3>
                 <p className="text-lg">{activeInteraction.content.feedback}</p>
               </div>

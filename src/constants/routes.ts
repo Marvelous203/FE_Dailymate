@@ -25,7 +25,10 @@ export const PUBLIC_ROUTES = [
   '/auth/role-select',
   '/environment-kid/login',
   '/environment-kid', // Thêm dòng này
-  '/kid-login'
+  '/kid-login',
+  '/payment',
+  '/payment/success',
+  '/payment/cancel'
 ];
 
 // Các route static và API

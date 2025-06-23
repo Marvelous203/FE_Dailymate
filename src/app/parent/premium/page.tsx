@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, X } from "lucide-react";
 import ParentHeader from "@/components/parent-header";
+import Link from "next/link";
 
 export default function PremiumPlans() {
   return (
@@ -12,51 +13,52 @@ export default function PremiumPlans() {
       <main className="container mx-auto p-4 md:p-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Choose the Perfect Plan for Your Child
+            Chọn gói phù hợp cho con bạn
           </h1>
           <p className="text-[#4b5563] text-lg">
-            Unlock premium educational content and features to enhance your
-            child's learning experience.
+            Nâng cấp trải nghiệm học tập với những tính năng độc quyền và toàn
+            diện.
           </p>
         </div>
 
         {/* Pricing Toggle */}
         <div className="flex justify-center mb-12">
           <div className="bg-white rounded-full p-1 inline-flex">
-            <Button className="rounded-full bg-[#8b5cf6]">Monthly</Button>
+            <Button className="rounded-full bg-[#8b5cf6]">Hàng tháng</Button>
             <Button variant="ghost" className="rounded-full">
-              Yearly (Save 20%)
+              Hàng năm (Tiết kiệm 20%)
             </Button>
           </div>
         </div>
 
         {/* Pricing Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {/* Basic Plan */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
+          {/* Free Plan */}
           <Card className="border-none shadow-sm relative overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Basic</CardTitle>
+              <CardTitle className="text-xl">Miễn phí</CardTitle>
               <p className="text-[#6b7280]">
-                Get started with essential features
+                Khám phá nền tảng với các tính năng cơ bản
               </p>
             </CardHeader>
             <CardContent>
               <div className="mb-6">
-                <span className="text-3xl font-bold">$9.99</span>
-                <span className="text-[#6b7280]">/month</span>
+                <span className="text-3xl font-bold">Miễn phí</span>
               </div>
 
-              <Button className="w-full mb-6">Get Started</Button>
+              <Link href="/payment">
+                <Button className="w-full mb-6">Bắt đầu miễn phí</Button>
+              </Link>
 
               <div className="space-y-3">
-                <PlanFeature included>Access to 10 basic courses</PlanFeature>
-                <PlanFeature included>Basic progress tracking</PlanFeature>
-                <PlanFeature included>1 child profile</PlanFeature>
-                <PlanFeature included>Email support</PlanFeature>
-                <PlanFeature>Premium courses</PlanFeature>
-                <PlanFeature>Advanced analytics</PlanFeature>
-                <PlanFeature>Multiple child profiles</PlanFeature>
-                <PlanFeature>Downloadable resources</PlanFeature>
+                <PlanFeature included>5 bài học cơ bản</PlanFeature>
+                <PlanFeature included>Báo cáo tiến độ cơ bản</PlanFeature>
+                <PlanFeature included>1 hồ sơ con</PlanFeature>
+                <PlanFeature included>Hỗ trợ email</PlanFeature>
+                <PlanFeature included>Giới hạn thời gian học</PlanFeature>
+                <PlanFeature>Tất cả bài học và hoạt động</PlanFeature>
+                <PlanFeature>Báo cáo chi tiết</PlanFeature>
+                <PlanFeature>Không giới hạn hồ sơ con</PlanFeature>
               </div>
             </CardContent>
           </Card>
@@ -64,60 +66,36 @@ export default function PremiumPlans() {
           {/* Premium Plan */}
           <Card className="border-none shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-[#8b5cf6] text-white px-4 py-1 rounded-bl-lg text-sm font-medium">
-              Most Popular
+              Phổ biến nhất
             </div>
             <CardHeader className="pb-2">
               <CardTitle className="text-xl">Premium</CardTitle>
-              <p className="text-[#6b7280]">Perfect for active learners</p>
+              <p className="text-[#6b7280]">Trải nghiệm học tập hoàn chỉnh</p>
             </CardHeader>
             <CardContent>
               <div className="mb-6">
-                <span className="text-3xl font-bold">$19.99</span>
-                <span className="text-[#6b7280]">/month</span>
+                <div className="text-lg text-gray-400 line-through mb-1">
+                  79.000đ
+                </div>
+                <span className="text-3xl font-bold">60.000đ</span>
+                <span className="text-[#6b7280]">/tháng</span>
               </div>
 
-              <Button className="w-full mb-6 bg-[#8b5cf6] hover:bg-[#7c3aed]">
-                Get Started
-              </Button>
+              <Link href="/payment">
+                <Button className="w-full mb-6 bg-[#8b5cf6] hover:bg-[#7c3aed]">
+                  Nâng cấp ngay
+                </Button>
+              </Link>
 
               <div className="space-y-3">
-                <PlanFeature included>Access to all basic courses</PlanFeature>
-                <PlanFeature included>Advanced progress tracking</PlanFeature>
-                <PlanFeature included>3 child profiles</PlanFeature>
-                <PlanFeature included>Priority email support</PlanFeature>
-                <PlanFeature included>Premium courses</PlanFeature>
-                <PlanFeature included>Advanced analytics</PlanFeature>
-                <PlanFeature>Multiple child profiles (up to 5)</PlanFeature>
-                <PlanFeature included>Downloadable resources</PlanFeature>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Family Plan */}
-          <Card className="border-none shadow-sm relative overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Family</CardTitle>
-              <p className="text-[#6b7280]">Best value for families</p>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <span className="text-3xl font-bold">$29.99</span>
-                <span className="text-[#6b7280]">/month</span>
-              </div>
-
-              <Button className="w-full mb-6">Get Started</Button>
-
-              <div className="space-y-3">
-                <PlanFeature included>Access to all courses</PlanFeature>
-                <PlanFeature included>Advanced progress tracking</PlanFeature>
-                <PlanFeature included>5 child profiles</PlanFeature>
-                <PlanFeature included>24/7 priority support</PlanFeature>
-                <PlanFeature included>Premium courses</PlanFeature>
-                <PlanFeature included>Advanced analytics</PlanFeature>
-                <PlanFeature included>
-                  Multiple child profiles (up to 5)
-                </PlanFeature>
-                <PlanFeature included>Downloadable resources</PlanFeature>
+                <PlanFeature included>Tất cả bài học và hoạt động</PlanFeature>
+                <PlanFeature included>Báo cáo chi tiết & phân tích</PlanFeature>
+                <PlanFeature included>Không giới hạn hồ sơ con</PlanFeature>
+                <PlanFeature included>Hỗ trợ ưu tiên 24/7</PlanFeature>
+                <PlanFeature included>Chứng chỉ hoàn thành</PlanFeature>
+                <PlanFeature included>Tải xuống không giới hạn</PlanFeature>
+                <PlanFeature included>Tính năng AI hỗ trợ học tập</PlanFeature>
+                <PlanFeature included>Không quảng cáo</PlanFeature>
               </div>
             </CardContent>
           </Card>
@@ -126,80 +104,78 @@ export default function PremiumPlans() {
         {/* Features Comparison */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-center mb-8">
-            Compare All Features
+            So sánh tính năng
           </h2>
 
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-lg shadow-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-4">Feature</th>
-                  <th className="p-4 text-center">Basic</th>
+                  <th className="text-left p-4">Tính năng</th>
+                  <th className="p-4 text-center">Miễn phí</th>
                   <th className="p-4 text-center bg-[#f0e5fc]">Premium</th>
-                  <th className="p-4 text-center">Family</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b">
-                  <td className="p-4">Number of courses</td>
-                  <td className="p-4 text-center">10</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">50+</td>
-                  <td className="p-4 text-center">All</td>
+                  <td className="p-4">Số lượng bài học</td>
+                  <td className="p-4 text-center">5 bài học</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">
+                    Không giới hạn
+                  </td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Child profiles</td>
+                  <td className="p-4">Hồ sơ con</td>
                   <td className="p-4 text-center">1</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">3</td>
-                  <td className="p-4 text-center">5</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">
+                    Không giới hạn
+                  </td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Progress tracking</td>
-                  <td className="p-4 text-center">Basic</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">Advanced</td>
-                  <td className="p-4 text-center">Advanced</td>
+                  <td className="p-4">Theo dõi tiến độ</td>
+                  <td className="p-4 text-center">Cơ bản</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">Nâng cao</td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Downloadable resources</td>
+                  <td className="p-4">Tài liệu tải xuống</td>
                   <td className="p-4 text-center">
                     <X className="h-5 w-5 text-[#ef4444] mx-auto" />
                   </td>
                   <td className="p-4 text-center bg-[#f0e5fc]">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mx-auto" />
                   </td>
-                  <td className="p-4 text-center">
-                    <CheckCircle className="h-5 w-5 text-[#10b981] mx-auto" />
-                  </td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Interactive activities</td>
-                  <td className="p-4 text-center">Limited</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">Full access</td>
-                  <td className="p-4 text-center">Full access</td>
+                  <td className="p-4">Hoạt động tương tác</td>
+                  <td className="p-4 text-center">Giới hạn</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">Đầy đủ</td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Parent dashboard</td>
-                  <td className="p-4 text-center">Basic</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">Advanced</td>
-                  <td className="p-4 text-center">Advanced</td>
+                  <td className="p-4">Dashboard phụ huynh</td>
+                  <td className="p-4 text-center">Cơ bản</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">Nâng cao</td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-4">Customer support</td>
+                  <td className="p-4">Hỗ trợ khách hàng</td>
                   <td className="p-4 text-center">Email</td>
-                  <td className="p-4 text-center bg-[#f0e5fc]">
-                    Priority email
+                  <td className="p-4 text-center bg-[#f0e5fc]">Ưu tiên 24/7</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="p-4">AI hỗ trợ học tập</td>
+                  <td className="p-4 text-center">
+                    <X className="h-5 w-5 text-[#ef4444] mx-auto" />
                   </td>
-                  <td className="p-4 text-center">24/7 priority</td>
+                  <td className="p-4 text-center bg-[#f0e5fc]">
+                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mx-auto" />
+                  </td>
                 </tr>
                 <tr>
-                  <td className="p-4">Certificates</td>
+                  <td className="p-4">Chứng chỉ</td>
                   <td className="p-4 text-center">
                     <X className="h-5 w-5 text-[#ef4444] mx-auto" />
                   </td>
                   <td className="p-4 text-center bg-[#f0e5fc]">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">
-                    <CheckCircle className="h-5 w-5 text-[#10b981] mx-auto" />
                   </td>
                 </tr>
               </tbody>
@@ -274,16 +250,24 @@ export default function PremiumPlans() {
             Join thousands of parents who have enhanced their children's
             education with our interactive learning platform.
           </p>
-          <Button className="bg-white text-[#8b5cf6] hover:bg-white/90">
-            Get Started Today
-          </Button>
+          <Link href="/payment">
+            <Button className="bg-white text-[#8b5cf6] hover:bg-white/90">
+              Get Started Today
+            </Button>
+          </Link>
         </div>
       </main>
     </div>
   );
 }
 
-function PlanFeature({ children, included = false }: { children: React.ReactNode; included?: boolean }) {
+function PlanFeature({
+  children,
+  included = false,
+}: {
+  children: React.ReactNode;
+  included?: boolean;
+}) {
   return (
     <div className="flex items-center">
       {included ? (

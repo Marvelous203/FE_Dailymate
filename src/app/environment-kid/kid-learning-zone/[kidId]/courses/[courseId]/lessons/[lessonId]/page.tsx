@@ -1,14 +1,24 @@
-'use client'
+"use client";
 
-import { useState, use, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, CheckCircle, Play, BookOpen, Trophy, Star, Clock, Users, Target } from "lucide-react"
-import Link from "next/link"
-import { InteractiveVideo } from "@/components/interactive-video/InteractiveVideo"
-import { getLessonById, getTestsByLesson } from "@/lib/api"
+import { useState, use, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Play,
+  BookOpen,
+  Trophy,
+  Star,
+  Clock,
+  Users,
+  Target,
+} from "lucide-react";
+import Link from "next/link";
+import { InteractiveVideo } from "@/components/interactive-video/InteractiveVideo";
+import { getLessonById, getTestsByLesson, getLessonsByCourse } from "@/lib/api";
 
 interface LessonData {
   _id: string;
@@ -36,30 +46,131 @@ interface LessonData {
 
 interface TestData {
   _id: string;
+  lessonId: {
+    _id: string;
+    courseId: string;
+    title: string;
+  };
   title: string;
   description: string;
+  timeLimit: number;
+  passingScore: number;
+  attempts: number;
   questions: Question[];
-  duration?: number;
-  difficulty?: string;
+  totalPoints: number;
+  createdBy: {
+    _id: string;
+    fullName: string;
+    specializations: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Question {
   _id: string;
-  question: string;
+  questionText: string;
+  questionType: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswer: string;
+  explanation: string;
+  points: number;
 }
 
-export default function LessonPage({ params }: { params: Promise<{ kidId: string; courseId: string; lessonId: string }> }) {
+// Helper functions for progress storage
+const getProgressKey = (kidId: string, lessonId: string) =>
+  `lesson_progress_${kidId}_${lessonId}`;
+
+const getStoredProgress = (kidId: string, lessonId: string) => {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(getProgressKey(kidId, lessonId));
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveProgress = (
+  kidId: string,
+  lessonId: string,
+  progress: {
+    videoCompleted: boolean;
+    interactiveCompleted: boolean;
+    lessonCompleted: boolean;
+    currentProgress: number;
+    completedTests: string[];
+  }
+) => {
+  if (typeof window === "undefined") return;
+  try {
+    const progressWithTimestamp = {
+      ...progress,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    localStorage.setItem(
+      getProgressKey(kidId, lessonId),
+      JSON.stringify(progressWithTimestamp)
+    );
+
+    console.log("💾 Progress saved to localStorage:", {
+      key: getProgressKey(kidId, lessonId),
+      progress: progressWithTimestamp,
+    });
+  } catch (error) {
+    console.error("❌ Error saving progress:", error);
+  }
+};
+
+export default function LessonPage({
+  params,
+}: {
+  params: Promise<{ kidId: string; courseId: string; lessonId: string }>;
+}) {
   const resolvedParams = use(params);
-  const [lessonCompleted, ] = useState(false)
-  const [videoCompleted, setVideoCompleted] = useState(false)
-  const [interactiveCompleted,] = useState(false)
-  const [lessonData, setLessonData] = useState<LessonData | null>(null)
-  const [testsData, setTestsData] = useState<TestData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [currentProgress, setCurrentProgress] = useState(0)
+  const [lessonCompleted, setLessonCompleted] = useState(false);
+  const [videoCompleted, setVideoCompleted] = useState(false);
+  const [interactiveCompleted, setInteractiveCompleted] = useState(false);
+  const [lessonData, setLessonData] = useState<LessonData | null>(null);
+  const [testsData, setTestsData] = useState<TestData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [completedTests, setCompletedTests] = useState<string[]>([]);
+  const [courseLessons, setCourseLessons] = useState<any[]>([]);
+  const [nextLessonId, setNextLessonId] = useState<string | null>(null);
+  const [prevLessonId, setPrevLessonId] = useState<string | null>(null);
+
+  // Load saved progress on component mount
+  useEffect(() => {
+    const savedProgress = getStoredProgress(
+      resolvedParams.kidId,
+      resolvedParams.lessonId
+    );
+    console.log("🔄 Loading saved progress:", savedProgress);
+    console.log(
+      "🗝️ Storage key:",
+      getProgressKey(resolvedParams.kidId, resolvedParams.lessonId)
+    );
+
+    if (savedProgress) {
+      setVideoCompleted(savedProgress.videoCompleted || false);
+      setInteractiveCompleted(savedProgress.interactiveCompleted || false);
+      setLessonCompleted(savedProgress.lessonCompleted || false);
+      setCurrentProgress(savedProgress.currentProgress || 0);
+      setCompletedTests(savedProgress.completedTests || []);
+
+      console.log("✅ Progress loaded successfully:", {
+        videoCompleted: savedProgress.videoCompleted,
+        interactiveCompleted: savedProgress.interactiveCompleted,
+        currentProgress: savedProgress.currentProgress,
+        completedTests: savedProgress.completedTests?.length || 0,
+      });
+    } else {
+      console.log("❌ No saved progress found - starting fresh");
+    }
+  }, [resolvedParams.kidId, resolvedParams.lessonId]);
 
   useEffect(() => {
     const fetchLessonData = async () => {
@@ -72,7 +183,7 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
         if (lessonResult.success && lessonResult.data) {
           setLessonData(lessonResult.data);
         } else {
-          setError('Không thể tải dữ liệu bài học');
+          setError("Không thể tải dữ liệu bài học");
           return;
         }
 
@@ -83,18 +194,65 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
             const tests = Array.isArray(testsResult.data.tests)
               ? testsResult.data.tests
               : Array.isArray(testsResult.data)
-                ? testsResult.data
-                : [];
+              ? testsResult.data
+              : [];
             setTestsData(tests);
           }
         } catch (testError) {
-          console.warn('Không tìm thấy bài kiểm tra cho bài học này:', testError);
+          console.warn(
+            "Không tìm thấy bài kiểm tra cho bài học này:",
+            testError
+          );
           setTestsData([]);
         }
 
+        // Fetch course lessons for navigation
+        try {
+          const lessonsResult = await getLessonsByCourse(
+            resolvedParams.courseId
+          );
+          const lessons = Array.isArray(lessonsResult)
+            ? lessonsResult
+            : lessonsResult?.lessons || lessonsResult?.data?.lessons || [];
+
+          setCourseLessons(lessons);
+
+          // Find current lesson index and set next/prev
+          const sortedLessons = lessons.sort(
+            (a: any, b: any) => (a.order || 0) - (b.order || 0)
+          );
+          const currentIndex = sortedLessons.findIndex(
+            (lesson: any) => lesson._id === resolvedParams.lessonId
+          );
+
+          if (currentIndex !== -1) {
+            // Set next lesson
+            if (currentIndex < sortedLessons.length - 1) {
+              setNextLessonId(sortedLessons[currentIndex + 1]._id);
+            }
+
+            // Set previous lesson
+            if (currentIndex > 0) {
+              setPrevLessonId(sortedLessons[currentIndex - 1]._id);
+            }
+          }
+
+          console.log("📚 Course lessons loaded:", {
+            totalLessons: lessons.length,
+            currentIndex,
+            nextLessonId:
+              currentIndex < sortedLessons.length - 1
+                ? sortedLessons[currentIndex + 1]._id
+                : null,
+            prevLessonId:
+              currentIndex > 0 ? sortedLessons[currentIndex - 1]._id : null,
+          });
+        } catch (lessonError) {
+          console.warn("Không thể tải danh sách bài học:", lessonError);
+        }
       } catch (err) {
-        console.error('Lỗi khi tải bài học:', err);
-        setError('Lỗi khi tải bài học');
+        console.error("Lỗi khi tải bài học:", err);
+        setError("Lỗi khi tải bài học");
       } finally {
         setLoading(false);
       }
@@ -103,53 +261,484 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
     fetchLessonData();
   }, [resolvedParams.lessonId]);
 
-  // Update progress based on completed activities
-  useEffect(() => {
-    let progress = 0;
-    if (videoCompleted) progress += 40;
-    if (interactiveCompleted) progress += 40;
-    if (testsData.length > 0 && lessonCompleted) progress += 20;
-    setCurrentProgress(progress);
-  }, [videoCompleted, interactiveCompleted, lessonCompleted, testsData.length]);
+  // This useEffect is removed - progress calculation is now handled in the separate useEffect below
 
-  // Interactive video data
-  const videoInteractions = [
-    {
-      timestamp: 30,
-      type: 'question' as const,
-      content: {
-        question: "Khi gặp vấn đề khó khăn, điều đầu tiên bạn nên làm là gì?",
-        options: [
-          "Bỏ cuộc ngay lập tức",
-          "Tìm hiểu và phân tích vấn đề",
-          "Hỏi người khác làm giúp",
-          "Làm ngẫu nhiên"
-        ],
-        correctAnswer: 1,
-        feedback: "Đúng rồi! Phân tích vấn đề là bước đầu tiên quan trọng để tìm ra giải pháp hiệu quả."
-      }
-    },
-    {
-      timestamp: 90,
-      type: 'question' as const,
-      content: {
-        question: "Brainstorming là gì?",
-        options: [
-          "Một loại trò chơi",
-          "Phương pháp tạo ra nhiều ý tưởng",
-          "Một bài tập thể dục",
-          "Cách học thuộc lòng"
-        ],
-        correctAnswer: 1,
-        feedback: "Chính xác! Brainstorming giúp chúng ta tạo ra nhiều ý tưởng sáng tạo để giải quyết vấn đề."
-      }
+  // State for video duration and dynamic interactions
+  const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [videoInteractions, setVideoInteractions] = useState<any[]>([]);
+
+  // Generate interaction based on video duration (at 80% of video length)
+  const generateInteraction = (duration: number) => {
+    if (duration <= 0) return [];
+
+    const interactionTimestamp = Math.floor(duration * 0.8); // 80% of video duration
+
+    // Create context-aware question based on lesson title and category
+    const lessonTitle = lessonData?.title || "bài học";
+    const category = lessonData?.courseId?.category || "học tập";
+
+    return [
+      {
+        timestamp: interactionTimestamp,
+        type: "question" as const,
+        content: {
+          question: `Sau khi xem "${lessonTitle}", bạn cảm thấy thế nào về nội dung ${category} này?`,
+          options: [
+            "Rất thú vị và dễ hiểu!",
+            "Hay nhưng cần xem lại một vài phần",
+            "Khó hiểu, cần giải thích thêm",
+            "Chưa phù hợp với tôi",
+          ],
+          correctAnswer: 0, // Any answer is considered "correct" for engagement
+          feedback:
+            "Cảm ơn bạn đã chia sẻ! Mọi phản hồi đều giúp chúng tôi cải thiện nội dung học tập tốt hơn.",
+        },
+      },
+    ];
+  };
+
+  // Update interactions when video duration changes or lesson data loads
+  useEffect(() => {
+    if (videoDuration > 0 && lessonData) {
+      const newInteractions = generateInteraction(videoDuration);
+      setVideoInteractions(newInteractions);
+      console.log("🎯 Generated interaction for video:", {
+        duration: videoDuration,
+        interactionAt: Math.floor(videoDuration * 0.8),
+        totalInteractions: newInteractions.length,
+        lessonTitle: lessonData.title,
+        category: lessonData.courseId?.category,
+      });
     }
-  ]
+  }, [videoDuration, lessonData]);
 
   const handleVideoComplete = (score: number) => {
-    console.log(`Điểm video: ${score}%`)
-    setVideoCompleted(true)
-  }
+    console.log(`📹 Video completed with score: ${score}%`);
+
+    // Load current saved progress to preserve existing states
+    const currentSavedProgress = getStoredProgress(
+      resolvedParams.kidId,
+      resolvedParams.lessonId
+    );
+
+    // Update video completion
+    setVideoCompleted(true);
+
+    // Preserve existing test completions
+    const preservedCompletedTests =
+      currentSavedProgress?.completedTests || completedTests;
+    setCompletedTests(preservedCompletedTests);
+
+    // Calculate progress with all preserved states
+    const testProgress =
+      testsData.length > 0
+        ? (preservedCompletedTests.length / testsData.length) * 20
+        : 0;
+    const videoProgress = 40; // Video is now completed
+
+    // Interactive completion is handled separately in handleInteractionComplete
+    const currentInteractiveCompleted =
+      interactiveCompleted ||
+      currentSavedProgress?.interactiveCompleted ||
+      false;
+    const interactiveProgress = currentInteractiveCompleted ? 40 : 0;
+
+    const totalProgress = videoProgress + interactiveProgress + testProgress;
+
+    setCurrentProgress(totalProgress);
+
+    // Force save progress immediately with all preserved states
+    saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
+      videoCompleted: true,
+      interactiveCompleted: currentInteractiveCompleted,
+      lessonCompleted: totalProgress >= 100,
+      currentProgress: totalProgress,
+      completedTests: preservedCompletedTests,
+    });
+
+    console.log("📹 Video completed, progress saved:", {
+      totalProgress,
+      interactiveCompleted: currentInteractiveCompleted,
+      preservedTests: preservedCompletedTests.length,
+      savedProgress: currentSavedProgress,
+    });
+  };
+
+  const handleVideoDurationLoad = (duration: number) => {
+    console.log("📏 Video duration received:", duration);
+    setVideoDuration(duration);
+  };
+
+  const handleInteractionComplete = (
+    answeredCount: number,
+    totalInteractions: number
+  ) => {
+    console.log(
+      `🎯 handleInteractionComplete called: ${answeredCount}/${totalInteractions}`
+    );
+    console.log("Current states:", {
+      videoCompleted,
+      interactiveCompleted,
+      completedTests: completedTests.length,
+      currentProgress,
+    });
+
+    // Mark interactive as completed when user answers all questions
+    if (answeredCount >= totalInteractions && totalInteractions > 0) {
+      console.log(
+        "🎉 All interactions completed! Setting interactiveCompleted = true"
+      );
+
+      setInteractiveCompleted(true);
+
+      // Load current saved progress to preserve existing states
+      const currentSavedProgress = getStoredProgress(
+        resolvedParams.kidId,
+        resolvedParams.lessonId
+      );
+
+      console.log("📁 Current saved progress:", currentSavedProgress);
+
+      // Preserve all existing completions
+      const currentVideoCompleted =
+        videoCompleted || currentSavedProgress?.videoCompleted || false;
+      const preservedCompletedTests =
+        currentSavedProgress?.completedTests || completedTests;
+
+      // Recalculate progress with interactive completion
+      const videoProgress = currentVideoCompleted ? 40 : 0;
+      const interactiveProgress = 40; // Interactive is now completed
+      const testProgress =
+        testsData.length > 0
+          ? (preservedCompletedTests.length / testsData.length) * 20
+          : 0;
+      const totalProgress = videoProgress + interactiveProgress + testProgress;
+
+      console.log("🧮 Progress calculation:", {
+        videoProgress,
+        interactiveProgress,
+        testProgress,
+        totalProgress,
+      });
+
+      setCurrentProgress(totalProgress);
+
+      // Save updated progress
+      const progressToSave = {
+        videoCompleted: currentVideoCompleted,
+        interactiveCompleted: true,
+        lessonCompleted: totalProgress >= 100,
+        currentProgress: totalProgress,
+        completedTests: preservedCompletedTests,
+      };
+
+      console.log("💾 Saving progress:", progressToSave);
+
+      saveProgress(
+        resolvedParams.kidId,
+        resolvedParams.lessonId,
+        progressToSave
+      );
+
+      console.log("✅ Interactive completed, progress updated:", {
+        totalProgress,
+        videoCompleted: currentVideoCompleted,
+        interactiveCompleted: true,
+      });
+    } else {
+      console.log(
+        "⏳ Not all interactions completed yet, waiting for more answers..."
+      );
+    }
+  };
+
+  // Navigation handlers
+  const handleNextLesson = () => {
+    if (nextLessonId && currentProgress >= 80) {
+      console.log("🚀 Navigating to next lesson:", nextLessonId);
+      window.location.href = `/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${nextLessonId}`;
+    } else {
+      console.warn("⚠️ Cannot navigate:", { nextLessonId, currentProgress });
+    }
+  };
+
+  const handlePrevLesson = () => {
+    if (prevLessonId) {
+      console.log("⬅️ Navigating to previous lesson:", prevLessonId);
+      window.location.href = `/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${prevLessonId}`;
+    }
+  };
+
+  // Function to mark test as completed (call this when returning from test page)
+  const markTestCompleted = (testId: string) => {
+    setCompletedTests((prev) => {
+      if (!prev.includes(testId)) {
+        const newCompletedTests = [...prev, testId];
+
+        // Load current saved progress to preserve existing completion states
+        const currentSavedProgress = getStoredProgress(
+          resolvedParams.kidId,
+          resolvedParams.lessonId
+        );
+
+        // Use current state OR saved state to preserve video/interactive completion
+        const currentVideoCompleted =
+          videoCompleted || currentSavedProgress?.videoCompleted || false;
+        const currentInteractiveCompleted =
+          interactiveCompleted ||
+          currentSavedProgress?.interactiveCompleted ||
+          false;
+
+        // Calculate progress with preserved states
+        const testProgress =
+          (newCompletedTests.length / Math.max(testsData.length, 1)) * 20;
+        const videoProgress = currentVideoCompleted ? 40 : 0;
+        const interactiveProgress = currentInteractiveCompleted ? 40 : 0;
+        const totalProgress =
+          videoProgress + interactiveProgress + testProgress;
+
+        // Update states to match what we're saving
+        setVideoCompleted(currentVideoCompleted);
+        setInteractiveCompleted(currentInteractiveCompleted);
+        setCurrentProgress(totalProgress);
+
+        saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
+          videoCompleted: currentVideoCompleted,
+          interactiveCompleted: currentInteractiveCompleted,
+          lessonCompleted: totalProgress >= 100,
+          currentProgress: totalProgress,
+          completedTests: newCompletedTests,
+        });
+
+        console.log("Test marked as completed and progress saved:", {
+          testId,
+          newCompletedTests,
+          videoCompleted: currentVideoCompleted,
+          interactiveCompleted: currentInteractiveCompleted,
+          totalProgress,
+          savedProgress: currentSavedProgress,
+        });
+
+        return newCompletedTests;
+      }
+      return prev;
+    });
+  };
+
+  // Check if test is completed
+  const isTestCompleted = (testId: string) => {
+    return completedTests.includes(testId);
+  };
+
+  // Listen for test completion from session storage or URL params
+  useEffect(() => {
+    const checkTestCompletion = () => {
+      console.log("Checking test completion...");
+
+      // Check if coming back from a test with completion status
+      const urlParams = new URLSearchParams(window.location.search);
+      const completedTestId = urlParams.get("completedTest");
+
+      console.log("URL completedTest param:", completedTestId);
+      console.log("Current completed tests:", completedTests);
+
+      if (completedTestId && !completedTests.includes(completedTestId)) {
+        console.log("Marking test as completed from URL:", completedTestId);
+        markTestCompleted(completedTestId);
+
+        // Clean up URL
+        window.history.replaceState({}, "", window.location.pathname);
+        return; // Exit early to avoid duplicate processing
+      }
+
+      // Also check session storage for test completion
+      const sessionTestCompleted = sessionStorage.getItem("lastCompletedTest");
+      console.log("Session storage test completion:", sessionTestCompleted);
+
+      if (sessionTestCompleted) {
+        try {
+          const { testId, lessonId, timestamp, passed } =
+            JSON.parse(sessionTestCompleted);
+
+          console.log("Session test data:", {
+            testId,
+            lessonId,
+            timestamp,
+            passed,
+          });
+          console.log("Current lesson ID:", resolvedParams.lessonId);
+          console.log(
+            "Time difference:",
+            Date.now() - new Date(timestamp).getTime()
+          );
+
+          // Only if it's for this lesson, recent, and passed
+          if (
+            lessonId === resolvedParams.lessonId &&
+            Date.now() - new Date(timestamp).getTime() < 5 * 60 * 1000 &&
+            passed &&
+            !completedTests.includes(testId)
+          ) {
+            console.log("Marking test as completed from session:", testId);
+            markTestCompleted(testId);
+            sessionStorage.removeItem("lastCompletedTest");
+          }
+        } catch (error) {
+          console.error("Error parsing session test completion:", error);
+        }
+      }
+    };
+
+    // Only run once when component mounts or when lessonId changes
+    // Don't include completedTests in dependencies to avoid infinite loops
+    checkTestCompletion();
+  }, [resolvedParams.lessonId]); // Removed completedTests dependency
+
+  // Separate useEffect to calculate and save progress when states change
+  useEffect(() => {
+    const videoProgress = videoCompleted ? 40 : 0;
+    const interactiveProgress = interactiveCompleted ? 40 : 0;
+    const testProgress =
+      testsData.length > 0
+        ? (completedTests.length / testsData.length) * 20
+        : 0;
+    const totalProgress = videoProgress + interactiveProgress + testProgress;
+
+    setCurrentProgress(totalProgress);
+
+    // Save progress to localStorage whenever it changes
+    if (videoCompleted || interactiveCompleted || completedTests.length > 0) {
+      saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
+        videoCompleted,
+        interactiveCompleted,
+        lessonCompleted: totalProgress >= 100,
+        currentProgress: totalProgress,
+        completedTests,
+      });
+
+      console.log("Progress recalculated and saved:", {
+        videoProgress,
+        interactiveProgress,
+        testProgress,
+        totalProgress,
+        completedTests: completedTests.length,
+        totalTests: testsData.length,
+      });
+    }
+  }, [
+    videoCompleted,
+    interactiveCompleted,
+    completedTests,
+    testsData.length,
+    resolvedParams.kidId,
+    resolvedParams.lessonId,
+  ]);
+
+  // Listen for page focus to check for new test completions
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Page focused, checking for test completions...");
+
+      // Check session storage for test completion
+      const sessionTestCompleted = sessionStorage.getItem("lastCompletedTest");
+      if (sessionTestCompleted) {
+        try {
+          const { testId, lessonId, timestamp, passed } =
+            JSON.parse(sessionTestCompleted);
+
+          console.log("Found test completion in session storage:", {
+            testId,
+            lessonId,
+            currentLessonId: resolvedParams.lessonId,
+            passed,
+            alreadyCompleted: completedTests.includes(testId),
+          });
+
+          // Only if it's for this lesson, recent, passed, and not already marked
+          if (
+            lessonId === resolvedParams.lessonId &&
+            Date.now() - new Date(timestamp).getTime() < 5 * 60 * 1000 &&
+            passed &&
+            !completedTests.includes(testId)
+          ) {
+            console.log("Marking test as completed from focus event:", testId);
+            markTestCompleted(testId);
+            sessionStorage.removeItem("lastCompletedTest");
+          }
+        } catch (error) {
+          console.error("Error parsing session test completion:", error);
+        }
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [resolvedParams.lessonId, completedTests]);
+
+  // Listen for storage changes from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      const progressKey = getProgressKey(
+        resolvedParams.kidId,
+        resolvedParams.lessonId
+      );
+
+      if (e.key === progressKey && e.newValue) {
+        try {
+          const newProgress = JSON.parse(e.newValue);
+          console.log("Progress updated from storage event:", newProgress);
+
+          setVideoCompleted(newProgress.videoCompleted || false);
+          setInteractiveCompleted(newProgress.interactiveCompleted || false);
+          setLessonCompleted(newProgress.lessonCompleted || false);
+          setCurrentProgress(newProgress.currentProgress || 0);
+          setCompletedTests(newProgress.completedTests || []);
+        } catch (error) {
+          console.error("Error parsing storage progress:", error);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [resolvedParams.kidId, resolvedParams.lessonId]);
+
+  // Force save progress before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Force save current progress before navigating away
+      if (videoCompleted || interactiveCompleted || completedTests.length > 0) {
+        const videoProgress = videoCompleted ? 40 : 0;
+        const interactiveProgress = interactiveCompleted ? 40 : 0;
+        const testProgress =
+          testsData.length > 0
+            ? (completedTests.length / testsData.length) * 20
+            : 0;
+        const totalProgress =
+          videoProgress + interactiveProgress + testProgress;
+
+        saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
+          videoCompleted,
+          interactiveCompleted,
+          lessonCompleted: totalProgress >= 100,
+          currentProgress: totalProgress,
+          completedTests,
+        });
+
+        console.log("Progress force-saved before unload:", totalProgress);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [
+    videoCompleted,
+    interactiveCompleted,
+    completedTests,
+    testsData.length,
+    resolvedParams.kidId,
+    resolvedParams.lessonId,
+  ]);
 
   if (loading) {
     return (
@@ -183,7 +772,9 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
               <BookOpen className="w-8 h-8 text-red-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
-            <p className="text-red-500 mb-6">{error || 'Không tìm thấy bài học'}</p>
+            <p className="text-red-500 mb-6">
+              {error || "Không tìm thấy bài học"}
+            </p>
             <div className="space-y-3">
               <Button
                 onClick={() => window.location.reload()}
@@ -191,8 +782,13 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
               >
                 Thử lại
               </Button>
-              <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}`}>
-                <Button variant="outline" className="w-full border-2 border-gray-300 hover:border-blue-400 py-3 rounded-xl">
+              <Link
+                href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}`}
+              >
+                <Button
+                  variant="outline"
+                  className="w-full border-2 border-gray-300 hover:border-blue-400 py-3 rounded-xl"
+                >
                   Quay lại khóa học
                 </Button>
               </Link>
@@ -208,7 +804,9 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center gap-6 mb-8">
-          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}`}>
+          <Link
+            href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}`}
+          >
             <Button
               variant="ghost"
               className="w-12 h-12 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
@@ -243,15 +841,197 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
             {/* Progress Bar */}
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Tiến độ học tập</span>
-                <span className="text-sm font-bold text-blue-600">{currentProgress}%</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Tiến độ học tập
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-blue-600">
+                    {currentProgress}%
+                  </span>
+
+                  {/* Debug buttons - remove in production */}
+                  {process.env.NODE_ENV === "development" && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs px-2 py-1"
+                        onClick={() => {
+                          console.log("Debug: Marking video as completed");
+                          handleVideoComplete(90);
+                        }}
+                      >
+                        ✅ Video
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs px-2 py-1"
+                        onClick={() => {
+                          console.log(
+                            "Debug: Simulating interactive completion"
+                          );
+                          handleInteractionComplete(1, 1); // Simulate answering the single question
+                        }}
+                      >
+                        🎯 Interactive
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs px-2 py-1"
+                        onClick={() => {
+                          if (testsData.length > 0) {
+                            console.log(
+                              "Debug: Marking first test as completed"
+                            );
+                            markTestCompleted(testsData[0]._id);
+                          }
+                        }}
+                      >
+                        🏆 Test
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs px-2 py-1"
+                        onClick={() => {
+                          console.log("Debug: Clearing all progress");
+                          localStorage.removeItem(
+                            getProgressKey(
+                              resolvedParams.kidId,
+                              resolvedParams.lessonId
+                            )
+                          );
+                          window.location.reload();
+                        }}
+                      >
+                        🗑️ Clear
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-              <Progress value={currentProgress} className="h-3 bg-gray-200 rounded-full overflow-hidden">
+              <Progress
+                value={currentProgress}
+                className="h-3 bg-gray-200 rounded-full overflow-hidden"
+              >
                 <div
                   className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500 ease-out rounded-full"
                   style={{ width: `${currentProgress}%` }}
                 />
               </Progress>
+
+              {/* Debug console - remove in production */}
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-3 p-3 bg-gray-100 rounded-lg text-xs">
+                  <strong>Debug Status:</strong>
+                  <div>
+                    Video: {videoCompleted ? "✅" : "❌"} | Interactive:{" "}
+                    {interactiveCompleted ? "✅" : "❌"} | Tests:{" "}
+                    {completedTests.length}/{testsData.length}
+                  </div>
+                  <div>
+                    Progress: {currentProgress}% | Storage Key:{" "}
+                    {getProgressKey(
+                      resolvedParams.kidId,
+                      resolvedParams.lessonId
+                    )}
+                  </div>
+                  <div>
+                    Navigation: Prev: {prevLessonId ? "✅" : "❌"} | Next:{" "}
+                    {nextLessonId ? "✅" : "❌"} | Total Lessons:{" "}
+                    {courseLessons.length}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs px-2 py-1"
+                      onClick={() => {
+                        if (testsData.length > 0) {
+                          const testData = {
+                            testId: testsData[0]._id,
+                            lessonId: resolvedParams.lessonId,
+                            timestamp: new Date().toISOString(),
+                            score: 8,
+                            totalPoints: 10,
+                            passed: true,
+                          };
+                          sessionStorage.setItem(
+                            "lastCompletedTest",
+                            JSON.stringify(testData)
+                          );
+                          console.log(
+                            "Debug: Simulated test completion in sessionStorage"
+                          );
+                          window.location.reload();
+                        }
+                      }}
+                    >
+                      🔄 Simulate Test Return
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs px-2 py-1"
+                      onClick={() => {
+                        console.log(
+                          "SessionStorage content:",
+                          sessionStorage.getItem("lastCompletedTest")
+                        );
+                        console.log(
+                          "LocalStorage content:",
+                          localStorage.getItem(
+                            getProgressKey(
+                              resolvedParams.kidId,
+                              resolvedParams.lessonId
+                            )
+                          )
+                        );
+                      }}
+                    >
+                      📋 Check Storage
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs px-2 py-1"
+                      onClick={() => {
+                        console.log("Manual progress refresh...");
+                        const savedProgress = getStoredProgress(
+                          resolvedParams.kidId,
+                          resolvedParams.lessonId
+                        );
+
+                        if (savedProgress) {
+                          setVideoCompleted(
+                            savedProgress.videoCompleted || false
+                          );
+                          setInteractiveCompleted(
+                            savedProgress.interactiveCompleted || false
+                          );
+                          setLessonCompleted(
+                            savedProgress.lessonCompleted || false
+                          );
+                          setCurrentProgress(
+                            savedProgress.currentProgress || 0
+                          );
+                          setCompletedTests(savedProgress.completedTests || []);
+                          console.log(
+                            "Progress manually refreshed:",
+                            savedProgress
+                          );
+                        } else {
+                          console.log("No saved progress found");
+                        }
+                      }}
+                    >
+                      🔄 Refresh Progress
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -264,9 +1044,14 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
               <CardContent className="p-0">
                 <div className="relative">
                   <InteractiveVideo
-                    videoSrc={lessonData.videoUrl?.trim().replace(/`/g, '') || "https://www.youtube.com/watch?v=LIN8GpWQ5rM"}
+                    videoSrc={
+                      lessonData.videoUrl?.trim().replace(/`/g, "") ||
+                      "https://www.youtube.com/watch?v=LIN8GpWQ5rM"
+                    }
                     interactions={videoInteractions}
                     onComplete={handleVideoComplete}
+                    onInteractionComplete={handleInteractionComplete}
+                    onDurationLoad={handleVideoDurationLoad}
                   />
                   {videoCompleted && (
                     <div className="absolute top-4 right-4">
@@ -287,11 +1072,15 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800">Nội dung bài học</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Nội dung bài học
+                  </h3>
                 </div>
 
                 <div className="prose prose-lg max-w-none">
-                  <p className="text-gray-600 text-lg leading-relaxed mb-8">{lessonData.description}</p>
+                  <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                    {lessonData.description}
+                  </p>
 
                   {lessonData.content?.sections && (
                     <div className="space-y-6">
@@ -299,8 +1088,12 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
                         <div key={index} className="relative">
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full"></div>
                           <div className="pl-8">
-                            <h4 className="text-xl font-bold text-gray-800 mb-3">{section.title}</h4>
-                            <p className="text-gray-600 leading-relaxed">{section.text}</p>
+                            <h4 className="text-xl font-bold text-gray-800 mb-3">
+                              {section.title}
+                            </h4>
+                            <p className="text-gray-600 leading-relaxed">
+                              {section.text}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -318,47 +1111,166 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
                     <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center">
                       <Trophy className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800">Bài kiểm tra</h3>
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      Bài kiểm tra
+                    </h3>
                     <Badge className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
                       {testsData.length} bài test
                     </Badge>
                   </div>
 
-                  <div className="grid gap-4">
+                  {/* Tests Overview */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Yêu cầu hoàn thành bài kiểm tra
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span>Xem video bài học trước (40%)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-orange-500" />
+                        <span>Làm bài test để hoàn thành 100%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-purple-500" />
+                        <span>Đạt điểm pass để qua bài</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6">
                     {testsData.map((test, index) => (
                       <div key={test._id} className="group">
-                        <div className="flex items-center justify-between p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-blue-50">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">
-                                {test.title}
-                              </h4>
-                              <p className="text-gray-600 text-sm mb-1">{test.description}</p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span>ID: {test._id}</span>
-                                {test.duration && (
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    {test.duration} phút
-                                  </span>
-                                )}
-                                {test.difficulty && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {test.difficulty}
+                        <div className="p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-blue-50">
+                          {/* Test Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {index + 1}
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition-colors mb-2">
+                                  {test.title}
+                                </h4>
+                                <p className="text-gray-600 text-sm mb-3">
+                                  {test.description}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-green-50 text-green-700 border-green-200"
+                                  >
+                                    {test.questions[0]?.questionType ||
+                                      "Multiple Choice"}
                                   </Badge>
-                                )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {isTestCompleted(test._id) && (
+                                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                                  <CheckCircle className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    Đã hoàn thành
+                                  </span>
+                                </div>
+                              )}
+                              <Link
+                                href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${resolvedParams.lessonId}/tests/${test._id}`}
+                              >
+                                <Button
+                                  className={`font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                                    isTestCompleted(test._id)
+                                      ? "bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white"
+                                      : "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white"
+                                  }`}
+                                >
+                                  {isTestCompleted(test._id) ? (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Làm lại test
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Play className="w-4 h-4 mr-2" />
+                                      Làm bài test
+                                    </>
+                                  )}
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Test Statistics */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                              <Clock className="w-4 h-4 text-blue-500" />
+                              <div>
+                                <div className="text-xs text-gray-500">
+                                  Thời gian
+                                </div>
+                                <div className="font-semibold text-gray-800">
+                                  {test.timeLimit} phút
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                              <Target className="w-4 h-4 text-green-500" />
+                              <div>
+                                <div className="text-xs text-gray-500">
+                                  Điểm qua
+                                </div>
+                                <div className="font-semibold text-gray-800">
+                                  {test.passingScore}%
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                              <Users className="w-4 h-4 text-purple-500" />
+                              <div>
+                                <div className="text-xs text-gray-500">
+                                  Lần thử
+                                </div>
+                                <div className="font-semibold text-gray-800">
+                                  {test.attempts}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              <div>
+                                <div className="text-xs text-gray-500">
+                                  Tổng điểm
+                                </div>
+                                <div className="font-semibold text-gray-800">
+                                  {test.totalPoints}
+                                </div>
                               </div>
                             </div>
                           </div>
-                          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${resolvedParams.lessonId}/tests/${test._id}`}>
-                            <Button className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                              <Play className="w-4 h-4 mr-2" />
-                              Làm bài test
-                            </Button>
-                          </Link>
+
+                          {/* Test Details */}
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-4 text-gray-600">
+                              <span>📝 {test.questions.length} câu hỏi</span>
+                              <span>👨‍🏫 {test.createdBy?.fullName}</span>
+                              {test.createdBy?.specializations &&
+                                test.createdBy.specializations.length > 0 && (
+                                  <span>
+                                    📚{" "}
+                                    {test.createdBy.specializations.join(", ")}
+                                  </span>
+                                )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Tạo:{" "}
+                              {new Date(test.createdAt).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -371,19 +1283,27 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
             <div className="flex justify-between items-center pt-6">
               <Button
                 variant="outline"
-                className="px-8 py-3 rounded-xl border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300"
+                className={`px-8 py-3 rounded-xl border-2 transition-all duration-300 ${
+                  prevLessonId
+                    ? "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                    : "border-gray-200 bg-gray-100 cursor-not-allowed"
+                }`}
+                disabled={!prevLessonId}
+                onClick={handlePrevLesson}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Bài trước
               </Button>
               <Button
-                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${currentProgress >= 80
-                  ? 'bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white shadow-lg'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                disabled={currentProgress < 80}
+                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  currentProgress >= 80 && nextLessonId
+                    ? "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white shadow-lg"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+                disabled={currentProgress < 80 || !nextLessonId}
+                onClick={handleNextLesson}
               >
-                Bài tiếp theo
+                {nextLessonId ? "Bài tiếp theo" : "Bài cuối cùng"}
                 <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
               </Button>
             </div>
@@ -394,7 +1314,9 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
             {/* Lesson Info */}
             <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 text-gray-800">Thông tin bài học</h3>
+                <h3 className="font-bold text-lg mb-4 text-gray-800">
+                  Thông tin bài học
+                </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Mã bài học:</span>
@@ -404,19 +1326,27 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Khóa học:</span>
-                    <span className="font-medium text-blue-600">{lessonData.courseId.title}</span>
+                    <span className="font-medium text-blue-600">
+                      {lessonData.courseId.title}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Danh mục:</span>
-                    <Badge variant="outline">{lessonData.courseId.category}</Badge>
+                    <Badge variant="outline">
+                      {lessonData.courseId.category}
+                    </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Độ tuổi:</span>
-                    <Badge variant="outline">{lessonData.courseId.ageGroup}</Badge>
+                    <Badge variant="outline">
+                      {lessonData.courseId.ageGroup}
+                    </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Thứ tự:</span>
-                    <span className="font-bold text-purple-600">#{lessonData.order}</span>
+                    <span className="font-bold text-purple-600">
+                      #{lessonData.order}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -425,30 +1355,65 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
             {/* Progress Checklist */}
             <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 text-gray-800">Tiến độ học tập</h3>
+                <h3 className="font-bold text-lg mb-4 text-gray-800">
+                  Tiến độ học tập
+                </h3>
                 <div className="space-y-4">
                   {[
-                    { title: "Xem video bài học", completed: videoCompleted, icon: Play },
-                    { title: "Hoàn thành hoạt động", completed: interactiveCompleted, icon: BookOpen },
-                    { title: "Làm bài kiểm tra", completed: testsData.length > 0 && lessonCompleted, icon: Trophy },
+                    {
+                      title: "Xem video bài học",
+                      completed: videoCompleted,
+                      icon: Play,
+                      progress: videoCompleted ? "40%" : "0%",
+                    },
+                    {
+                      title: "Hoàn thành hoạt động",
+                      completed: interactiveCompleted,
+                      icon: BookOpen,
+                      progress: interactiveCompleted ? "40%" : "0%",
+                    },
+                    {
+                      title: `Làm bài kiểm tra (${completedTests.length}/${testsData.length})`,
+                      completed:
+                        testsData.length > 0 &&
+                        completedTests.length === testsData.length,
+                      icon: Trophy,
+                      progress:
+                        testsData.length > 0
+                          ? `${Math.round(
+                              (completedTests.length / testsData.length) * 20
+                            )}%`
+                          : "0%",
+                    },
                   ].map((step, index) => {
                     const IconComponent = step.icon;
                     return (
                       <div key={index} className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${step.completed
-                          ? 'bg-gradient-to-r from-green-400 to-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-400'
-                          }`}>
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                            step.completed
+                              ? "bg-gradient-to-r from-green-400 to-blue-500 text-white"
+                              : "bg-gray-200 text-gray-400"
+                          }`}
+                        >
                           {step.completed ? (
                             <CheckCircle className="w-4 h-4" />
                           ) : (
                             <IconComponent className="w-4 h-4" />
                           )}
                         </div>
-                        <span className={`font-medium transition-colors ${step.completed ? 'text-gray-800' : 'text-gray-500'
-                          }`}>
-                          {step.title}
-                        </span>
+                        <div className="flex-1">
+                          <span
+                            className={`font-medium transition-colors ${
+                              step.completed ? "text-gray-800" : "text-gray-500"
+                            }`}
+                          >
+                            {step.title}
+                          </span>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Tiến độ: {step.progress}
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
@@ -477,5 +1442,5 @@ export default function LessonPage({ params }: { params: Promise<{ kidId: string
         </div>
       </div>
     </div>
-  )
+  );
 }

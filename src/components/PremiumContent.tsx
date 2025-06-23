@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   CheckCircle,
   Star,
@@ -13,85 +13,69 @@ import {
   BookOpen,
   Award,
   Headphones,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function PremiumContent() {
   const plans = [
     {
-      name: "Cơ bản",
+      name: "Miễn phí",
       price: "Miễn phí",
       originalPrice: null,
-      description: "Phù hợp để khám phá nền tảng",
+      description: "Khám phá nền tảng với các tính năng cơ bản",
       features: [
-        "5 khóa học cơ bản",
-        "2 trò chơi giáo dục",
+        "5 bài học cơ bản",
         "Báo cáo tiến độ cơ bản",
-        "Hỗ trợ email"
+        "1 hồ sơ con",
+        "Hỗ trợ email",
+        "Giới hạn thời gian học",
       ],
       highlighted: false,
       color: "from-gray-500 to-gray-600",
-      icon: BookOpen
+      icon: BookOpen,
     },
     {
-      name: "Gia đình",
-      price: "299.000đ",
-      originalPrice: "399.000đ",
-      description: "Lựa chọn phổ biến nhất",
+      name: "Premium",
+      price: "60.000đ",
+      originalPrice: "79.000đ",
+      description: "Trải nghiệm học tập hoàn chỉnh",
       features: [
-        "Tất cả khóa học (50+ khóa)",
-        "Trò chơi không giới hạn",
+        "Tất cả bài học và hoạt động",
         "Báo cáo chi tiết & phân tích",
-        "Hỗ trợ 24/7",
-        "Học offline",
-        "Tối đa 3 con",
-        "Chứng chỉ hoàn thành"
+        "Không giới hạn hồ sơ con",
+        "Hỗ trợ ưu tiên 24/7",
+        "Chứng chỉ hoàn thành",
+        "Tải xuống không giới hạn",
+        "Tính năng AI hỗ trợ học tập",
+        "Không quảng cáo",
       ],
       highlighted: true,
-      color: "from-[#10b981] to-[#059669]",
-      icon: Crown
+      color: "from-[#8b5cf6] to-[#7c3aed]",
+      icon: Crown,
     },
-    {
-      name: "Trường học",
-      price: "Liên hệ",
-      originalPrice: null,
-      description: "Giải pháp cho giáo dục",
-      features: [
-        "Quản lý lớp học",
-        "Phân tích nâng cao",
-        "Tùy chỉnh nội dung",
-        "Đào tạo giáo viên",
-        "API tích hợp",
-        "Không giới hạn học sinh",
-        "Hỗ trợ kỹ thuật riêng"
-      ],
-      highlighted: false,
-      color: "from-purple-500 to-purple-600",
-      icon: Users
-    }
-  ]
+  ];
 
   const premiumFeatures = [
     {
       icon: Zap,
       title: "Học tập nhanh hơn",
-      description: "AI cá nhân hóa giúp tối ưu hóa tốc độ học"
+      description: "AI cá nhân hóa giúp tối ưu hóa tốc độ học",
     },
     {
       icon: Shield,
       title: "An toàn tuyệt đối",
-      description: "Môi trường học tập được bảo vệ nghiêm ngặt"
+      description: "Môi trường học tập được bảo vệ nghiêm ngặt",
     },
     {
       icon: Award,
       title: "Chứng chỉ chính thức",
-      description: "Được công nhận bởi Bộ Giáo dục"
+      description: "Được công nhận bởi Bộ Giáo dục",
     },
     {
       icon: Headphones,
       title: "Hỗ trợ 24/7",
-      description: "Đội ngũ chuyên gia luôn sẵn sàng hỗ trợ"
-    }
-  ]
+      description: "Đội ngũ chuyên gia luôn sẵn sàng hỗ trợ",
+    },
+  ];
 
   return (
     <motion.div
@@ -116,12 +100,13 @@ export default function PremiumContent() {
             transition={{ delay: 0.1 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            Nâng cấp trải nghiệm học tập với những tính năng độc quyền và hỗ trợ chuyên nghiệp
+            Nâng cấp trải nghiệm học tập với những tính năng độc quyền và hỗ trợ
+            chuyên nghiệp
           </motion.p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -129,8 +114,7 @@ export default function PremiumContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.05, y: -10 }}
-              className={`relative ${plan.highlighted ? 'z-10' : ''
-                }`}
+              className={`relative ${plan.highlighted ? "z-10" : ""}`}
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -141,28 +125,39 @@ export default function PremiumContent() {
                 </div>
               )}
 
-              <Card className={`overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 h-full ${plan.highlighted
-                  ? 'ring-2 ring-[#10b981] bg-gradient-to-br from-white to-green-50'
-                  : 'bg-white'
-                }`}>
+              <Card
+                className={`overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 h-full ${
+                  plan.highlighted
+                    ? "ring-2 ring-[#10b981] bg-gradient-to-br from-white to-green-50"
+                    : "bg-white"
+                }`}
+              >
                 <CardContent className="p-8">
                   <div className="text-center mb-8">
-                    <div className={`w-16 h-16 bg-gradient-to-r ${plan.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                    <div
+                      className={`w-16 h-16 bg-gradient-to-r ${plan.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}
+                    >
                       <plan.icon className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                     <p className="text-gray-600 mb-4">{plan.description}</p>
                     <div className="mb-4">
                       {plan.originalPrice && (
-                        <div className="text-lg text-gray-400 line-through mb-1">{plan.originalPrice}</div>
+                        <div className="text-lg text-gray-400 line-through mb-1">
+                          {plan.originalPrice}
+                        </div>
                       )}
-                      <div className={`text-4xl font-bold ${plan.highlighted ? 'text-[#10b981]' : 'text-gray-900'
-                        }`}>
+                      <div
+                        className={`text-4xl font-bold ${
+                          plan.highlighted ? "text-[#10b981]" : "text-gray-900"
+                        }`}
+                      >
                         {plan.price}
                       </div>
-                      {plan.price !== 'Liên hệ' && plan.price !== 'Miễn phí' && (
-                        <div className="text-gray-600">/tháng</div>
-                      )}
+                      {plan.price !== "Liên hệ" &&
+                        plan.price !== "Miễn phí" && (
+                          <div className="text-gray-600">/tháng</div>
+                        )}
                     </div>
                   </div>
 
@@ -172,24 +167,33 @@ export default function PremiumContent() {
                         key={idx}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: (index * 0.1) + (idx * 0.05) }}
+                        transition={{ delay: index * 0.1 + idx * 0.05 }}
                         className="flex items-start gap-3"
                       >
-                        <CheckCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${plan.highlighted ? 'text-[#10b981]' : 'text-gray-400'
-                          }`} />
+                        <CheckCircle
+                          className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
+                            plan.highlighted
+                              ? "text-[#10b981]"
+                              : "text-gray-400"
+                          }`}
+                        />
                         <span className="text-gray-700">{feature}</span>
                       </motion.li>
                     ))}
                   </ul>
 
                   <Button
-                    className={`w-full ${plan.highlighted
-                        ? 'bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                    className={`w-full ${
+                      plan.highlighted
+                        ? "bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
-                    {plan.price === 'Liên hệ' ? 'Liên hệ tư vấn' :
-                      plan.price === 'Miễn phí' ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
+                    {plan.price === "Liên hệ"
+                      ? "Liên hệ tư vấn"
+                      : plan.price === "Miễn phí"
+                      ? "Bắt đầu miễn phí"
+                      : "Chọn gói này"}
                   </Button>
                 </CardContent>
               </Card>
@@ -204,14 +208,16 @@ export default function PremiumContent() {
           transition={{ delay: 0.6 }}
           className="mb-20"
         >
-          <h3 className="text-3xl font-bold text-center mb-12">Tại sao chọn Premium?</h3>
+          <h3 className="text-3xl font-bold text-center mb-12">
+            Tại sao chọn Premium?
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {premiumFeatures.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 + (index * 0.1) }}
+                transition={{ delay: 0.7 + index * 0.1 }}
                 className="text-center"
               >
                 <div className="w-16 h-16 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -233,18 +239,27 @@ export default function PremiumContent() {
         >
           <h3 className="text-3xl font-bold mb-4">Sẵn sàng bắt đầu?</h3>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Tham gia cùng hàng nghìn gia đình đã tin tưởng DailyMates để phát triển kỹ năng sống cho con em mình
+            Tham gia cùng hàng nghìn gia đình đã tin tưởng DailyMates để phát
+            triển kỹ năng sống cho con em mình
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="bg-white text-[#10b981] hover:bg-gray-100">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="bg-white text-[#10b981] hover:bg-gray-100"
+            >
               Dùng thử miễn phí
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-green-500 hover:bg-green-500 hover:text-white">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-green-500 hover:bg-green-500 hover:text-white"
+            >
               Xem demo
             </Button>
           </div>
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }

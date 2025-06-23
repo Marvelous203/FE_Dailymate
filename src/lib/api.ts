@@ -1,5 +1,4 @@
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Helper function để xử lý lỗi response
 async function handleErrorResponse(response: Response) {
@@ -881,5 +880,79 @@ export const handleApiError = (error: Error | ErrorResponse): string => {
 }
 
 export const processData = (data: Record<string, unknown>): ProcessedData => {
-  return data;
+  return Object.keys(data).reduce((acc, key) => {
+    acc[key] = data[key];
+    return acc;
+  }, {} as ProcessedData);
+};
+
+// Payment API functions
+export async function createPayment(paymentData: {
+  amount: number;
+  description: string;
+  planType?: string;
+}) {
+  try {
+    console.log('🚀 Creating payment with URL:', `${API_URL}/api/payment/create-link`);
+    console.log('📦 Payment data:', paymentData);
+    
+    const response = await fetch(`${API_URL}/api/payment/create-link`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Create payment error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server thanh toán. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi tạo thanh toán');
+  }
+}
+
+export async function checkPaymentStatus(orderCode: string) {
+  try {
+    const response = await fetch(`${API_URL}/api/payment/${orderCode}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Check payment status error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server thanh toán. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán');
+  }
 }
