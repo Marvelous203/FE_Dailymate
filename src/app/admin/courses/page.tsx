@@ -1,3 +1,4 @@
+'use client'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,8 +6,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, Filter, BookOpen, Clock, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getAllCourses } from '@/lib/api';
 
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  const fetchCourses = async (pageNum = 1) => {
+    try {
+      setLoading(true);
+      const data = await getAllCourses(pageNum, 9);
+      if (data.success) {
+        setCourses(pageNum === 1 ? data.data.courses : [...courses, ...data.data.courses]);
+        setHasNextPage(data.data.pagination?.hasNextPage || false);
+        setPage(pageNum);
+      } else {
+        setError(data.message);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Lỗi khi tải khoá học');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses(1);
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -44,24 +76,35 @@ export default function CoursesPage() {
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course, index) => (
-              <CourseCard key={index} course={course} />
-            ))}
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <Button variant="outline">Load More</Button>
-          </div>
+          {loading ? (
+            <div>Đang tải khoá học...</div>
+          ) : error ? (
+            <div className="text-red-500">{error}</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course) => (
+                  <CourseCard key={course._id} course={course} />
+                ))}
+              </div>
+              {hasNextPage && (
+                <div className="flex justify-center mt-8">
+                  <Button variant="outline" onClick={() => fetchCourses(page + 1)} disabled={loading}>
+                    {loading ? 'Đang tải...' : 'Load More'}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </TabsContent>
 
         {/* Other tabs would have similar content but filtered by status */}
         <TabsContent value="published" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses
-              .filter((course) => course.status === "Published")
-              .map((course, index) => (
-                <CourseCard key={index} course={course} />
+              .filter((course) => course.status === "Published" || course.isPublished)
+              .map((course) => (
+                <CourseCard key={course._id} course={course} />
               ))}
           </div>
         </TabsContent>
@@ -118,12 +161,12 @@ interface Course {
   level?: string;
 }
 
-function CourseCard({ course }: { course: Course }) {
+function CourseCard({ course }: { course: any }) {
   return (
     <Card className="border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
         <Image
-          src={`/placeholder.svg?height=160&width=320`}
+          src={course.thumbnailUrl || `/placeholder.svg?height=160&width=320`}
           alt={course.title}
           width={320}
           height={160}
@@ -131,10 +174,10 @@ function CourseCard({ course }: { course: Course }) {
         />
         <div
           className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(
-            course.status
+            course.status || (course.isPublished ? "Published" : "Draft")
           )}`}
         >
-          {course.status}
+          {course.status || (course.isPublished ? "Published" : "Draft")}
         </div>
       </div>
       <CardContent className="p-4">
@@ -144,10 +187,10 @@ function CourseCard({ course }: { course: Course }) {
           </div>
           <div className="text-[#6b7280] text-xs flex items-center">
             <Star className="h-3 w-3 text-[#f59e0b] mr-1" />
-            {course.rating}
+            {course.rating ?? course.pointsEarned ?? 0}
           </div>
         </div>
-        <Link href={`/admin/courses/${course.id}`}>
+        <Link href={`/admin/courses/${course._id}`}>
           <h3 className="font-semibold mb-2 hover:text-[#ef4444] transition-colors">
             {course.title}
           </h3>
@@ -155,11 +198,11 @@ function CourseCard({ course }: { course: Course }) {
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center text-[#6b7280]">
             <Clock size={16} className="mr-1" />
-            <span>{course.duration}</span>
+            <span>{course.duration || ''}</span>
           </div>
           <div className="flex items-center text-[#6b7280]">
             <BookOpen size={16} className="mr-1" />
-            <span>{course.lessons} lessons</span>
+            <span>{course.lessons ?? 0} lessons</span>
           </div>
         </div>
         <div className="flex justify-between mt-4">
@@ -224,60 +267,3 @@ function getStatusBadgeColor(status: string) {
       return "bg-gray-100 text-gray-800";
   }
 }
-
-const courses = [
-  {
-    id: 1,
-    title: "Mathematics for Kids",
-    category: "Mathematics",
-    rating: 4.8,
-    duration: "4 hours",
-    lessons: 12,
-    status: "Published",
-  },
-  {
-    id: 2,
-    title: "English Vocabulary",
-    category: "Language",
-    rating: 4.5,
-    duration: "6 hours",
-    lessons: 18,
-    status: "Published",
-  },
-  {
-    id: 3,
-    title: "Science Experiments",
-    category: "Science",
-    rating: 4.9,
-    duration: "5 hours",
-    lessons: 15,
-    status: "Published",
-  },
-  {
-    id: 4,
-    title: "Art & Craft",
-    category: "Art",
-    rating: 4.7,
-    duration: "3 hours",
-    lessons: 10,
-    status: "Draft",
-  },
-  {
-    id: 5,
-    title: "Music Basics",
-    category: "Music",
-    rating: 4.6,
-    duration: "4 hours",
-    lessons: 12,
-    status: "Draft",
-  },
-  {
-    id: 6,
-    title: "Geography Adventures",
-    category: "Geography",
-    rating: 4.4,
-    duration: "5 hours",
-    lessons: 20,
-    status: "Archived",
-  },
-];
