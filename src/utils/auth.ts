@@ -84,3 +84,54 @@ export function isPublicRoute(pathname: string, publicRoutes: string[]): boolean
 export function isStaticRoute(pathname: string, staticRoutes: string[]): boolean {
   return staticRoutes.some(route => pathname.startsWith(route));
 }
+
+/**
+ * Kiểm tra authentication status cho environment-kid
+ */
+export function checkKidEnvironmentAuth(): {
+  isParentLoggedIn: boolean;
+  isKidLoggedIn: boolean;
+  parentData: any;
+  kidData: any;
+} {
+  if (typeof window === 'undefined') {
+    return {
+      isParentLoggedIn: false,
+      isKidLoggedIn: false,
+      parentData: null,
+      kidData: null
+    };
+  }
+
+  try {
+    const parentData = localStorage.getItem('parentData');
+    const kidData = localStorage.getItem('kidData');
+
+    return {
+      isParentLoggedIn: !!parentData,
+      isKidLoggedIn: !!kidData,
+      parentData: parentData ? JSON.parse(parentData) : null,
+      kidData: kidData ? JSON.parse(kidData) : null
+    };
+  } catch (error) {
+    console.error('Error checking kid environment auth:', error);
+    return {
+      isParentLoggedIn: false,
+      isKidLoggedIn: false,
+      parentData: null,
+      kidData: null
+    };
+  }
+}
+
+/**
+ * Clear environment-kid authentication data
+ */
+export function clearKidEnvironmentAuth(): void {
+  if (typeof window === 'undefined') return;
+  
+  localStorage.removeItem('parentData');
+  localStorage.removeItem('kidData');
+  localStorage.removeItem('kidsInfo');
+  localStorage.removeItem('kidsData');
+}

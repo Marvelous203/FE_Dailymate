@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { GamepadIcon, Star, Trophy, Users } from "lucide-react"
-import { useParams } from "next/navigation"
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { GamepadIcon, Star, Trophy, Users } from "lucide-react";
+import { useParams } from "next/navigation";
 
 export default function GamesPage() {
   const params = useParams();
@@ -82,8 +82,26 @@ export default function GamesPage() {
       highScore: 0,
       stars: 25,
       multiplayer: false,
-    }
-  ]
+    },
+    {
+      id: 10,
+      title: "Tô màu tự do",
+      description:
+        "Bảng vẽ online với nhiều màu sắc để phát triển sáng tạo và cảm xúc",
+      highScore: 0,
+      stars: 30,
+      multiplayer: false,
+    },
+    {
+      id: 11,
+      title: "Vẽ theo mẫu",
+      description:
+        "Quan sát và sao chép hình ảnh để phát triển kỹ năng quan sát",
+      highScore: 0,
+      stars: 25,
+      multiplayer: false,
+    },
+  ];
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-8">
@@ -92,7 +110,9 @@ export default function GamesPage() {
           <p className="text-[#6b7280]">Have fun while learning!</p>
         </div>
         <Button className="bg-[#83d98c] hover:bg-[#6bc275]">
-          <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>Back to Dashboard</Link>
+          <Link href={`/environment-kid/kid-learning-zone/${kidId}`}>
+            Back to Dashboard
+          </Link>
         </Button>
       </div>
 
@@ -131,8 +151,22 @@ export default function GamesPage() {
                 </div>
               </div>
               <Button className="w-full bg-[#83d98c] hover:bg-[#6bc275]">
-                <Link href={game.id === 7 ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex` : game.id === 8 ? `/environment-kid/kid-learning-zone/${kidId}/games/block-puzzle` : game.id === 9 ? `/environment-kid/kid-learning-zone/${kidId}/games/decision-making` : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`}>
-                  {game.id === 7 ? 'Play Now' : 'Play'}
+                <Link
+                  href={
+                    game.id === 7
+                      ? `/environment-kid/kid-learning-zone/${kidId}/games/color-reflex`
+                      : game.id === 8
+                      ? `/environment-kid/kid-learning-zone/${kidId}/games/block-puzzle`
+                      : game.id === 9
+                      ? `/environment-kid/kid-learning-zone/${kidId}/games/decision-making`
+                      : game.id === 10
+                      ? `/environment-kid/kid-learning-zone/${kidId}/games/free-drawing`
+                      : game.id === 11
+                      ? `/environment-kid/kid-learning-zone/${kidId}/games/pattern-drawing`
+                      : `/environment-kid/kid-learning-zone/${kidId}/games/${game.id}`
+                  }
+                >
+                  {game.id === 7 ? "Play Now" : "Play"}
                 </Link>
               </Button>
             </CardContent>
@@ -140,6 +174,5 @@ export default function GamesPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }
-

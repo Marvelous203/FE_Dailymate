@@ -1,14 +1,26 @@
-"use client"
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, CheckCircle, ChevronLeft, Clock, Play, Shield, Star, User, Heart, Download, Share2 } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { getCourseById, getLessonsByCourse } from "@/lib/api"
-import { use } from 'react';
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BookOpen,
+  CheckCircle,
+  ChevronLeft,
+  Clock,
+  Play,
+  Shield,
+  Star,
+  User,
+  Heart,
+  Download,
+  Share2,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { getCourseById, getLessonsByCourse } from "@/lib/api";
+import { use } from "react";
 
 interface Course {
   _id: string;
@@ -55,7 +67,11 @@ interface Lesson {
   updatedAt: string;
 }
 
-export default function ParentCourseDetail({ params }: { params: Promise<{ id: string }> }) {
+export default function ParentCourseDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = use(params);
   const courseId = resolvedParams.id;
   const [course, setCourse] = useState<Course | null>(null);
@@ -70,13 +86,13 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
       try {
         setLoading(true);
         setError(null);
-        
+
         // Gọi song song cả course và lessons
         const [courseResponse, lessonsResponse] = await Promise.all([
           getCourseById(courseId),
-          getLessonsByCourse(courseId)
+          getLessonsByCourse(courseId),
         ]);
-        
+
         // Xử lý course data
         let courseData = null;
         if (courseResponse?.success && courseResponse.data) {
@@ -88,7 +104,7 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
         } else if (courseResponse?._id) {
           courseData = courseResponse;
         }
-        
+
         // Xử lý lessons data
         let lessonsData = [];
         if (lessonsResponse?.data?.lessons) {
@@ -98,16 +114,16 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
         } else if (Array.isArray(lessonsResponse)) {
           lessonsData = lessonsResponse;
         }
-        
+
         if (courseData) {
           setCourse(courseData);
           setLessons(lessonsData);
         } else {
-          setError('Không tìm thấy thông tin khóa học');
+          setError("Không tìm thấy thông tin khóa học");
         }
       } catch (err) {
-        console.error('Error fetching course data:', err);
-        setError('Không thể tải thông tin khóa học');
+        console.error("Error fetching course data:", err);
+        setError("Không thể tải thông tin khóa học");
       } finally {
         setLoading(false);
       }
@@ -124,75 +140,75 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        setLoading(true)
-        console.log('Fetching course details for ID:', courseId)
-        const response = await getCourseById(courseId)
-        console.log('Course API Response:', response)
-        
+        setLoading(true);
+        console.log("Fetching course details for ID:", courseId);
+        const response = await getCourseById(courseId);
+        console.log("Course API Response:", response);
+
         // Handle different response structures
-        let courseData = null
+        let courseData = null;
         if (response && response.success && response.data) {
           // API trả về {success: true, data: courseObject}
-          courseData = response.data
+          courseData = response.data;
         } else if (response && response.data && response.data.course) {
-          courseData = response.data.course
+          courseData = response.data.course;
         } else if (response && response.course) {
-          courseData = response.course
+          courseData = response.course;
         } else if (response && response._id) {
-          courseData = response
+          courseData = response;
         }
-        
+
         if (courseData) {
-          setCourse(courseData)
+          setCourse(courseData);
         } else {
-          console.error('No course data found in response:', response)
-          setError('Không tìm thấy thông tin khóa học')
+          console.error("No course data found in response:", response);
+          setError("Không tìm thấy thông tin khóa học");
         }
       } catch (err) {
-        console.error('Error fetching course:', err)
-        setError('Không thể tải thông tin khóa học')
+        console.error("Error fetching course:", err);
+        setError("Không thể tải thông tin khóa học");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (courseId) {
-      fetchCourse()
+      fetchCourse();
     }
-  }, [courseId])
+  }, [courseId]);
 
   // Fetch lessons for the course
   useEffect(() => {
     const fetchLessons = async () => {
-      if (!course) return
-      
+      if (!course) return;
+
       try {
-        setLoadingLessons(true)
-        console.log('Fetching lessons for course:', courseId)
-        const response = await getLessonsByCourse(courseId)
-        console.log('Lessons API Response:', response)
-        
+        setLoadingLessons(true);
+        console.log("Fetching lessons for course:", courseId);
+        const response = await getLessonsByCourse(courseId);
+        console.log("Lessons API Response:", response);
+
         // Handle different response structures
-        let lessonsData = []
+        let lessonsData = [];
         if (response && response.data && response.data.lessons) {
-          lessonsData = response.data.lessons
+          lessonsData = response.data.lessons;
         } else if (response && response.lessons) {
-          lessonsData = response.lessons
+          lessonsData = response.lessons;
         } else if (response && Array.isArray(response)) {
-          lessonsData = response
+          lessonsData = response;
         }
-        
-        setLessons(lessonsData)
+
+        setLessons(lessonsData);
       } catch (err) {
-        console.error('Error fetching lessons:', err)
+        console.error("Error fetching lessons:", err);
         // Don't set error for lessons, just log it
       } finally {
-        setLoadingLessons(false)
+        setLoadingLessons(false);
       }
-    }
+    };
 
-    fetchLessons()
-  }, [course, courseId])
+    fetchLessons();
+  }, [course, courseId]);
 
   if (loading) {
     return (
@@ -202,29 +218,28 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
           <p className="text-[#6b7280]">Đang tải thông tin khóa học...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !course) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{error || 'Không tìm thấy khóa học'}</p>
-          <Button 
-            onClick={() => window.history.back()} 
+          <p className="text-red-500 mb-4">
+            {error || "Không tìm thấy khóa học"}
+          </p>
+          <Button
+            onClick={() => window.history.back()}
             className="bg-[#8b5cf6] hover:bg-[#7c3aed] mr-4"
           >
             Quay lại
           </Button>
-          <Button 
-            onClick={() => window.location.reload()} 
-            variant="outline"
-          >
+          <Button onClick={() => window.location.reload()} variant="outline">
             Thử lại
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -236,15 +251,21 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Link href="/parent/courses" className="flex items-center text-[#6b7280] mb-6 hover:text-[#8b5cf6] group">
-            <ChevronLeft size={20} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+          <Link
+            href="/parent/courses"
+            className="flex items-center text-[#6b7280] mb-6 hover:text-[#8b5cf6] group"
+          >
+            <ChevronLeft
+              size={20}
+              className="mr-1 group-hover:-translate-x-1 transition-transform"
+            />
             Quay lại danh sách khóa học
           </Link>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Course Details */}
-          <motion.div 
+          <motion.div
             className="lg:col-span-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -255,14 +276,17 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                 {!isVideoPlaying ? (
                   <>
                     <Image
-                      src={course.thumbnailUrl || `/placeholder.svg?height=400&width=800`}
+                      src={
+                        course.thumbnailUrl ||
+                        `/placeholder.svg?height=400&width=800`
+                      }
                       alt={course.title}
                       width={800}
                       height={400}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Button 
+                      <Button
                         className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm p-6 group"
                         onClick={() => setIsVideoPlaying(true)}
                       >
@@ -274,8 +298,8 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                   <div className="w-full h-full bg-black flex items-center justify-center">
                     <div className="text-white text-center">
                       <p className="text-xl mb-4">Video Player Placeholder</p>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="text-white border-white hover:bg-white/10"
                         onClick={() => setIsVideoPlaying(false)}
                       >
@@ -306,9 +330,13 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                   )}
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold mb-4">{course.title}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-4">
+                  {course.title}
+                </h1>
 
-                <p className="text-[#4b5563] mb-6 text-lg">{course.description}</p>
+                <p className="text-[#4b5563] mb-6 text-lg">
+                  {course.description}
+                </p>
 
                 <div className="flex flex-wrap gap-4 mb-6">
                   <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
@@ -321,20 +349,35 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                   </div>
                   <div className="flex items-center gap-2 bg-[#f9fafb] px-4 py-2 rounded-full">
                     <Clock className="h-5 w-5 text-[#8b5cf6]" />
-                    <span>Tổng thời gian: {lessons.reduce((total, lesson) => total + lesson.duration, 0)} phút</span>
+                    <span>
+                      Tổng thời gian:{" "}
+                      {lessons.reduce(
+                        (total, lesson) => total + lesson.duration,
+                        0
+                      )}{" "}
+                      phút
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full flex-1 py-6 text-lg">
-                    {course.isPremium ? 'Mua khóa học Premium' : 'Bắt đầu học miễn phí'}
+                    {course.isPremium
+                      ? "Mua khóa học Premium"
+                      : "Bắt đầu học miễn phí"}
                   </Button>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-full flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="rounded-full flex items-center gap-2"
+                    >
                       <Heart className="h-5 w-5" />
                       Yêu thích
                     </Button>
-                    <Button variant="outline" className="rounded-full flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="rounded-full flex items-center gap-2"
+                    >
                       <Share2 className="h-5 w-5" />
                       Chia sẻ
                     </Button>
@@ -345,9 +388,15 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
 
             <Tabs defaultValue="curriculum" className="mb-8">
               <TabsList className="bg-white rounded-full p-1 w-full flex justify-between md:w-auto">
-                <TabsTrigger value="curriculum" className="rounded-full">Chương trình học</TabsTrigger>
-                <TabsTrigger value="overview" className="rounded-full">Tổng quan</TabsTrigger>
-                <TabsTrigger value="instructor" className="rounded-full">Giảng viên</TabsTrigger>
+                <TabsTrigger value="curriculum" className="rounded-full">
+                  Chương trình học
+                </TabsTrigger>
+                <TabsTrigger value="overview" className="rounded-full">
+                  Tổng quan
+                </TabsTrigger>
+                <TabsTrigger value="instructor" className="rounded-full">
+                  Giảng viên
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="curriculum" className="mt-6">
@@ -356,12 +405,14 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                     {loadingLessons ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8b5cf6]"></div>
-                        <span className="ml-3 text-[#6b7280]">Đang tải danh sách bài học...</span>
+                        <span className="ml-3 text-[#6b7280]">
+                          Đang tải danh sách bài học...
+                        </span>
                       </div>
                     ) : lessons.length > 0 ? (
                       lessons.map((lesson, index) => (
-                        <motion.div 
-                          key={lesson._id} 
+                        <motion.div
+                          key={lesson._id}
                           className="flex items-center justify-between p-5 border-b last:border-b-0 hover:bg-[#f9fafb] transition-colors"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -387,7 +438,7 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                             </div>
                           </div>
                           {lesson.isPublished ? (
-                            <Link 
+                            <Link
                               href={`/parent/courses/${courseId}/lessons/${lesson._id}`}
                               className="text-[#8b5cf6] hover:text-[#7c3aed] font-medium text-sm transition-colors"
                             >
@@ -407,7 +458,14 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                                 strokeLinejoin="round"
                                 className="text-[#6b7280]"
                               >
-                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                                <rect
+                                  width="18"
+                                  height="11"
+                                  x="3"
+                                  y="11"
+                                  rx="2"
+                                  ry="2"
+                                />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                               </svg>
                             </div>
@@ -416,7 +474,9 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                       ))
                     ) : (
                       <div className="text-center py-12">
-                        <p className="text-[#6b7280]">Chưa có bài học nào được thêm vào khóa học này</p>
+                        <p className="text-[#6b7280]">
+                          Chưa có bài học nào được thêm vào khóa học này
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -426,26 +486,40 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
               <TabsContent value="overview" className="mt-6">
                 <Card className="border-none rounded-xl shadow-md">
                   <CardContent className="p-6 md:p-8">
-                    <h2 className="text-xl font-semibold mb-6">Về khóa học này</h2>
-                    <p className="text-[#4b5563] mb-6 leading-relaxed">{course.description}</p>
+                    <h2 className="text-xl font-semibold mb-6">
+                      Về khóa học này
+                    </h2>
+                    <p className="text-[#4b5563] mb-6 leading-relaxed">
+                      {course.description}
+                    </p>
 
-                    <h3 className="text-lg font-semibold mb-4 mt-8">Thông tin khóa học</h3>
+                    <h3 className="text-lg font-semibold mb-4 mt-8">
+                      Thông tin khóa học
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                       <div className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-[#4b5563]">Danh mục: {course.category}</span>
+                        <span className="text-[#4b5563]">
+                          Danh mục: {course.category}
+                        </span>
                       </div>
                       <div className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-[#4b5563]">Độ tuổi phù hợp: {course.ageGroup}</span>
+                        <span className="text-[#4b5563]">
+                          Độ tuổi phù hợp: {course.ageGroup}
+                        </span>
                       </div>
                       <div className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-[#4b5563]">Số bài học: {lessons.length}</span>
+                        <span className="text-[#4b5563]">
+                          Số bài học: {lessons.length}
+                        </span>
                       </div>
                       <div className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-[#4b5563]">Điểm thưởng: {course.pointsEarned} điểm</span>
+                        <span className="text-[#4b5563]">
+                          Điểm thưởng: {course.pointsEarned} điểm
+                        </span>
                       </div>
                     </div>
 
@@ -453,15 +527,22 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                     <ul className="space-y-3 mb-8">
                       <li className="flex items-start">
                         <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
-                        <span className="text-[#4b5563]">Không cần kiến thức trước - phù hợp cho người mới bắt đầu</span>
+                        <span className="text-[#4b5563]">
+                          Không cần kiến thức trước - phù hợp cho người mới bắt
+                          đầu
+                        </span>
                       </li>
                       <li className="flex items-start">
                         <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
-                        <span className="text-[#4b5563]">Máy tính hoặc tablet có kết nối internet</span>
+                        <span className="text-[#4b5563]">
+                          Máy tính hoặc tablet có kết nối internet
+                        </span>
                       </li>
                       <li className="flex items-start">
                         <div className="h-2 w-2 rounded-full bg-[#8b5cf6] mt-2 mr-3"></div>
-                        <span className="text-[#4b5563]">Sự hỗ trợ của phụ huynh (khuyến khích)</span>
+                        <span className="text-[#4b5563]">
+                          Sự hỗ trợ của phụ huynh (khuyến khích)
+                        </span>
                       </li>
                     </ul>
                   </CardContent>
@@ -482,23 +563,42 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                         />
                       </div>
                       <div>
-                        <h2 className="text-xl font-semibold mb-2">{course.instructor.fullName}</h2>
-                        <p className="text-[#8b5cf6] mb-4">Giảng viên chuyên nghiệp</p>
+                        <h2 className="text-xl font-semibold mb-2">
+                          {course.instructor.fullName}
+                        </h2>
+                        <p className="text-[#8b5cf6] mb-4">
+                          Giảng viên chuyên nghiệp
+                        </p>
                         <p className="text-[#4b5563] mb-6 leading-relaxed">
-                          Giảng viên có kinh nghiệm giảng dạy với chuyên môn trong các lĩnh vực: {course.instructor.specializations.join(', ')}
+                          Giảng viên có kinh nghiệm giảng dạy với chuyên môn
+                          trong các lĩnh vực:{" "}
+                          {course.instructor.specializations?.join(", ") ||
+                            "Đa dạng các môn học"}
                         </p>
                         <div className="flex items-center gap-8">
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">5+</div>
-                            <div className="text-sm text-[#6b7280]">Khóa học</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">
+                              5+
+                            </div>
+                            <div className="text-sm text-[#6b7280]">
+                              Khóa học
+                            </div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">100+</div>
-                            <div className="text-sm text-[#6b7280]">Học viên</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">
+                              100+
+                            </div>
+                            <div className="text-sm text-[#6b7280]">
+                              Học viên
+                            </div>
                           </div>
                           <div className="text-center">
-                            <div className="font-bold text-2xl text-[#8b5cf6]">4.8</div>
-                            <div className="text-sm text-[#6b7280]">Đánh giá</div>
+                            <div className="font-bold text-2xl text-[#8b5cf6]">
+                              4.8
+                            </div>
+                            <div className="text-sm text-[#6b7280]">
+                              Đánh giá
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -518,7 +618,7 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
             <Card className="border-none rounded-xl shadow-md sticky top-4">
               <CardContent className="p-6">
                 <div className="text-3xl font-bold text-[#1e1e1e] mb-6">
-                  {course.isPremium ? 'Premium' : 'Miễn phí'}
+                  {course.isPremium ? "Premium" : "Miễn phí"}
                 </div>
 
                 <div className="space-y-5 mb-8">
@@ -526,7 +626,9 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
                       <p className="font-medium">Truy cập đầy đủ khóa học</p>
-                      <p className="text-sm text-[#6b7280]">{lessons.length} bài học</p>
+                      <p className="text-sm text-[#6b7280]">
+                        {lessons.length} bài học
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -540,22 +642,26 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
                       <p className="font-medium">Hoạt động tương tác</p>
-                      <p className="text-sm text-[#6b7280]">Trò chơi và bài kiểm tra</p>
+                      <p className="text-sm text-[#6b7280]">
+                        Trò chơi và bài kiểm tra
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
                     <div>
                       <p className="font-medium">Điểm thưởng</p>
-                      <p className="text-sm text-[#6b7280]">{course.pointsEarned} điểm</p>
+                      <p className="text-sm text-[#6b7280]">
+                        {course.pointsEarned} điểm
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-4">
-                  {course.isPremium ? 'Mua ngay' : 'Bắt đầu học'}
+                  {course.isPremium ? "Mua ngay" : "Bắt đầu học"}
                 </Button>
-                
+
                 <p className="text-xs text-[#6b7280] text-center">
                   Đảm bảo hoàn tiền trong 30 ngày
                 </p>
@@ -565,7 +671,7 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Related Courses */}
-        <motion.div 
+        <motion.div
           className="mt-16"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -607,14 +713,18 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
                       </div>
                     </div>
                     <Link href={`/parent/courses/${course.id}`}>
-                      <h3 className="font-semibold mb-3 hover:text-[#8b5cf6] transition-colors line-clamp-2">{course.title}</h3>
+                      <h3 className="font-semibold mb-3 hover:text-[#8b5cf6] transition-colors line-clamp-2">
+                        {course.title}
+                      </h3>
                     </Link>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-sm text-[#6b7280]">
                         <BookOpen size={16} className="mr-1" />
                         <span>{course.lessons} lessons</span>
                       </div>
-                      <div className="font-bold text-[#8b5cf6]">${course.price}</div>
+                      <div className="font-bold text-[#8b5cf6]">
+                        ${course.price}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -624,7 +734,7 @@ export default function ParentCourseDetail({ params }: { params: Promise<{ id: s
         </motion.div>
       </main>
     </div>
-  )
+  );
 }
 const courses = [
   {
@@ -671,7 +781,7 @@ const courses = [
       rating: 4.8,
     },
   },
-]
+];
 
 const lessons = [
   {
@@ -714,7 +824,7 @@ const lessons = [
     duration: "55 min",
     preview: false,
   },
-]
+];
 
 const relatedCourses = [
   {
@@ -741,5 +851,4 @@ const relatedCourses = [
     lessons: 22,
     price: 42.99,
   },
-]
-
+];

@@ -1,12 +1,24 @@
-'use client'
+"use client";
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { BookOpen, Clock, Star, ArrowLeft } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useEffect, useState, use } from "react"
-import { getCourseById, getLessonsByCourse } from "@/lib/api"
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  BookOpen,
+  Clock,
+  Star,
+  ArrowLeft,
+  CheckCircle,
+  Play,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState, use } from "react";
+import {
+  getCourseById,
+  getLessonsByCourse,
+  checkAndAwardCourseCompletion,
+  updateCourseProgress,
+} from "@/lib/api";
 
 interface Course {
   _id: string;
@@ -29,13 +41,106 @@ interface Test {
   lessonId?: string;
 }
 
-export default function CoursePage({ params }: { params: Promise<{ courseId: string; kidId: string }> }) {
+export default function CoursePage({
+  params,
+}: {
+  params: Promise<{ courseId: string; kidId: string }>;
+}) {
   const resolvedParams = use(params);
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lessonProgress, setLessonProgress] = useState<Record<string, any>>({});
+  const [overallProgress, setOverallProgress] = useState(0);
+  const [courseCompleted, setCourseCompleted] = useState(false);
+  const [pointsAwarded, setPointsAwarded] = useState<{
+    points: number;
+    courseName: string;
+  } | null>(null);
+
+  // Load lesson progress from localStorage
+  const loadLessonProgress = async (lessonsData: Lesson[]) => {
+    const progressData: Record<string, any> = {};
+    let completedLessons = 0;
+
+    lessonsData.forEach((lesson) => {
+      const storageKey = `lesson_progress_${resolvedParams.kidId}_${lesson._id}`;
+      const savedProgress = localStorage.getItem(storageKey);
+
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          progressData[lesson._id] = progress;
+
+          // Check if lesson is completed
+          // A lesson is completed if currentProgress reaches 100%
+          if (progress.currentProgress >= 100) {
+            completedLessons++;
+          }
+        } catch (error) {
+          console.error(
+            "Error parsing progress for lesson:",
+            lesson._id,
+            error
+          );
+        }
+      }
+    });
+
+    setLessonProgress(progressData);
+
+    // Calculate overall progress percentage
+    const progressPercentage =
+      lessonsData.length > 0
+        ? Math.round((completedLessons / lessonsData.length) * 100)
+        : 0;
+    setOverallProgress(progressPercentage);
+
+    // Check if course is completed and award points
+    if (progressPercentage === 100 && !courseCompleted) {
+      setCourseCompleted(true);
+
+      // Update overall progress in localStorage for API sync
+      const overallProgressKey = `course_overall_progress_${resolvedParams.kidId}_${resolvedParams.courseId}`;
+      localStorage.setItem(overallProgressKey, "100");
+
+      try {
+        // First, update API progress status to completed
+        await updateCourseProgress(
+          resolvedParams.kidId,
+          resolvedParams.courseId,
+          {
+            status: true, // Mark course as completed
+            lessonCompleted: lessonsData.map((lesson) => ({
+              lessonId: lesson._id,
+            })),
+          }
+        );
+
+        // Then check and award points
+        const awardResult = await checkAndAwardCourseCompletion(
+          resolvedParams.kidId,
+          resolvedParams.courseId
+        );
+
+        if (awardResult && awardResult.success) {
+          setPointsAwarded({
+            points: awardResult.pointsAwarded,
+            courseName: awardResult.courseName,
+          });
+
+          // Show congratulations message
+          console.log(
+            `🎉 Congratulations! Course completed and ${awardResult.pointsAwarded} points awarded!`
+          );
+        }
+      } catch (error) {
+        console.error("Error awarding course completion points:", error);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -45,22 +150,27 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
         // Gọi song song course và lessons
         const [courseResponse, lessonsResponse] = await Promise.all([
           getCourseById(resolvedParams.courseId),
-          getLessonsByCourse(resolvedParams.courseId)
+          getLessonsByCourse(resolvedParams.courseId),
         ]);
 
-        setCourse(courseResponse.course || courseResponse.data || courseResponse);
+        setCourse(
+          courseResponse.course || courseResponse.data || courseResponse
+        );
 
         const lessonsData = Array.isArray(lessonsResponse)
           ? lessonsResponse
           : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
 
         setLessons(lessonsData);
-        
+
         // Initialize tests as empty array for now
         setTests([]);
+
+        // Load lesson progress from localStorage
+        await loadLessonProgress(lessonsData);
       } catch (error) {
-        console.error('Error fetching course data:', error);
-        setError('Không thể tải thông tin khóa học');
+        console.error("Error fetching course data:", error);
+        setError("Không thể tải thông tin khóa học");
       } finally {
         setLoading(false);
       }
@@ -68,6 +178,19 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
 
     fetchCourseData();
   }, [resolvedParams.courseId]);
+
+  // Refresh progress when page becomes visible (user returns from lesson)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (!document.hidden && lessons.length > 0) {
+        await loadLessonProgress(lessons);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [lessons, courseCompleted]);
 
   if (loading) {
     return (
@@ -91,8 +214,13 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
     return (
       <div className="space-y-6">
         <div className="text-center py-8">
-          <p className="text-red-500 mb-4">{error || 'Không tìm thấy khóa học'}</p>
-          <Button onClick={() => window.location.reload()} className="bg-[#83d98c] hover:bg-[#6bc275]">
+          <p className="text-red-500 mb-4">
+            {error || "Không tìm thấy khóa học"}
+          </p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-[#83d98c] hover:bg-[#6bc275]"
+          >
             Thử lại
           </Button>
         </div>
@@ -105,7 +233,10 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
       {/* Back Button Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" className="p-2">
-          <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/`} className="flex items-center gap-2">
+          <Link
+            href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/`}
+            className="flex items-center gap-2"
+          >
             <ArrowLeft className="h-6 w-6" />
             <span>Back to Courses</span>
           </Link>
@@ -116,7 +247,10 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
         <div className="flex items-center gap-6">
           <div className="h-40 w-40 bg-[#d9d9d9] rounded-lg overflow-hidden">
             <Image
-              src={course.thumbnailUrl || "https://res.cloudinary.com/dfkb8qo66/image/upload/v1742822285/1000000018_aifdis.jpg"}
+              src={
+                course.thumbnailUrl ||
+                "https://res.cloudinary.com/dfkb8qo66/image/upload/v1742822285/1000000018_aifdis.jpg"
+              }
               alt="ảnh con thỏ"
               width={160}
               height={160}
@@ -132,26 +266,62 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
               </div>
               <div className="flex items-center">
                 <Clock size={16} className="mr-1" />
-                <span>{Array.isArray(lessons) ? lessons.reduce((total, lesson) => total + (lesson.duration || 0), 0) : 0} Minutes</span>
+                <span>
+                  {Array.isArray(lessons)
+                    ? lessons.reduce(
+                        (total, lesson) => total + (lesson.duration || 0),
+                        0
+                      )
+                    : 0}{" "}
+                  Minutes
+                </span>
               </div>
               <div className="flex items-center">
                 <Star className="h-4 w-4 text-[#f59e0b] fill-[#f59e0b] mr-1" />
                 <span>{tests.length} Tests Available</span>
               </div>
             </div>
-            <p className="text-[#4b5563] mb-4">
-              {course.description}
-            </p>
+            <p className="text-[#4b5563] mb-4">{course.description}</p>
             <div className="w-full bg-[#e5e7eb] h-2 rounded-full mb-2">
-              <div className="bg-[#83d98c] h-2 rounded-full" style={{ width: "0%" }}></div>
+              <div
+                className="bg-[#83d98c] h-2 rounded-full transition-all duration-300"
+                style={{ width: `${overallProgress}%` }}
+              ></div>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[#6b7280]">Overall Progress</span>
-              <span className="font-medium">0%</span>
+              <span className="font-medium">{overallProgress}%</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Congratulations Message */}
+      {pointsAwarded && (
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+              <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-2">🎉 Chúc mừng!</h3>
+              <p className="text-lg">
+                Bé đã hoàn thành khóa học{" "}
+                <strong>{pointsAwarded.courseName}</strong> và nhận được{" "}
+                <strong>{pointsAwarded.points} điểm</strong>!
+              </p>
+              <p className="text-white/90 mt-1">
+                Tiếp tục học tập để kiếm thêm nhiều điểm và lên level cao hơn
+                nhé! 🌟
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold">+{pointsAwarded.points}</div>
+              <div className="text-sm text-white/90">điểm</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h2 className="text-xl font-bold mb-4">Course Lessons</h2>
@@ -159,30 +329,120 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
           {lessons.length > 0 ? (
             lessons
               .sort((a, b) => (a.order || 0) - (b.order || 0))
-              .map((lesson, index) => (
-                <Card key={lesson._id} className="border-none shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-[#e5e7eb] flex items-center justify-center">
-                          <span className="text-lg font-bold text-[#6b7280]">{index + 1}</span>
+              .map((lesson, index) => {
+                const progress = lessonProgress[lesson._id];
+                const isCompleted = progress?.currentProgress >= 100;
+                const hasStarted =
+                  progress &&
+                  progress.currentProgress > 0 &&
+                  progress.currentProgress < 100;
+
+                return (
+                  <Card key={lesson._id} className="border-none shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                              isCompleted
+                                ? "bg-green-500"
+                                : hasStarted
+                                ? "bg-blue-500"
+                                : "bg-[#e5e7eb]"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle className="w-6 h-6 text-white" />
+                            ) : (
+                              <span
+                                className={`text-lg font-bold ${
+                                  hasStarted ? "text-white" : "text-[#6b7280]"
+                                }`}
+                              >
+                                {index + 1}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{lesson.title}</h3>
+                              {isCompleted && (
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  Completed
+                                </span>
+                              )}
+                              {hasStarted && !isCompleted && (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                  In Progress
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-[#6b7280]">
+                              {lesson.duration || 15} minutes
+                            </p>
+                            {progress && (
+                              <div className="mt-1">
+                                <div className="w-32 bg-gray-200 h-1 rounded-full">
+                                  <div
+                                    className={`h-1 rounded-full transition-all ${
+                                      isCompleted
+                                        ? "bg-green-500"
+                                        : "bg-blue-500"
+                                    }`}
+                                    style={{
+                                      width: `${
+                                        progress.currentProgress || 0
+                                      }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {progress.currentProgress || 0}% completed
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{lesson.title}</h3>
-                          <p className="text-sm text-[#6b7280]">{lesson.duration || 15} minutes</p>
-                        </div>
+                        <Button
+                          className={`${
+                            isCompleted
+                              ? "bg-green-500 hover:bg-green-600 text-white"
+                              : hasStarted
+                              ? "bg-blue-500 hover:bg-blue-600 text-white"
+                              : "bg-[#e5e7eb] text-[#6b7280] hover:bg-gray-300"
+                          }`}
+                        >
+                          <Link
+                            href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}
+                            className="flex items-center gap-2"
+                          >
+                            {isCompleted ? (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                Review
+                              </>
+                            ) : hasStarted ? (
+                              <>
+                                <Play className="w-4 h-4" />
+                                Continue
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4" />
+                                Start
+                              </>
+                            )}
+                          </Link>
+                        </Button>
                       </div>
-                      <Button className="bg-[#e5e7eb] text-[#6b7280]">
-                        <Link href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}>
-                          Start
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
           ) : (
-            <p className="text-center text-[#6b7280] py-8">Chưa có bài học nào trong khóa học này.</p>
+            <p className="text-center text-[#6b7280] py-8">
+              Chưa có bài học nào trong khóa học này.
+            </p>
           )}
         </div>
       </div>
@@ -197,7 +457,9 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-[#f59e0b] flex items-center justify-center">
-                        <span className="text-lg font-bold text-white">T{index + 1}</span>
+                        <span className="text-lg font-bold text-white">
+                          T{index + 1}
+                        </span>
                       </div>
                       <div>
                         <h3 className="font-semibold">{test.title}</h3>
@@ -205,7 +467,9 @@ export default function CoursePage({ params }: { params: Promise<{ courseId: str
                       </div>
                     </div>
                     <Button className="bg-[#f59e0b] hover:bg-[#d97706] text-white">
-                      <Link href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}/tests/${test._id}`}>
+                      <Link
+                        href={`/environment-kid/kid-learning-zone/courses/${resolvedParams.courseId}/tests/${test._id}`}
+                      >
                         Take Test
                       </Link>
                     </Button>

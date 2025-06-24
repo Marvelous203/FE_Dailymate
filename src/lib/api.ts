@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8386';
 
 // Helper function để xử lý lỗi response
 async function handleErrorResponse(response: Response) {
@@ -790,6 +790,13 @@ export async function updateKid(kidId: string, kidData: {
   gender?: string;
   avatar?: string;
   age?: number;
+  points?: number;
+  level?: number;
+  unlockedAvatars?: string[];
+  streak?: {
+    current: number;
+    longest: number;
+  };
 }) {
   try {
     const response = await fetch(`${API_URL}/api/kid/${kidId}`, {
@@ -954,5 +961,344 @@ export async function checkPaymentStatus(orderCode: string) {
       throw new Error(error.message);
     }
     throw new Error('Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán');
+  }
+}
+
+// Course Progress API functions - Updated to match actual backend structure
+export async function getCourseProgress(kidId: string, courseId: string) {
+  try {
+    // Use the bulk progress API to find specific course progress
+    const progressResponse = await getAllCourseProgressByKidId(kidId);
+    
+    if (progressResponse?.success && progressResponse.data?.courseProgressList) {
+      const courseProgress = progressResponse.data.courseProgressList.find((progress: any) => {
+        const currentCourseId = typeof progress.courseId === 'object' 
+          ? (progress.courseId._id || progress.courseId.id)
+          : progress.courseId;
+        return currentCourseId === courseId;
+      });
+      
+      if (courseProgress) {
+        console.log('✅ Found course progress:', courseProgress);
+        return {
+          success: true,
+          message: "Course progress found",
+          data: courseProgress
+        };
+      }
+    }
+    
+    // If not found, try to auto-enroll
+    console.log('Course progress not found, trying to enroll...');
+    try {
+      return await enrollInCourse(kidId, courseId);
+    } catch (enrollError) {
+      console.error('Failed to enroll in course:', enrollError);
+      
+      // Return fallback data to allow access but indicate not enrolled
+      return {
+        success: true,
+        message: "Course progress not found",
+        data: {
+          courseId: courseId,
+          kidId: kidId,
+          status: false,
+          testResults: [],
+          lessonCompleted: [],
+          _id: "not_found",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0
+        }
+      };
+    }
+  } catch (error) {
+    console.error('Get course progress error:', error);
+    
+    // Return fallback data
+    return {
+      success: true,
+      message: "Using fallback data",
+      data: {
+        courseId: courseId,
+        kidId: kidId,
+        status: false,
+        testResults: [],
+        lessonCompleted: [],
+        _id: "fallback_id",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        __v: 0
+      }
+    };
+  }
+}
+
+// Get all course progress by kid ID
+export async function getAllCourseProgressByKidId(kidId: string) {
+  try {
+    console.log(`🔍 Fetching all progress for kid: ${kidId}`);
+    const response = await fetch(`${API_URL}/api/progress/kid/${kidId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    console.log(`📡 Progress API response status: ${response.status}`);
+
+    if (!response.ok) {
+      console.log('❌ All progress endpoint failed, trying individual course checks...');
+      
+      // If the bulk endpoint fails, we'll try to get enrollment status differently
+      // For now, return empty but we'll implement a fallback in the component
+      return {
+        success: false,
+        message: "All progress endpoint not available",
+        data: [],
+        needsFallback: true
+      };
+    }
+
+    const data = await response.json();
+    console.log('✅ Progress API response data:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Get all course progress error:', error);
+    return {
+      success: false,
+      message: "Network error or API unavailable",
+      data: [],
+      needsFallback: true
+    };
+  }
+}
+
+export async function updateCourseProgress(kidId: string, courseId: string, progressData: {
+  testResults?: Array<{
+    testId: string;
+    score: number;
+    passed: boolean;
+  }>;
+  lessonCompleted?: Array<{
+    lessonId: string;
+  }>;
+  status?: boolean;
+}) {
+  try {
+    // First, get the progress record to find the progressId
+    const progressResponse = await getAllCourseProgressByKidId(kidId);
+    let progressId = null;
+    
+    if (progressResponse?.success && progressResponse.data?.courseProgressList) {
+      const courseProgress = progressResponse.data.courseProgressList.find((progress: any) => {
+        const currentCourseId = typeof progress.courseId === 'object' 
+          ? (progress.courseId._id || progress.courseId.id)
+          : progress.courseId;
+        return currentCourseId === courseId;
+      });
+      
+      if (courseProgress) {
+        progressId = courseProgress._id;
+        console.log('✅ Found progressId:', progressId);
+      }
+    }
+    
+    if (!progressId) {
+      console.warn('❌ No progressId found for course, cannot update');
+      return { success: false, message: 'No progress record found' };
+    }
+
+    // Update progress using the correct endpoint: PUT /api/progress/{progressId}
+    const response = await fetch(`${API_URL}/api/progress/${progressId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(progressData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to update progress via API, continuing with local storage only');
+      return { success: false, message: 'API update failed, using local storage' };
+    }
+
+    const data = await response.json();
+    console.log('✅ Progress updated successfully via API:', data);
+    return data;
+  } catch (error) {
+    console.error('Update course progress error:', error);
+    // Don't throw error, just log and continue with local storage
+    console.warn('Progress update failed, continuing with local storage only');
+    return { success: false, message: 'Local storage only' };
+  }
+}
+
+// Enroll in course API
+export async function enrollInCourse(kidId: string, courseId: string) {
+  try {
+    const response = await fetch(`${API_URL}/api/progress/enroll`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ kidId, courseId }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      // Handle specific case where kid is already enrolled
+      if (response.status === 400) {
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.message && errorData.message.includes('already enrolled')) {
+          // Return success response if already enrolled
+          return {
+            success: true,
+            message: "Kid is already enrolled in this course",
+            data: {
+              courseId: courseId,
+              kidId: kidId,
+              status: false,
+              testResults: [],
+              lessonCompleted: [],
+              _id: "already_enrolled",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              __v: 0
+            }
+          };
+        }
+      }
+      
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Enroll in course error:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi đăng ký khóa học');
+  }
+}
+
+// Helper function to update lesson completion
+export async function updateLessonCompletion(kidId: string, courseId: string, lessonId: string) {
+  return updateCourseProgress(kidId, courseId, {
+    lessonCompleted: [{ lessonId }],
+    status: false // Set to true when all lessons in course are completed
+  });
+}
+
+// Helper function to update test result  
+export async function updateTestResult(
+  kidId: string, 
+  courseId: string, 
+  testId: string, 
+  score: number, 
+  passed: boolean
+) {
+  return updateCourseProgress(kidId, courseId, {
+    testResults: [{ testId, score, passed }]
+  });
+}
+
+// Submit test result function - uses updateCourseProgress since there's no separate submit endpoint
+export async function submitTestResult(kidId: string, courseId: string, lessonId: string, testId: string, testData: {
+  score: number;
+  totalPoints: number;
+  answers: any[];
+  timeSpent: number;
+  passed: boolean;
+}) {
+  console.log('submitTestResult: Using updateCourseProgress for test result');
+  return updateTestResult(kidId, courseId, testId, testData.score, testData.passed);
+}
+
+// Function to update kid points when completing a course
+export async function updateKidPointsForCourse(kidId: string, coursePoints: number) {
+  try {
+    // First get current kid data
+    const kidResponse = await getKidById(kidId);
+    if (!kidResponse || !kidResponse.success) {
+      throw new Error('Không thể lấy thông tin kid');
+    }
+
+    const currentKid = kidResponse.data;
+    const currentPoints = currentKid.points || 0;
+    const newPoints = currentPoints + coursePoints;
+
+    // Calculate new level based on points (every 100 points = 1 level)
+    const newLevel = Math.floor(newPoints / 100) + 1;
+
+    // Update kid with new points and level
+    const updateResponse = await updateKid(kidId, {
+      points: newPoints,
+      level: newLevel,
+    });
+
+    console.log(`🎉 Updated kid points: ${currentPoints} -> ${newPoints}, Level: ${newLevel}`);
+    
+    return updateResponse;
+  } catch (error) {
+    console.error('Error updating kid points:', error);
+    throw error;
+  }
+}
+
+// Function to check if course is completed and award points
+export async function checkAndAwardCourseCompletion(kidId: string, courseId: string) {
+  try {
+    // Get course progress
+    const progressResponse = await getCourseProgress(kidId, courseId);
+    if (!progressResponse || !progressResponse.success) {
+      return null;
+    }
+
+    const progress = progressResponse.data;
+    
+    // Check if course is completed (status = true)
+    if (progress.status === true) {
+      // Get course details to find points
+      const courseResponse = await getCourseById(courseId);
+      if (courseResponse && courseResponse.success) {
+        const course = courseResponse.data;
+        const coursePoints = course.pointsEarned || course.points || 50; // Default 50 points
+        
+        // Check if we already awarded points for this course (to avoid duplicate awards)
+        const alreadyAwarded = localStorage.getItem(`course_points_awarded_${kidId}_${courseId}`);
+        
+        if (!alreadyAwarded) {
+          // Award points
+          await updateKidPointsForCourse(kidId, coursePoints);
+          
+          // Mark as awarded to prevent duplicate awards
+          localStorage.setItem(`course_points_awarded_${kidId}_${courseId}`, 'true');
+          
+          console.log(`🏆 Course completed! Awarded ${coursePoints} points for course: ${course.title}`);
+          
+          return {
+            success: true,
+            pointsAwarded: coursePoints,
+            courseName: course.title
+          };
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error checking course completion:', error);
+    return null;
   }
 }

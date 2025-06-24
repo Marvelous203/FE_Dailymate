@@ -22,6 +22,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // Xử lý đặc biệt cho environment-kid routes
+  if (pathname.startsWith('/environment-kid')) {
+    // Environment-kid sử dụng localStorage authentication
+    // Middleware sẽ để client-side guards xử lý
+    console.log('🔧 Environment-kid route detected:', pathname);
+    return NextResponse.next();
+  }
+  
   // Lấy session data từ passport session
   const sessionData = getSessionFromRequest(request);
   
