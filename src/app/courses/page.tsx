@@ -1,3 +1,4 @@
+'use client'
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -6,19 +7,54 @@ import { Clock, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/sidebar";
+import { useEffect, useState } from "react";
+import { getAllCourses } from '@/lib/api';
 
 // Cập nhật interface Course để khớp với dữ liệu thực tế
 interface Course {
-  id: number;
+  _id: string;
   title: string;
   category: string;
-  rating: number;
-  duration: string;
-  progress: number;
-  saved: boolean;
+  rating?: number;
+  duration?: string;
+  progress?: number;
+  saved?: boolean;
+  thumbnailUrl?: string;
+  isPublished?: boolean;
+  pointsEarned?: number;
+  description?: string;
 }
 
 export default function Courses() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  const fetchCourses = async (pageNum = 1) => {
+    try {
+      setLoading(true);
+      const data = await getAllCourses(pageNum, 9);
+      if (data.success) {
+        setCourses(pageNum === 1 ? data.data.courses : [...courses, ...data.data.courses]);
+        setHasNextPage(data.data.pagination?.hasNextPage || false);
+        setPage(pageNum);
+      } else {
+        setError(data.message);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Lỗi khi tải khoá học');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses(1);
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex">
       {/* Sidebar */}
@@ -67,19 +103,34 @@ export default function Courses() {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map((course, index) => (
-                <CourseCard key={index} course={course} />
-              ))}
-            </div>
+            {loading ? (
+              <div>Đang tải khoá học...</div>
+            ) : error ? (
+              <div className="text-red-500">{error}</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.map((course) => (
+                    <CourseCard key={course._id} course={course} />
+                  ))}
+                </div>
+                {hasNextPage && (
+                  <div className="flex justify-center mt-6">
+                    <Button onClick={() => fetchCourses(page + 1)} disabled={loading}>
+                      {loading ? 'Đang tải...' : 'Load More'}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="ongoing" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses
-                .filter((c) => c.progress > 0 && c.progress < 100)
-                .map((course, index) => (
-                  <CourseCard key={index} course={course} />
+                .filter((c) => c.progress && c.progress > 0 && c.progress < 100)
+                .map((course) => (
+                  <CourseCard key={course._id} course={course} />
                 ))}
             </div>
           </TabsContent>
@@ -88,8 +139,8 @@ export default function Courses() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses
                 .filter((c) => c.progress === 100)
-                .map((course, index) => (
-                  <CourseCard key={index} course={course} />
+                .map((course) => (
+                  <CourseCard key={course._id} course={course} />
                 ))}
             </div>
           </TabsContent>
@@ -98,8 +149,8 @@ export default function Courses() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses
                 .filter((c) => c.saved)
-                .map((course, index) => (
-                  <CourseCard key={index} course={course} />
+                .map((course) => (
+                  <CourseCard key={course._id} course={course} />
                 ))}
             </div>
           </TabsContent>
@@ -114,7 +165,7 @@ function CourseCard({ course }: { course: Course }) {
     <Card className="bg-white border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
         <Image
-          src={`/placeholder.svg?height=160&width=320`}
+          src={course.thumbnailUrl || `/placeholder.svg?height=160&width=320`}
           alt={course.title}
           width={320}
           height={160}
@@ -133,27 +184,27 @@ function CourseCard({ course }: { course: Course }) {
           </div>
           <div className="text-[#6b7280] text-xs flex items-center">
             <Star className="h-3 w-3 text-[#f59e0b] mr-1" />
-            {course.rating}
+            {course.rating ?? course.pointsEarned ?? 0}
           </div>
         </div>
-        <Link href={`/courses/${course.id}`}>
+        <Link href={`/courses/${course._id}`}>
           <h3 className="font-semibold mb-2 hover:text-[#10b981] transition-colors">
             {course.title}
           </h3>
         </Link>
         <div className="flex items-center text-sm text-[#6b7280] mb-3">
           <Clock size={16} className="mr-1" />
-          <span>{course.duration}</span>
+          <span>{course.duration || ''}</span>
         </div>
         <div className="w-full bg-[#e5e7eb] h-2 rounded-full">
           <div
             className="bg-[#10b981] h-2 rounded-full"
-            style={{ width: `${course.progress}%` }}
+            style={{ width: `${course.progress ?? 0}%` }}
           ></div>
         </div>
         <div className="flex justify-between items-center mt-2 text-sm">
           <span className="text-[#6b7280]">Progress</span>
-          <span className="font-medium">{course.progress}%</span>
+          <span className="font-medium">{course.progress ?? 0}%</span>
         </div>
       </CardContent>
     </Card>
@@ -219,60 +270,3 @@ function Star(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-
-const courses = [
-  {
-    id: 1,
-    title: "Mathematics for Kids",
-    category: "Mathematics",
-    rating: 4.8,
-    duration: "4 hours",
-    progress: 65,
-    saved: true,
-  },
-  {
-    id: 2,
-    title: "English Vocabulary",
-    category: "Language",
-    rating: 4.5,
-    duration: "6 hours",
-    progress: 30,
-    saved: false,
-  },
-  {
-    id: 3,
-    title: "Science Experiments",
-    category: "Science",
-    rating: 4.9,
-    duration: "5 hours",
-    progress: 100,
-    saved: true,
-  },
-  {
-    id: 4,
-    title: "Art & Craft",
-    category: "Art",
-    rating: 4.7,
-    duration: "3 hours",
-    progress: 0,
-    saved: false,
-  },
-  {
-    id: 5,
-    title: "Music Basics",
-    category: "Music",
-    rating: 4.6,
-    duration: "4 hours",
-    progress: 50,
-    saved: true,
-  },
-  {
-    id: 6,
-    title: "Geography Adventures",
-    category: "Geography",
-    rating: 4.4,
-    duration: "5 hours",
-    progress: 20,
-    saved: false,
-  },
-];

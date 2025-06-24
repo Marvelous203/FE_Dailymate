@@ -1,3 +1,4 @@
+'use client'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,85 @@ import {
   Users,
   Calendar,
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function AnalyticsPage() {
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<number>(1);
+  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [revenueData, setRevenueData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [parentGrowth, setParentGrowth] = useState<any[]>([]);
+  const [loadingParentGrowth, setLoadingParentGrowth] = useState(false);
+  const [growthYear, setGrowthYear] = useState<number>(2025);
+  const [totalRevenue, setTotalRevenue] = useState<number>(0);
+  const [activeUsers, setActiveUsers] = useState<number>(0);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all(
+      Array.from({ length: 12 }, (_, i) =>
+        fetch("https://dailymate-be.onrender.com/api/transaction", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ month: i + 1, year: 2025 }),
+          cache: "no-store",
+        })
+          .then((res) => res.json())
+          .then((data) => ({
+            month: i + 1,
+            revenue: data.data?.revenue || 0,
+          }))
+      )
+    )
+      .then((data) => {
+        setMonthlyRevenue(data);
+        const sum = data.reduce((acc, cur) => acc + (cur.revenue || 0), 0);
+        setTotalRevenue(sum);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setLoadingStats(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/parents/count/year?year=${selectedYear}`)
+      .then(res => res.json())
+      .then(data => setActiveUsers(data.data?.parentCount || 0))
+      .finally(() => setLoadingStats(false));
+  }, [selectedYear]);
+
+  useEffect(() => {
+    setLoadingParentGrowth(true);
+    Promise.all(
+      Array.from({ length: 12 }, (_, i) =>
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/parents/count/month?month=${i + 1}&year=${growthYear}`)
+          .then((res) => res.json())
+          .then((data) => ({
+            month: i + 1,
+            count: data.data?.parentCount || 0,
+          }))
+      )
+    )
+      .then(setParentGrowth)
+      .finally(() => setLoadingParentGrowth(false));
+  }, [growthYear]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("https://dailymate-be.onrender.com/api/transaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ month: selectedMonth, year: selectedYear }),
+      cache: "no-store",
+    })
+      .then((res) => res.json())
+      .then((data) => setRevenueData(data.data))
+      .catch(() => setRevenueData(null))
+      .finally(() => setLoading(false));
+  }, [selectedMonth, selectedYear]);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -26,15 +104,15 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Total Revenue"
-          value="$48,294"
-          change="+18% from last month"
+          value={loading ? "..." : totalRevenue.toLocaleString("vi-VN") + "₫"}
+          change=""
           icon={<DollarSign className="h-5 w-5 text-[#ef4444]" />}
           bgColor="bg-red-50"
         />
         <StatCard
           title="Active Users"
-          value="2,845"
-          change="+12% from last month"
+          value={loadingStats ? "..." : activeUsers.toLocaleString("vi-VN")}
+          change=""
           icon={<Users className="h-5 w-5 text-[#0ea5e9]" />}
           bgColor="bg-blue-50"
         />
@@ -69,87 +147,45 @@ export default function AnalyticsPage() {
                 <CardTitle>Revenue Overview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80 w-full">
-                  <div className="flex h-64 items-end gap-2 pt-6">
-                    {[45, 60, 30, 70, 85, 50, 20, 40, 65, 55, 75, 90].map(
-                      (value, i) => (
-                        <div
-                          key={i}
-                          className="relative flex h-full w-full flex-col items-center"
-                        >
-                          <div
-                            className="absolute bottom-0 w-full max-w-12 rounded-t bg-[#ef4444]"
-                            style={{ height: `${value}%` }}
-                          ></div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                  <div className="flex justify-between mt-2">
-                    {[
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ].map((month, i) => (
-                      <div key={i} className="text-xs text-[#6b7280]">
-                        {month}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {loading ? (
+                  <p>Loading revenue chart...</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyRevenue}>
+                      <XAxis dataKey="month" tickFormatter={(m) => `Th${m}`} />
+                      <YAxis />
+                      <Tooltip formatter={(value) => `${value.toLocaleString()}₫`} />
+                      <Bar dataKey="revenue" fill="#ef4444" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-sm">
               <CardHeader>
-                <CardTitle>User Growth</CardTitle>
+                <div className="flex justify-between items-center w-full">
+                  <CardTitle>User Growth</CardTitle>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-sm">Năm:</span>
+                    <input type="number" value={growthYear} onChange={e => setGrowthYear(Number(e.target.value))} className="border rounded p-1 w-24" min={2000} max={2100} />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="h-80 w-full">
-                  <div className="flex h-64 items-end gap-2 pt-6">
-                    {[20, 35, 45, 50, 65, 75, 85, 90, 95, 100, 110, 120].map(
-                      (value, i) => (
-                        <div
-                          key={i}
-                          className="relative flex h-full w-full flex-col items-center"
-                        >
-                          <div
-                            className="absolute bottom-0 w-full max-w-12 rounded-t bg-[#0ea5e9]"
-                            style={{ height: `${value * 0.8}%` }}
-                          ></div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                  <div className="flex justify-between mt-2">
-                    {[
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ].map((month, i) => (
-                      <div key={i} className="text-xs text-[#6b7280]">
-                        {month}
-                      </div>
-                    ))}
-                  </div>
+                  {loadingParentGrowth ? (
+                    <div>Loading user chart..</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={parentGrowth}>
+                        <XAxis dataKey="month" tickFormatter={(m) => `Th${m}`} />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip formatter={(value) => `${value} phụ huynh`} />
+                        <Bar dataKey="count" fill="#0ea5e9" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -279,7 +315,45 @@ export default function AnalyticsPage() {
               <CardTitle>Revenue Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Revenue analytics content would go here</p>
+              <div className="flex gap-4 mb-4">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="border rounded px-2 py-1"
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      Tháng {i + 1}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="border rounded px-2 py-1"
+                >
+                  {[2024, 2025, 2026, 2027].map((year) => (
+                    <option key={year} value={year}>
+                      Năm {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {loading ? (
+                <p>Đang tải doanh thu...</p>
+              ) : (
+                <div>
+                  <div className="text-2xl font-bold">
+                    Doanh thu tháng {selectedMonth}/{selectedYear}:{" "}
+                    <span className="text-[#ef4444]">
+                      {revenueData ? `${revenueData.revenue.toLocaleString()}₫` : "0₫"}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    Số giao dịch thành công: {revenueData?.successfulTransactions ?? 0}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
