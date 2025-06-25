@@ -87,18 +87,25 @@ interface Question {
   points: number;
 }
 
-// Helper functions for progress storage
-const getProgressKey = (kidId: string, lessonId: string) =>
-  `lesson_progress_${kidId}_${lessonId}`;
+// Import kid progress utilities
+import {
+  kidLocalStorage,
+  type LessonProgress,
+  getStorageKeys,
+} from "@/utils/kidProgress";
 
-const getStoredProgress = (kidId: string, lessonId: string) => {
+// Helper function to get the progress key (for compatibility with existing code)
+const getProgressKey = (kidId: string, lessonId: string) => {
+  return getStorageKeys(kidId).lessonProgress(lessonId);
+};
+
+// Helper functions for progress storage using the new utilities
+const getStoredProgress = (
+  kidId: string,
+  lessonId: string
+): LessonProgress | null => {
   if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(getProgressKey(kidId, lessonId));
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
+  return kidLocalStorage.getLessonProgress(kidId, lessonId);
 };
 
 const saveProgress = async (
@@ -115,21 +122,15 @@ const saveProgress = async (
 ) => {
   if (typeof window === "undefined") return;
   try {
-    const progressWithTimestamp = {
-      ...progress,
-      lastUpdated: new Date().toISOString(),
-    };
+    // Save to localStorage using the new utility function
+    kidLocalStorage.setLessonProgress(kidId, lessonId, progress);
 
-    // Save to localStorage for immediate UI updates
-    localStorage.setItem(
-      getProgressKey(kidId, lessonId),
-      JSON.stringify(progressWithTimestamp)
+    console.log(
+      "💾 Progress saved to localStorage for kid:",
+      kidId,
+      "lesson:",
+      lessonId
     );
-
-    console.log("💾 Progress saved to localStorage:", {
-      key: getProgressKey(kidId, lessonId),
-      progress: progressWithTimestamp,
-    });
 
     // Sync with backend API if courseId is provided
     if (courseId) {
@@ -236,8 +237,10 @@ export default function LessonPage({
       );
       console.log("🔄 Loading saved progress:", savedProgress);
       console.log(
-        "🗝️ Storage key:",
-        getProgressKey(resolvedParams.kidId, resolvedParams.lessonId)
+        "🗝️ Loading progress for kid:",
+        resolvedParams.kidId,
+        "lesson:",
+        resolvedParams.lessonId
       );
 
       if (savedProgress) {

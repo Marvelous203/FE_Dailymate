@@ -80,18 +80,34 @@ export default function ParentCourseDetail({
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  // Tối ưu hóa: Gọi cả course và lessons cùng lúc với Promise.all
+  // Tối ưu hóa: Gọi course trước, sau đó lessons với better error handling
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Gọi song song cả course và lessons
-        const [courseResponse, lessonsResponse] = await Promise.all([
-          getCourseById(courseId),
-          getLessonsByCourse(courseId),
-        ]);
+        console.log("🔄 [Parent] Fetching course data for:", courseId);
+
+        // Fetch course first (mandatory)
+        let courseResponse;
+        try {
+          courseResponse = await getCourseById(courseId);
+          console.log("✅ [Parent] Course data fetched successfully");
+        } catch (courseError) {
+          console.error("❌ [Parent] Failed to fetch course:", courseError);
+          if (
+            courseError instanceof Error &&
+            courseError.message.includes("ECONNRESET")
+          ) {
+            setError(
+              "Kết nối bị gián đoạn khi tải khóa học. Vui lòng thử lại sau."
+            );
+          } else {
+            setError("Không thể tải thông tin khóa học. Vui lòng thử lại.");
+          }
+          return;
+        }
 
         // Xử lý course data
         let courseData = null;
@@ -105,25 +121,73 @@ export default function ParentCourseDetail({
           courseData = courseResponse;
         }
 
-        // Xử lý lessons data
-        let lessonsData = [];
-        if (lessonsResponse?.data?.lessons) {
-          lessonsData = lessonsResponse.data.lessons;
-        } else if (lessonsResponse?.lessons) {
-          lessonsData = lessonsResponse.lessons;
-        } else if (Array.isArray(lessonsResponse)) {
-          lessonsData = lessonsResponse;
+        if (!courseData) {
+          setError("Không tìm thấy thông tin khóa học");
+          return;
         }
 
-        if (courseData) {
-          setCourse(courseData);
-          setLessons(lessonsData);
-        } else {
-          setError("Không tìm thấy thông tin khóa học");
+        setCourse(courseData);
+
+        // Fetch lessons (optional - can continue without lessons)
+        let lessonsData = [];
+        try {
+          const lessonsResponse = await getLessonsByCourse(courseId);
+          console.log("✅ [Parent] Lessons data fetched successfully");
+
+          // Xử lý lessons data
+          if (lessonsResponse?.data?.lessons) {
+            lessonsData = lessonsResponse.data.lessons;
+          } else if (lessonsResponse?.lessons) {
+            lessonsData = lessonsResponse.lessons;
+          } else if (Array.isArray(lessonsResponse)) {
+            lessonsData = lessonsResponse;
+          }
+        } catch (lessonsError) {
+          console.warn(
+            "⚠️ [Parent] Failed to fetch lessons, continuing without them:",
+            lessonsError
+          );
+          // Continue with empty lessons rather than failing
+          if (
+            lessonsError instanceof Error &&
+            lessonsError.message.includes("ECONNRESET")
+          ) {
+            console.warn(
+              "📡 [Parent] Lessons fetch failed due to connection reset, but course will display"
+            );
+          }
+          lessonsData = [];
         }
+
+        setLessons(lessonsData);
+        console.log("🎉 [Parent] Course page data loading completed");
       } catch (err) {
-        console.error("Error fetching course data:", err);
-        setError("Không thể tải thông tin khóa học");
+        console.error(
+          "❌ [Parent] Unexpected error fetching course data:",
+          err
+        );
+
+        // Provide user-friendly error messages
+        if (err instanceof Error) {
+          if (err.message.includes("ECONNRESET")) {
+            setError(
+              "Kết nối bị gián đoạn. Vui lòng kiểm tra mạng và thử lại."
+            );
+          } else if (err.message.includes("timeout")) {
+            setError("Tải dữ liệu quá lâu. Vui lòng thử lại.");
+          } else if (
+            err.message.includes("network") ||
+            err.message.includes("fetch")
+          ) {
+            setError(
+              "Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại."
+            );
+          } else {
+            setError(`Lỗi: ${err.message}`);
+          }
+        } else {
+          setError("Không thể tải thông tin khóa học");
+        }
       } finally {
         setLoading(false);
       }

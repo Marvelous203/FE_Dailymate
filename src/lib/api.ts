@@ -369,36 +369,87 @@ export async function deleteCourse(courseId: string) {
   }
 }
 
-// API cho lesson
-export async function getLessonsByCourse(courseId: string) {
-  try {
-    const response = await fetch(`${API_URL}/api/lesson/course/${courseId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+// API cho lesson with improved error handling and retry mechanism
+export async function getLessonsByCourse(courseId: string, retryCount: number = 3) {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= retryCount; attempt++) {
+    try {
+      console.log(`🔄 Attempt ${attempt}/${retryCount}: Fetching lessons for course ${courseId}`);
+      
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_URL}/api/lesson/course/${courseId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const errorMessage = await handleErrorResponse(response);
-      throw new Error(errorMessage);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorMessage = await handleErrorResponse(response);
+        throw new Error(`HTTP ${response.status}: ${errorMessage}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ Successfully fetched lessons for course ${courseId}:`, data);
+      return data;
+      
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`❌ Attempt ${attempt}/${retryCount} failed for course ${courseId}:`, error);
+
+      // Handle specific error types
+      if (error instanceof Error) {
+        // ECONNRESET, ENOTFOUND, etc.
+        if (error.message.includes('ECONNRESET')) {
+          console.warn(`🔌 Connection reset detected on attempt ${attempt}. Server may be overloaded.`);
+        } else if (error.message.includes('ENOTFOUND')) {
+          console.error(`🌐 DNS resolution failed. Check if API_URL is correct: ${API_URL}`);
+          break; // Don't retry DNS errors
+        } else if (error.message.includes('fetch')) {
+          console.warn(`📡 Network fetch error on attempt ${attempt}.`);
+        } else if (error.name === 'AbortError') {
+          console.warn(`⏰ Request timeout on attempt ${attempt} (>10s).`);
+        }
+      }
+
+      // Don't retry on the last attempt
+      if (attempt === retryCount) {
+        break;
+      }
+
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Max 5 seconds
+      console.log(`⏳ Waiting ${delay}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Get lessons by course error:', error);
-
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
-    }
-
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error('Đã xảy ra lỗi khi lấy danh sách bài học');
   }
+
+  // All attempts failed, throw the last error with improved message
+  if (lastError) {
+    console.error(`🚫 All ${retryCount} attempts failed for getLessonsByCourse(${courseId})`);
+    
+    if (lastError.message.includes('ECONNRESET')) {
+      throw new Error(`Kết nối bị gián đoạn khi tải danh sách bài học. Server có thể đang quá tải. Vui lòng thử lại sau ít phút.`);
+    } else if (lastError.message.includes('ENOTFOUND')) {
+      throw new Error(`Không thể kết nối đến server API. Vui lòng kiểm tra kết nối mạng hoặc liên hệ quản trị viên.`);
+    } else if (lastError.message.includes('fetch')) {
+      throw new Error(`Lỗi kết nối mạng khi tải danh sách bài học. Vui lòng kiểm tra kết nối internet và thử lại.`);
+    } else if (lastError.name === 'AbortError') {
+      throw new Error(`Yêu cầu tải danh sách bài học quá lâu (>10s). Vui lòng thử lại hoặc kiểm tra kết nối mạng.`);
+    } else {
+      throw new Error(`Không thể tải danh sách bài học: ${lastError.message}`);
+    }
+  }
+  
+  throw new Error('Đã xảy ra lỗi không xác định khi lấy danh sách bài học');
 }
 
 // API cho test theo lesson
@@ -1259,6 +1310,9 @@ export async function updateKidPointsForCourse(kidId: string, coursePoints: numb
 // Function to check if course is completed and award points
 export async function checkAndAwardCourseCompletion(kidId: string, courseId: string) {
   try {
+    // Import the kid progress utilities
+    const { kidLocalStorage } = await import('@/utils/kidProgress');
+    
     // Get course progress
     const progressResponse = await getCourseProgress(kidId, courseId);
     if (!progressResponse || !progressResponse.success) {
@@ -1275,23 +1329,31 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
         const course = courseResponse.data;
         const coursePoints = course.pointsEarned || course.points || 50; // Default 50 points
         
-        // Check if we already awarded points for this course (to avoid duplicate awards)
-        const alreadyAwarded = localStorage.getItem(`course_points_awarded_${kidId}_${courseId}`);
-        
-        if (!alreadyAwarded) {
+        // Check if points have already been awarded using our utility function
+        if (!kidLocalStorage.hasPointsBeenAwarded(kidId, courseId)) {
           // Award points
           await updateKidPointsForCourse(kidId, coursePoints);
           
-          // Mark as awarded to prevent duplicate awards
-          localStorage.setItem(`course_points_awarded_${kidId}_${courseId}`, 'true');
+          // Mark as awarded using our utility function
+          kidLocalStorage.markPointsAwarded(kidId, courseId, {
+            courseId: courseId,
+            pointsAwarded: coursePoints,
+            timestamp: new Date().toISOString(),
+            courseName: course.title
+          });
           
-          console.log(`🏆 Course completed! Awarded ${coursePoints} points for course: ${course.title}`);
+          console.log(`🏆 Course completed! Awarded ${coursePoints} points for course: ${course.title} to kid: ${kidId}`);
           
           return {
             success: true,
             pointsAwarded: coursePoints,
             courseName: course.title
           };
+        } else {
+          // Already awarded - log this but don't re-award
+          const existingAward = kidLocalStorage.getPointsAwardData(kidId, courseId);
+          console.log(`⚠️ Points already awarded for this course:`, existingAward);
+          return null;
         }
       }
     }

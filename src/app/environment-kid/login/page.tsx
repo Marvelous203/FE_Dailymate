@@ -110,11 +110,37 @@ export default function KidLoginPage() {
     setError("");
 
     try {
+      // Clear previous kid's data before switching
+      const { kidLocalStorage, validateKidDataIntegrity } = await import(
+        "@/utils/kidProgress"
+      );
+
+      // Get previously logged in kid data to clear their specific data
+      const oldKidData = localStorage.getItem("kidData");
+      if (oldKidData) {
+        try {
+          const parsedOldData = JSON.parse(oldKidData);
+          const oldKidId = parsedOldData?.data?._id || parsedOldData?.data?.id;
+          if (oldKidId && oldKidId !== kidId) {
+            console.log(`🧹 Clearing old kid data for: ${oldKidId}`);
+            kidLocalStorage.clearKidData(oldKidId);
+          }
+        } catch (e) {
+          console.warn("Error parsing old kid data:", e);
+        }
+      }
+
       // Fetch kid data
       const kidCompleteData = await fetchKidDataAfterLogin(kidId);
 
       // Store kid data in localStorage
       localStorage.setItem("kidData", JSON.stringify(kidCompleteData));
+
+      // Validate data integrity for new kid and migrate old keys if needed
+      validateKidDataIntegrity(kidId);
+      kidLocalStorage.migrateOldKeys(kidId);
+
+      console.log(`✅ Kid login successful for: ${kidName} (${kidId})`);
 
       // Redirect to kid learning zone with kid ID
       router.push(`/environment-kid/kid-learning-zone/${kidId}`);

@@ -102,9 +102,13 @@ export default function CoursePage({
     if (progressPercentage === 100 && !courseCompleted) {
       setCourseCompleted(true);
 
-      // Update overall progress in localStorage for API sync
-      const overallProgressKey = `course_overall_progress_${resolvedParams.kidId}_${resolvedParams.courseId}`;
-      localStorage.setItem(overallProgressKey, "100");
+      // Update overall progress in localStorage for API sync using utility function
+      const { kidLocalStorage } = await import("@/utils/kidProgress");
+      kidLocalStorage.setCourseOverallProgress(
+        resolvedParams.kidId,
+        resolvedParams.courseId,
+        100
+      );
 
       try {
         // First, update API progress status to completed
@@ -146,37 +150,114 @@ export default function CoursePage({
     const fetchCourseData = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // Gọi song song course và lessons
-        const [courseResponse, lessonsResponse] = await Promise.all([
-          getCourseById(resolvedParams.courseId),
-          getLessonsByCourse(resolvedParams.courseId),
-        ]);
+        console.log(
+          "🔄 Starting to fetch course data for:",
+          resolvedParams.courseId
+        );
+
+        // Fetch course first (mandatory)
+        let courseResponse;
+        try {
+          courseResponse = await getCourseById(resolvedParams.courseId);
+          console.log("✅ Course data fetched successfully");
+        } catch (courseError) {
+          console.error("❌ Failed to fetch course:", courseError);
+          if (
+            courseError instanceof Error &&
+            courseError.message.includes("ECONNRESET")
+          ) {
+            setError(
+              "Kết nối bị gián đoạn khi tải khóa học. Vui lòng thử lại."
+            );
+          } else {
+            setError("Không thể tải thông tin khóa học. Vui lòng thử lại.");
+          }
+          return;
+        }
 
         setCourse(
           courseResponse.course || courseResponse.data || courseResponse
         );
 
-        const lessonsData = Array.isArray(lessonsResponse)
-          ? lessonsResponse
-          : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
+        // Fetch lessons (optional - can continue without lessons)
+        let lessonsData = [];
+        try {
+          const lessonsResponse = await getLessonsByCourse(
+            resolvedParams.courseId
+          );
+          console.log("✅ Lessons data fetched successfully");
+
+          lessonsData = Array.isArray(lessonsResponse)
+            ? lessonsResponse
+            : lessonsResponse?.lessons || lessonsResponse?.data?.lessons || [];
+        } catch (lessonsError) {
+          console.warn(
+            "⚠️ Failed to fetch lessons, continuing without them:",
+            lessonsError
+          );
+          // Show a non-blocking warning but continue
+          if (
+            lessonsError instanceof Error &&
+            lessonsError.message.includes("ECONNRESET")
+          ) {
+            console.warn(
+              "📡 Lessons fetch failed due to connection reset, but course will load"
+            );
+          }
+          lessonsData = [];
+        }
 
         setLessons(lessonsData);
 
         // Initialize tests as empty array for now
         setTests([]);
 
-        // Load lesson progress from localStorage
-        await loadLessonProgress(lessonsData);
+        // Load lesson progress from localStorage (non-blocking)
+        try {
+          if (lessonsData.length > 0) {
+            await loadLessonProgress(lessonsData);
+            console.log("✅ Lesson progress loaded successfully");
+          }
+        } catch (progressError) {
+          console.warn("⚠️ Failed to load lesson progress:", progressError);
+          // Continue without progress data
+        }
+
+        console.log("🎉 Course page data loading completed");
       } catch (error) {
-        console.error("Error fetching course data:", error);
-        setError("Không thể tải thông tin khóa học");
+        console.error("❌ Unexpected error in fetchCourseData:", error);
+
+        // Provide user-friendly error messages
+        if (error instanceof Error) {
+          if (error.message.includes("ECONNRESET")) {
+            setError(
+              "Kết nối bị gián đoạn. Vui lòng kiểm tra mạng và thử lại."
+            );
+          } else if (error.message.includes("timeout")) {
+            setError("Tải dữ liệu quá lâu. Vui lòng thử lại.");
+          } else if (
+            error.message.includes("network") ||
+            error.message.includes("fetch")
+          ) {
+            setError(
+              "Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại."
+            );
+          } else {
+            setError(`Lỗi: ${error.message}`);
+          }
+        } else {
+          setError("Có lỗi không xác định. Vui lòng thử lại.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCourseData();
+    if (resolvedParams.courseId) {
+      fetchCourseData();
+    }
   }, [resolvedParams.courseId]);
 
   // Refresh progress when page becomes visible (user returns from lesson)
@@ -213,16 +294,41 @@ export default function CoursePage({
   if (error || !course) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-8">
-          <p className="text-red-500 mb-4">
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+          <div className="mb-6">
+            {error?.includes("ECONNRESET") || error?.includes("gián đoạn") ? (
+              <div className="text-6xl mb-4">📡</div>
+            ) : error?.includes("timeout") || error?.includes("lâu") ? (
+              <div className="text-6xl mb-4">⏰</div>
+            ) : error?.includes("network") || error?.includes("mạng") ? (
+              <div className="text-6xl mb-4">🌐</div>
+            ) : (
+              <div className="text-6xl mb-4">⚠️</div>
+            )}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Có lỗi xảy ra
+          </h3>
+          <p className="text-red-500 mb-6">
             {error || "Không tìm thấy khóa học"}
           </p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="bg-[#83d98c] hover:bg-[#6bc275]"
-          >
-            Thử lại
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[#83d98c] hover:bg-[#6bc275]"
+            >
+              🔄 Thử lại
+            </Button>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              ← Quay lại
+            </Button>
+          </div>
+          {error?.includes("ECONNRESET") && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+              💡 <strong>Mẹo:</strong> Lỗi này thường do mạng không ổn định. Hãy
+              kiểm tra kết nối internet và thử lại sau vài giây.
+            </div>
+          )}
         </div>
       </div>
     );

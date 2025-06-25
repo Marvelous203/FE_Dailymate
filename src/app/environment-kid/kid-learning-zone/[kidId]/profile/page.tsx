@@ -26,6 +26,7 @@ import {
   getAllCourseProgressByKidId,
   getAllCourses,
 } from "@/lib/api";
+import { kidLocalStorage } from "@/utils/kidProgress";
 import { useParams } from "next/navigation";
 
 // Add proper TypeScript interfaces
@@ -159,12 +160,14 @@ export default function KidProfilePage() {
             isCompleted = true;
             console.log("✅ Course completed via API status");
           } else {
-            // Fallback: check localStorage overall progress
-            const overallProgressKey = `course_overall_progress_${kidId}_${courseId}`;
-            const storedProgress = localStorage.getItem(overallProgressKey);
-            if (storedProgress === "100") {
+            // Fallback: check localStorage overall progress using utility function
+            const storedProgress = kidLocalStorage.getCourseOverallProgress(
+              kidId,
+              courseId
+            );
+            if (storedProgress === 100) {
               isCompleted = true;
-              console.log("✅ Course completed via localStorage");
+              console.log("✅ Course completed via utility function");
             }
           }
 

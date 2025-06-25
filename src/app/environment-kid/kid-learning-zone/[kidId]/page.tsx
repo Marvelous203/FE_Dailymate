@@ -24,6 +24,7 @@ import {
   getLessonsByCourse,
   getKidById,
 } from "@/lib/api";
+import { kidLocalStorage } from "@/utils/kidProgress";
 
 interface KidData {
   data: {
@@ -90,22 +91,11 @@ export default function KidLearningZonePage() {
                 lessonsResponse?.data?.lessons ||
                 [];
 
-            // Calculate progress percentage - use localStorage first (same as My Courses section)
-            const overallProgressKey = `course_overall_progress_${kidId}_${courseId}`;
-            const storedOverallProgress =
-              localStorage.getItem(overallProgressKey);
-            let progressPercentage = 0;
-
-            if (storedOverallProgress) {
-              try {
-                const parsed = parseInt(storedOverallProgress);
-                // Ensure progress is between 0 and 100
-                progressPercentage = Math.min(100, Math.max(0, parsed || 0));
-              } catch (error) {
-                console.error("Error parsing stored progress:", error);
-                progressPercentage = 0;
-              }
-            }
+            // Calculate progress percentage using utility function
+            let progressPercentage = kidLocalStorage.getCourseOverallProgress(
+              kidId,
+              courseId
+            );
 
             // Get lesson data for calculations
             const totalLessons = lessons.length;
@@ -169,7 +159,7 @@ export default function KidLearningZonePage() {
 
             console.log(`🔍 Continue Learning - Course: ${courseData.title}`);
             console.log(
-              `📈 Continue Learning - Progress: ${progressPercentage}% (from localStorage: ${storedOverallProgress})`
+              `📈 Continue Learning - Progress: ${progressPercentage}% (from utility function)`
             );
             console.log(
               `🎯 Continue Learning - Progress data:`,
@@ -656,25 +646,9 @@ export default function KidLearningZonePage() {
 
                 if (!course) return null;
 
-                // Get progress from localStorage (same as course detail page)
-                const overallProgressKey = `course_overall_progress_${kidId}_${courseId}`;
-                const storedOverallProgress =
-                  localStorage.getItem(overallProgressKey);
-                let progressPercentage = 0;
-
-                if (storedOverallProgress) {
-                  try {
-                    const parsed = parseInt(storedOverallProgress);
-                    // Ensure progress is between 0 and 100
-                    progressPercentage = Math.min(
-                      100,
-                      Math.max(0, parsed || 0)
-                    );
-                  } catch (error) {
-                    console.error("Error parsing stored progress:", error);
-                    progressPercentage = 0;
-                  }
-                }
+                // Get progress using utility function
+                let progressPercentage =
+                  kidLocalStorage.getCourseOverallProgress(kidId, courseId);
 
                 // Fallback: calculate from localStorage individual lesson progress if no overall progress
                 if (progressPercentage === 0) {
@@ -722,7 +696,7 @@ export default function KidLearningZonePage() {
                 // Debug logging
                 console.log(`🔍 Course: ${course.title}`);
                 console.log(
-                  `📈 Progress: ${progressPercentage}% (from localStorage: ${storedOverallProgress})`
+                  `📈 Progress: ${progressPercentage}% (from utility function)`
                 );
                 console.log(`🎯 Progress data:`, progress);
 
