@@ -80,6 +80,7 @@ export default function TeacherCoursesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCourseDetailModalOpen, setIsCourseDetailModalOpen] = useState(false);
   const [courseToView, setCourseToView] = useState<Course | null>(null);
+  const [instructorNames, setInstructorNames] = useState<{ [id: string]: string }>({});
 
   const fetchCourses = async (page: number = 1) => {
     try {
@@ -90,6 +91,13 @@ export default function TeacherCoursesPage() {
         setCourses(data.data.courses);
         setPagination(data.data.pagination);
         setCurrentPage(page);
+
+        // Fetch instructor names
+        data.data.courses.forEach((course: Course) => {
+          if (typeof course.instructor === "string") {
+            fetchInstructorName(course.instructor);
+          }
+        });
       } else {
         setError(data.message);
       }
@@ -97,6 +105,21 @@ export default function TeacherCoursesPage() {
       setError(error instanceof Error ? error.message : 'Failed to fetch courses');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInstructorName = async (id: string) => {
+    if (instructorNames[id]) return; // Đã có rồi thì bỏ qua
+    try {
+      const res = await fetch(`http://localhost:8386/api/teacher/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setInstructorNames(prev => ({ ...prev, [id]: data.data.fullName }));
+      } else {
+        setInstructorNames(prev => ({ ...prev, [id]: "Unknown" }));
+      }
+    } catch (e) {
+      setInstructorNames(prev => ({ ...prev, [id]: "Unknown" }));
     }
   };
 
@@ -243,7 +266,14 @@ export default function TeacherCoursesPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {courses.map((course, index) => (
-                  <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                  <CourseCard
+                    key={index}
+                    course={course}
+                    onEdit={openEditModal}
+                    onDelete={openDeleteModal}
+                    onView={openCourseDetailModal}
+                    instructorNames={instructorNames}
+                  />
                 ))}
               </div>
 
@@ -275,7 +305,14 @@ export default function TeacherCoursesPage() {
                 {courses
                   .filter((course) => course.isPublished)
                   .map((course, index) => (
-                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                    <CourseCard
+                      key={index}
+                      course={course}
+                      onEdit={openEditModal}
+                      onDelete={openDeleteModal}
+                      onView={openCourseDetailModal}
+                      instructorNames={instructorNames}
+                    />
                   ))}
               </div>
 
@@ -307,7 +344,14 @@ export default function TeacherCoursesPage() {
                 {courses
                   .filter((course) => !course.isPublished)
                   .map((course, index) => (
-                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                    <CourseCard
+                      key={index}
+                      course={course}
+                      onEdit={openEditModal}
+                      onDelete={openDeleteModal}
+                      onView={openCourseDetailModal}
+                      instructorNames={instructorNames}
+                    />
                   ))}
               </div>
 
@@ -339,7 +383,14 @@ export default function TeacherCoursesPage() {
                 {courses
                   .filter((course) => course.status === 'archived')
                   .map((course, index) => (
-                    <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                    <CourseCard
+                      key={index}
+                      course={course}
+                      onEdit={openEditModal}
+                      onDelete={openDeleteModal}
+                      onView={openCourseDetailModal}
+                      instructorNames={instructorNames}
+                    />
                   ))}
               </div>
 
@@ -366,7 +417,14 @@ export default function TeacherCoursesPage() {
             {courses
               .filter((course) => course.isPublished)
               .map((course, index) => (
-                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                <CourseCard
+                  key={index}
+                  course={course}
+                  onEdit={openEditModal}
+                  onDelete={openDeleteModal}
+                  onView={openCourseDetailModal}
+                  instructorNames={instructorNames}
+                />
               ))}
           </div>
         </TabsContent>
@@ -376,7 +434,14 @@ export default function TeacherCoursesPage() {
             {courses
               .filter((course) => !course.isPublished)
               .map((course, index) => (
-                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                <CourseCard
+                  key={index}
+                  course={course}
+                  onEdit={openEditModal}
+                  onDelete={openDeleteModal}
+                  onView={openCourseDetailModal}
+                  instructorNames={instructorNames}
+                />
               ))}
           </div>
         </TabsContent>
@@ -386,7 +451,14 @@ export default function TeacherCoursesPage() {
             {courses
               .filter((course) => course.status === 'archived')
               .map((course, index) => (
-                <CourseCard key={index} course={course} onEdit={openEditModal} onDelete={openDeleteModal} onView={openCourseDetailModal} />
+                <CourseCard
+                  key={index}
+                  course={course}
+                  onEdit={openEditModal}
+                  onDelete={openDeleteModal}
+                  onView={openCourseDetailModal}
+                  instructorNames={instructorNames}
+                />
               ))}
           </div>
         </TabsContent>
@@ -472,7 +544,19 @@ export default function TeacherCoursesPage() {
   )
 }
 
-function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEdit: (course: Course) => void; onDelete: (course: Course) => void; onView: (course: Course) => void }) {
+function CourseCard({
+  course,
+  onEdit,
+  onDelete,
+  onView,
+  instructorNames
+}: {
+  course: Course;
+  onEdit: (course: Course) => void;
+  onDelete: (course: Course) => void;
+  onView: (course: Course) => void;
+  instructorNames: { [id: string]: string };
+}) {
   return (
     <Card className="border-none shadow-sm overflow-hidden">
       <div className="h-40 bg-[#d9d9d9] relative">
@@ -510,7 +594,7 @@ function CourseCard({ course, onEdit, onDelete, onView }: { course: Course; onEd
             <User className="mr-1 w-4 h-4" />
             <span>
               {typeof course.instructor === 'string'
-                ? course.instructor
+                ? instructorNames[course.instructor] || "Loading..."
                 : course.instructor?.fullName || 'Unknown Instructor'
               }
             </span>

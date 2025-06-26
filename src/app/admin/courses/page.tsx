@@ -15,6 +15,8 @@ export default function CoursesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [enrollmentCounts, setEnrollmentCounts] = useState<{ [key: string]: number }>({});
+  const [loadingEnrollments, setLoadingEnrollments] = useState(false);
 
   const fetchCourses = async (pageNum = 1) => {
     try {
@@ -33,6 +35,29 @@ export default function CoursesPage() {
       setLoading(false);
     }
   };
+
+  // Fetch enrollment count for all courses
+  useEffect(() => {
+    if (courses.length === 0) return;
+    setLoadingEnrollments(true);
+    Promise.all(
+      courses.map(async (course) => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/course/${course._id}/enrollment-count`);
+          console.log('trùn', res)
+          const data = await res.json();
+          return { id: course._id, count: data.data?.enrollmentCount ?? 0 };
+        } catch {
+          return { id: course._id, count: 0 };
+        }
+      })
+    ).then((results) => {
+      const counts: { [key: string]: number } = {};
+      results.forEach(r => { counts[r.id] = r.count });
+      setEnrollmentCounts(counts);
+      setLoadingEnrollments(false);
+    });
+  }, [courses]);
 
   useEffect(() => {
     fetchCourses(1);
@@ -71,8 +96,6 @@ export default function CoursesPage() {
         <TabsList className="bg-white">
           <TabsTrigger value="all">All Courses</TabsTrigger>
           <TabsTrigger value="published">Published</TabsTrigger>
-          <TabsTrigger value="draft">Draft</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
@@ -116,8 +139,8 @@ export default function CoursesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Courses"
-            value="124"
-            change="+5 this month"
+            value={courses.length.toString()}
+            change=""
             icon={<BookOpen className="h-5 w-5 text-[#ef4444]" />}
             bgColor="bg-red-50"
           />

@@ -53,10 +53,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="container mx-auto px-4 py-1">
           <ul className="flex space-x-1 overflow-x-auto pb-2">
-            <NavItem href="/admin/dashboard" icon={<Home size={18} />} label="Dashboard" />
+            <NavItem href="/admin/analytics" icon={<LineChart size={18} />} label="Dashboard " />
             <NavItem href="/admin/users" icon={<Users size={18} />} label="Users" />
             <NavItem href="/admin/courses" icon={<BookOpen size={18} />} label="Courses" />
-            <NavItem href="/admin/analytics" icon={<LineChart size={18} />} label="Analytics" />
             <NavItem href="/admin/profile" icon={<User size={18} />} label="Profile" />
             <NavItem href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
           </ul>

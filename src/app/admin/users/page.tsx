@@ -385,85 +385,13 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="all" className="mb-8" value={tab} onValueChange={setTab}>
+      <Tabs defaultValue="teachers" className="mb-8" value={tab} onValueChange={setTab}>
         <TabsList className="bg-white">
-          {/* <TabsTrigger value="all">All Users</TabsTrigger>
-          <TabsTrigger value="admins">Administrators</TabsTrigger> */}
           <TabsTrigger value="teachers">Teachers</TabsTrigger>
           <TabsTrigger value="parents">Parents</TabsTrigger>
           <TabsTrigger value="children">Kids</TabsTrigger>
           <TabsTrigger value="statistics">Statistics</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle>User List</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3">Name</th>
-                      <th className="text-left p-3">Email</th>
-                      <th className="text-left p-3">Role</th>
-                      <th className="text-left p-3">Status</th>
-                      <th className="text-left p-3">Joined</th>
-                      <th className="text-left p-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="p-3">{user.name}</td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(
-                              user.role
-                            )}`}
-                          >
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${user.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                              }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="p-3">{user.joined}</td>
-                        <td className="p-3">
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-sm text-gray-500">
-                  Showing 1-10 of 100 users
-                </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="admins" className="mt-6">
           <Card className="border-none shadow-sm">
@@ -927,57 +855,6 @@ function getRoleBadgeColor(role: string) {
   }
 }
 
-const users = [
-  {
-    name: "John Smith",
-    email: "john.smith@example.com",
-    role: "Admin",
-    status: "Active",
-    joined: "Jan 10, 2023",
-  },
-  {
-    name: "Sarah Johnson",
-    email: "sarah.johnson@example.com",
-    role: "Teacher",
-    status: "Active",
-    joined: "Feb 15, 2023",
-  },
-  {
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    role: "Parent",
-    status: "Active",
-    joined: "Mar 5, 2023",
-  },
-  {
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
-    role: "Teacher",
-    status: "Inactive",
-    joined: "Apr 20, 2023",
-  },
-  {
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    role: "Child",
-    status: "Active",
-    joined: "May 12, 2023",
-  },
-  {
-    name: "Jessica Wilson",
-    email: "jessica.wilson@example.com",
-    role: "Parent",
-    status: "Active",
-    joined: "Jun 8, 2023",
-  },
-  {
-    name: "David Miller",
-    email: "david.miller@example.com",
-    role: "Admin",
-    status: "Active",
-    joined: "Jul 15, 2023",
-  },
-];
 
 function StatisticParent() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);

@@ -102,7 +102,7 @@ export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
                 passingScore,
                 attempts,
                 questions: questions.length > 0 ? questions : [currentQuestion],
-                createdBy: "6843bd2fc9c53e526c15e0be"
+                createdBy: "685a1fbd05372834986df9e1"
             };
 
             const response = await fetch('http://localhost:8386/api/test', {
