@@ -18,7 +18,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { InteractiveVideo } from "@/components/interactive-video/InteractiveVideo";
-import { getLessonById, getTestsByLesson, getLessonsByCourse } from "@/lib/api";
+import {
+  getLessonById,
+  getTestsByLesson,
+  getLessonsByCourse,
+  getCourseProgress,
+  updateCourseProgress,
+  submitTestResult,
+  updateLessonCompletion,
+  enrollInCourse,
+  getAllCourseProgressByKidId,
+} from "@/lib/api";
 
 interface LessonData {
   _id: string;
@@ -77,21 +87,28 @@ interface Question {
   points: number;
 }
 
-// Helper functions for progress storage
-const getProgressKey = (kidId: string, lessonId: string) =>
-  `lesson_progress_${kidId}_${lessonId}`;
+// Import kid progress utilities
+import {
+  kidLocalStorage,
+  type LessonProgress,
+  getStorageKeys,
+} from "@/utils/kidProgress";
 
-const getStoredProgress = (kidId: string, lessonId: string) => {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(getProgressKey(kidId, lessonId));
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
+// Helper function to get the progress key (for compatibility with existing code)
+const getProgressKey = (kidId: string, lessonId: string) => {
+  return getStorageKeys(kidId).lessonProgress(lessonId);
 };
 
-const saveProgress = (
+// Helper functions for progress storage using the new utilities
+const getStoredProgress = (
+  kidId: string,
+  lessonId: string
+): LessonProgress | null => {
+  if (typeof window === "undefined") return null;
+  return kidLocalStorage.getLessonProgress(kidId, lessonId);
+};
+
+const saveProgress = async (
   kidId: string,
   lessonId: string,
   progress: {
@@ -100,24 +117,37 @@ const saveProgress = (
     lessonCompleted: boolean;
     currentProgress: number;
     completedTests: string[];
-  }
+  },
+  courseId?: string
 ) => {
   if (typeof window === "undefined") return;
   try {
-    const progressWithTimestamp = {
-      ...progress,
-      lastUpdated: new Date().toISOString(),
-    };
+    // Save to localStorage using the new utility function
+    kidLocalStorage.setLessonProgress(kidId, lessonId, progress);
 
-    localStorage.setItem(
-      getProgressKey(kidId, lessonId),
-      JSON.stringify(progressWithTimestamp)
+    console.log(
+      "💾 Progress saved to localStorage for kid:",
+      kidId,
+      "lesson:",
+      lessonId
     );
 
-    console.log("💾 Progress saved to localStorage:", {
-      key: getProgressKey(kidId, lessonId),
-      progress: progressWithTimestamp,
-    });
+    // Sync with backend API if courseId is provided
+    if (courseId) {
+      try {
+        // Update lesson completion if lesson is completed
+        if (progress.lessonCompleted) {
+          await updateLessonCompletion(kidId, courseId, lessonId);
+        }
+
+        // You can also update other progress data using updateCourseProgress
+        // with the correct structure when needed
+        console.log("✅ Progress synced with backend");
+      } catch (apiError) {
+        console.warn("⚠️ Failed to sync progress with backend:", apiError);
+        // Continue with local storage only
+      }
+    }
   } catch (error) {
     console.error("❌ Error saving progress:", error);
   }
@@ -141,36 +171,98 @@ export default function LessonPage({
   const [courseLessons, setCourseLessons] = useState<any[]>([]);
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
   const [prevLessonId, setPrevLessonId] = useState<string | null>(null);
+  const [courseProgressData, setCourseProgressData] = useState<any>(null);
+  const [allProgressData, setAllProgressData] = useState<any>(null);
+  const [apiStatus, setApiStatus] = useState<{
+    courseProgress: "loading" | "success" | "error";
+    allProgress: "loading" | "success" | "error";
+  }>({
+    courseProgress: "loading",
+    allProgress: "loading",
+  });
 
-  // Load saved progress on component mount
+  // Load course progress from API and localStorage
   useEffect(() => {
-    const savedProgress = getStoredProgress(
-      resolvedParams.kidId,
-      resolvedParams.lessonId
-    );
-    console.log("🔄 Loading saved progress:", savedProgress);
-    console.log(
-      "🗝️ Storage key:",
-      getProgressKey(resolvedParams.kidId, resolvedParams.lessonId)
-    );
+    const loadCourseProgress = async () => {
+      // Test both APIs
+      try {
+        // 1. Get specific course progress
+        console.log("📡 Testing Course Progress API...");
+        console.log(
+          "Course Progress API URL:",
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8386"
+          }/api/progress/${resolvedParams.courseId}`
+        );
 
-    if (savedProgress) {
-      setVideoCompleted(savedProgress.videoCompleted || false);
-      setInteractiveCompleted(savedProgress.interactiveCompleted || false);
-      setLessonCompleted(savedProgress.lessonCompleted || false);
-      setCurrentProgress(savedProgress.currentProgress || 0);
-      setCompletedTests(savedProgress.completedTests || []);
+        setApiStatus((prev) => ({ ...prev, courseProgress: "loading" }));
+        const courseProgress = await getCourseProgress(
+          resolvedParams.kidId,
+          resolvedParams.courseId
+        );
+        console.log("✅ Course Progress API Response:", courseProgress);
+        setCourseProgressData(courseProgress.data);
+        setApiStatus((prev) => ({ ...prev, courseProgress: "success" }));
+      } catch (error) {
+        console.error("❌ Course Progress API Error:", error);
+        setApiStatus((prev) => ({ ...prev, courseProgress: "error" }));
+      }
 
-      console.log("✅ Progress loaded successfully:", {
-        videoCompleted: savedProgress.videoCompleted,
-        interactiveCompleted: savedProgress.interactiveCompleted,
-        currentProgress: savedProgress.currentProgress,
-        completedTests: savedProgress.completedTests?.length || 0,
-      });
-    } else {
-      console.log("❌ No saved progress found - starting fresh");
-    }
-  }, [resolvedParams.kidId, resolvedParams.lessonId]);
+      try {
+        // 2. Get all progress by kid ID
+        console.log("📡 Testing All Progress API...");
+        console.log(
+          "All Progress API URL:",
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8386"
+          }/api/progress/kid/${resolvedParams.kidId}`
+        );
+
+        setApiStatus((prev) => ({ ...prev, allProgress: "loading" }));
+        const allProgress = await getAllCourseProgressByKidId(
+          resolvedParams.kidId
+        );
+        console.log("✅ All Progress API Response:", allProgress);
+        setAllProgressData(allProgress.data);
+        setApiStatus((prev) => ({ ...prev, allProgress: "success" }));
+      } catch (error) {
+        console.error("❌ All Progress API Error:", error);
+        setApiStatus((prev) => ({ ...prev, allProgress: "error" }));
+      }
+
+      // Load local progress (fallback or sync check)
+      const savedProgress = getStoredProgress(
+        resolvedParams.kidId,
+        resolvedParams.lessonId
+      );
+      console.log("🔄 Loading saved progress:", savedProgress);
+      console.log(
+        "🗝️ Loading progress for kid:",
+        resolvedParams.kidId,
+        "lesson:",
+        resolvedParams.lessonId
+      );
+
+      if (savedProgress) {
+        setVideoCompleted(savedProgress.videoCompleted || false);
+        setInteractiveCompleted(savedProgress.interactiveCompleted || false);
+        setLessonCompleted(savedProgress.lessonCompleted || false);
+        setCurrentProgress(savedProgress.currentProgress || 0);
+        setCompletedTests(savedProgress.completedTests || []);
+
+        console.log("✅ Progress loaded successfully:", {
+          videoCompleted: savedProgress.videoCompleted,
+          interactiveCompleted: savedProgress.interactiveCompleted,
+          currentProgress: savedProgress.currentProgress,
+          completedTests: savedProgress.completedTests?.length || 0,
+        });
+      } else {
+        console.log("❌ No saved progress found - starting fresh");
+      }
+    };
+
+    loadCourseProgress();
+  }, [resolvedParams.kidId, resolvedParams.lessonId, resolvedParams.courseId]);
 
   useEffect(() => {
     const fetchLessonData = async () => {
@@ -348,13 +440,18 @@ export default function LessonPage({
     setCurrentProgress(totalProgress);
 
     // Force save progress immediately with all preserved states
-    saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
-      videoCompleted: true,
-      interactiveCompleted: currentInteractiveCompleted,
-      lessonCompleted: totalProgress >= 100,
-      currentProgress: totalProgress,
-      completedTests: preservedCompletedTests,
-    });
+    saveProgress(
+      resolvedParams.kidId,
+      resolvedParams.lessonId,
+      {
+        videoCompleted: true,
+        interactiveCompleted: currentInteractiveCompleted,
+        lessonCompleted: totalProgress >= 100,
+        currentProgress: totalProgress,
+        completedTests: preservedCompletedTests,
+      },
+      resolvedParams.courseId
+    );
 
     console.log("📹 Video completed, progress saved:", {
       totalProgress,
@@ -437,7 +534,8 @@ export default function LessonPage({
       saveProgress(
         resolvedParams.kidId,
         resolvedParams.lessonId,
-        progressToSave
+        progressToSave,
+        resolvedParams.courseId
       );
 
       console.log("✅ Interactive completed, progress updated:", {
@@ -466,6 +564,41 @@ export default function LessonPage({
     if (prevLessonId) {
       console.log("⬅️ Navigating to previous lesson:", prevLessonId);
       window.location.href = `/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${prevLessonId}`;
+    }
+  };
+
+  // Function to handle test completion with API integration
+  const handleTestCompletion = async (
+    testId: string,
+    testResult: {
+      score: number;
+      totalPoints: number;
+      answers: any[];
+      timeSpent: number;
+      passed: boolean;
+    }
+  ) => {
+    try {
+      // Submit test result to backend API using new structure
+      const apiResult = await submitTestResult(
+        resolvedParams.kidId,
+        resolvedParams.courseId,
+        resolvedParams.lessonId,
+        testId,
+        testResult
+      );
+      console.log("✅ Test result submitted to API:", apiResult);
+
+      // Update local progress after successful API submission
+      if (testResult.passed) {
+        markTestCompleted(testId);
+      }
+    } catch (error) {
+      console.error("❌ Failed to submit test result to API:", error);
+      // Still update local progress as fallback
+      if (testResult.passed) {
+        markTestCompleted(testId);
+      }
     }
   };
 
@@ -502,13 +635,18 @@ export default function LessonPage({
         setInteractiveCompleted(currentInteractiveCompleted);
         setCurrentProgress(totalProgress);
 
-        saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
-          videoCompleted: currentVideoCompleted,
-          interactiveCompleted: currentInteractiveCompleted,
-          lessonCompleted: totalProgress >= 100,
-          currentProgress: totalProgress,
-          completedTests: newCompletedTests,
-        });
+        saveProgress(
+          resolvedParams.kidId,
+          resolvedParams.lessonId,
+          {
+            videoCompleted: currentVideoCompleted,
+            interactiveCompleted: currentInteractiveCompleted,
+            lessonCompleted: totalProgress >= 100,
+            currentProgress: totalProgress,
+            completedTests: newCompletedTests,
+          },
+          resolvedParams.courseId
+        );
 
         console.log("Test marked as completed and progress saved:", {
           testId,
@@ -532,7 +670,7 @@ export default function LessonPage({
 
   // Listen for test completion from session storage or URL params
   useEffect(() => {
-    const checkTestCompletion = () => {
+    const checkTestCompletion = async () => {
       console.log("Checking test completion...");
 
       // Check if coming back from a test with completion status
@@ -557,14 +695,17 @@ export default function LessonPage({
 
       if (sessionTestCompleted) {
         try {
-          const { testId, lessonId, timestamp, passed } =
-            JSON.parse(sessionTestCompleted);
+          const testCompletionData = JSON.parse(sessionTestCompleted);
+          const { testId, lessonId, timestamp, passed, score, totalPoints } =
+            testCompletionData;
 
           console.log("Session test data:", {
             testId,
             lessonId,
             timestamp,
             passed,
+            score,
+            totalPoints,
           });
           console.log("Current lesson ID:", resolvedParams.lessonId);
           console.log(
@@ -579,8 +720,17 @@ export default function LessonPage({
             passed &&
             !completedTests.includes(testId)
           ) {
-            console.log("Marking test as completed from session:", testId);
-            markTestCompleted(testId);
+            console.log("Processing test completion from session:", testId);
+
+            // Handle test completion with API integration
+            await handleTestCompletion(testId, {
+              score: score || 0,
+              totalPoints: totalPoints || 0,
+              answers: [], // We don't store answers in session, but API might not need them
+              timeSpent: 0, // We don't track time spent in session
+              passed: passed,
+            });
+
             sessionStorage.removeItem("lastCompletedTest");
           }
         } catch (error) {
@@ -608,13 +758,18 @@ export default function LessonPage({
 
     // Save progress to localStorage whenever it changes
     if (videoCompleted || interactiveCompleted || completedTests.length > 0) {
-      saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
-        videoCompleted,
-        interactiveCompleted,
-        lessonCompleted: totalProgress >= 100,
-        currentProgress: totalProgress,
-        completedTests,
-      });
+      saveProgress(
+        resolvedParams.kidId,
+        resolvedParams.lessonId,
+        {
+          videoCompleted,
+          interactiveCompleted,
+          lessonCompleted: totalProgress >= 100,
+          currentProgress: totalProgress,
+          completedTests,
+        },
+        resolvedParams.courseId
+      );
 
       console.log("Progress recalculated and saved:", {
         videoProgress,
@@ -717,13 +872,18 @@ export default function LessonPage({
         const totalProgress =
           videoProgress + interactiveProgress + testProgress;
 
-        saveProgress(resolvedParams.kidId, resolvedParams.lessonId, {
-          videoCompleted,
-          interactiveCompleted,
-          lessonCompleted: totalProgress >= 100,
-          currentProgress: totalProgress,
-          completedTests,
-        });
+        saveProgress(
+          resolvedParams.kidId,
+          resolvedParams.lessonId,
+          {
+            videoCompleted,
+            interactiveCompleted,
+            lessonCompleted: totalProgress >= 100,
+            currentProgress: totalProgress,
+            completedTests,
+          },
+          resolvedParams.courseId
+        );
 
         console.log("Progress force-saved before unload:", totalProgress);
       }
@@ -1352,11 +1512,199 @@ export default function LessonPage({
               </CardContent>
             </Card>
 
+            {/* API Testing Panel */}
+            <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm mb-6">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-lg mb-4 text-gray-800">
+                  🧪 API Testing Status
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      Course Progress API:
+                    </span>
+                    <Badge
+                      variant={
+                        apiStatus.courseProgress === "success"
+                          ? "default"
+                          : apiStatus.courseProgress === "error"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {apiStatus.courseProgress === "success"
+                        ? "✅ Success"
+                        : apiStatus.courseProgress === "error"
+                        ? "❌ Error"
+                        : "⏳ Loading"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      All Progress API:
+                    </span>
+                    <Badge
+                      variant={
+                        apiStatus.allProgress === "success"
+                          ? "default"
+                          : apiStatus.allProgress === "error"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {apiStatus.allProgress === "success"
+                        ? "✅ Success"
+                        : apiStatus.allProgress === "error"
+                        ? "❌ Error"
+                        : "⏳ Loading"}
+                    </Badge>
+                  </div>
+
+                  <div className="text-xs text-gray-500 mt-4 space-y-1">
+                    <p>
+                      <strong>Get Course Progress:</strong> GET /api/progress/
+                      {resolvedParams.courseId}
+                    </p>
+                    <p>
+                      <strong>Get All Progress:</strong> GET /api/progress/kid/
+                      {resolvedParams.kidId}
+                    </p>
+                    <p>
+                      <strong>Update Progress:</strong> PUT /api/progress/update
+                    </p>
+                    <p>
+                      <strong>Enroll Course:</strong> POST /api/progress/enroll
+                    </p>
+                    <p className="text-[10px] bg-gray-100 p-2 rounded">
+                      <strong>Update Body:</strong>{" "}
+                      {`{kidId: "${resolvedParams.kidId}", courseId: "${resolvedParams.courseId}", testResults: [{testId, score, passed}], lessonCompleted: [{lessonId: "${resolvedParams.lessonId}"}], status: boolean}`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* All Progress Data Preview */}
+            {allProgressData && Array.isArray(allProgressData) && (
+              <Card className="border-0 shadow-2xl rounded-3xl bg-blue-50 backdrop-blur-sm mb-6">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 text-blue-800">
+                    📋 All Course Progress ({allProgressData.length} courses)
+                  </h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {allProgressData.map((progress: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center text-sm border-b pb-2"
+                      >
+                        <span className="text-gray-600">
+                          Course: {progress.courseId?.slice(-8) || "Unknown"}
+                        </span>
+                        <div className="flex gap-2">
+                          <Badge
+                            variant={progress.status ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {progress.status ? "Done" : "Learning"}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {progress.lessonCompleted?.length || 0}L /{" "}
+                            {progress.testResults?.length || 0}T
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Course Progress from API */}
+            {courseProgressData ? (
+              <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm mb-6">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 text-gray-800">
+                    📊 Tiến độ khóa học (API)
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Trạng thái khóa học:
+                      </span>
+                      <Badge
+                        variant={
+                          courseProgressData.status ? "default" : "secondary"
+                        }
+                      >
+                        {courseProgressData.status
+                          ? "Đã hoàn thành"
+                          : "Đang học"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Bài học đã hoàn thành:
+                      </span>
+                      <span className="text-sm font-medium">
+                        {courseProgressData.lessonCompleted?.length || 0} bài
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Bài test đã làm:
+                      </span>
+                      <span className="text-sm font-medium">
+                        {courseProgressData.testResults?.length || 0} bài
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Bài test đã đạt:
+                      </span>
+                      <span className="text-sm font-medium">
+                        {courseProgressData.testResults?.filter(
+                          (test: any) => test.passed
+                        )?.length || 0}{" "}
+                        bài
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Cập nhật lần cuối:
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(courseProgressData.updatedAt).toLocaleString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-0 shadow-2xl rounded-3xl bg-yellow-50 backdrop-blur-sm mb-6">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 text-yellow-800">
+                    ⚡ Chế độ học ngoại tuyến
+                  </h3>
+                  <div className="space-y-2">
+                    <p className="text-sm text-yellow-700">
+                      Hệ thống đang hoạt động với dữ liệu cục bộ.
+                    </p>
+                    <p className="text-xs text-yellow-600">
+                      Tiến độ của bé sẽ được đồng bộ với server khi kết nối ổn
+                      định.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Progress Checklist */}
             <Card className="border-0 shadow-2xl rounded-3xl bg-white/80 backdrop-blur-sm">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-4 text-gray-800">
-                  Tiến độ học tập
+                  🎯 Tiến độ bài học hiện tại
                 </h3>
                 <div className="space-y-4">
                   {[

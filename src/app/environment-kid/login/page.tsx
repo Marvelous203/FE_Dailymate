@@ -1,152 +1,196 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { loginUser, fetchUserDataAfterLogin, fetchKidDataAfterLogin } from "@/lib/api"
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  loginUser,
+  fetchUserDataAfterLogin,
+  fetchKidDataAfterLogin,
+} from "@/lib/api";
 
 export default function KidLoginPage() {
-  const [parentEmail, setParentEmail] = useState('')
-  const [parentPassword, setParentPassword] = useState('')
-  const [kidsInfo, setKidsInfo] = useState<{ data: { kids: Array<{ _id: string; fullName: string }> } } | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showParentModal, setShowParentModal] = useState(false)
-  const [isParentLoggedIn, setIsParentLoggedIn] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const router = useRouter()
+  const [parentEmail, setParentEmail] = useState("");
+  const [parentPassword, setParentPassword] = useState("");
+  const [kidsInfo, setKidsInfo] = useState<{
+    data: { kids: Array<{ _id: string; fullName: string }> };
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showParentModal, setShowParentModal] = useState(false);
+  const [isParentLoggedIn, setIsParentLoggedIn] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const router = useRouter();
 
   // Check parent login status and load kids data on component mount
   useEffect(() => {
     const checkAuthStatus = () => {
-      const parentData = localStorage.getItem('parentData')
-      const storedKidsInfo = localStorage.getItem('kidsInfo')
-      
+      const parentData = localStorage.getItem("parentData");
+      const storedKidsInfo = localStorage.getItem("kidsInfo");
+
       if (parentData) {
-        setIsParentLoggedIn(true)
-        
+        setIsParentLoggedIn(true);
+
         if (storedKidsInfo) {
           try {
-            const parsedKidsInfo = JSON.parse(storedKidsInfo)
-            setKidsInfo(parsedKidsInfo)
+            const parsedKidsInfo = JSON.parse(storedKidsInfo);
+            setKidsInfo(parsedKidsInfo);
           } catch (error) {
-            console.error('Error parsing kids info:', error)
-            setKidsInfo(null)
+            console.error("Error parsing kids info:", error);
+            setKidsInfo(null);
           }
         }
       } else {
-        setIsParentLoggedIn(false)
-        setKidsInfo(null)
+        setIsParentLoggedIn(false);
+        setKidsInfo(null);
       }
-      
-      setInitialLoading(false)
-    }
 
-    checkAuthStatus()
-  }, [])
+      setInitialLoading(false);
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // Handle parent login
   const handleParentLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       // Login parent
-      const loginResponse = await loginUser(parentEmail, parentPassword)
-      
-      if (loginResponse.success && loginResponse.user.role === 'parent') {
+      const loginResponse = await loginUser(parentEmail, parentPassword);
+
+      if (loginResponse.success && loginResponse.user.role === "parent") {
         // Fetch complete user data including kids
-        const userCompleteData = await fetchUserDataAfterLogin(loginResponse.user.roleData._id)
-        
+        const userCompleteData = await fetchUserDataAfterLogin(
+          loginResponse.user.roleData._id
+        );
+
         // Store data in localStorage
-        localStorage.setItem('parentData', JSON.stringify(userCompleteData.parent))
-        localStorage.setItem('kidsInfo', JSON.stringify(userCompleteData.kidsInfo))
-        
+        localStorage.setItem(
+          "parentData",
+          JSON.stringify(userCompleteData.parent)
+        );
+        localStorage.setItem(
+          "kidsInfo",
+          JSON.stringify(userCompleteData.kidsInfo)
+        );
+
         // Update local state - chỉ cần kidsInfo
-        setKidsInfo(userCompleteData.kidsInfo)
-        setIsParentLoggedIn(true)
-        setShowParentModal(false)
-        
+        setKidsInfo(userCompleteData.kidsInfo);
+        setIsParentLoggedIn(true);
+        setShowParentModal(false);
+
         // Clear form
-        setParentEmail('')
-        setParentPassword('')
+        setParentEmail("");
+        setParentPassword("");
       } else {
-        setError('Invalid credentials or not a parent account')
+        setError("Invalid credentials or not a parent account");
       }
     } catch (error) {
-      console.error('Parent login error:', error)
-      setError(error instanceof Error ? error.message : 'Login failed. Please try again.')
+      console.error("Parent login error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again."
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Handle kid login (no password required)
   const handleKidLogin = async (kidId: string, kidName: string) => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
+      // Clear previous kid's data before switching
+      const { kidLocalStorage, validateKidDataIntegrity } = await import(
+        "@/utils/kidProgress"
+      );
+
+      // Get previously logged in kid data to clear their specific data
+      const oldKidData = localStorage.getItem("kidData");
+      if (oldKidData) {
+        try {
+          const parsedOldData = JSON.parse(oldKidData);
+          const oldKidId = parsedOldData?.data?._id || parsedOldData?.data?.id;
+          if (oldKidId && oldKidId !== kidId) {
+            console.log(`🧹 Clearing old kid data for: ${oldKidId}`);
+            kidLocalStorage.clearKidData(oldKidId);
+          }
+        } catch (e) {
+          console.warn("Error parsing old kid data:", e);
+        }
+      }
+
       // Fetch kid data
-      const kidCompleteData = await fetchKidDataAfterLogin(kidId)
-      
+      const kidCompleteData = await fetchKidDataAfterLogin(kidId);
+
       // Store kid data in localStorage
-      localStorage.setItem('kidData', JSON.stringify(kidCompleteData))
-      
+      localStorage.setItem("kidData", JSON.stringify(kidCompleteData));
+
+      // Validate data integrity for new kid and migrate old keys if needed
+      validateKidDataIntegrity(kidId);
+      kidLocalStorage.migrateOldKeys(kidId);
+
+      console.log(`✅ Kid login successful for: ${kidName} (${kidId})`);
+
       // Redirect to kid learning zone with kid ID
-      router.push(`/environment-kid/kid-learning-zone/${kidId}`)
+      router.push(`/environment-kid/kid-learning-zone/${kidId}`);
     } catch (error) {
-      console.error('Kid login error:', error)
-      setError(`Failed to login as ${kidName}. Please try again.`)
+      console.error("Kid login error:", error);
+      setError(`Failed to login as ${kidName}. Please try again.`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Handle add new kid
   const handleAddNewKid = () => {
     if (isParentLoggedIn) {
-      router.push('/environment-kid/dashboard')
+      router.push("/environment-kid/dashboard");
     } else {
-      setShowParentModal(true)
-      setError('')
+      setShowParentModal(true);
+      setError("");
     }
-  }
+  };
 
   // Handle parent logout
   const handleParentLogout = () => {
-    localStorage.removeItem('parentData')
-    localStorage.removeItem('kidsInfo')
-    setIsParentLoggedIn(false)
-    setKidsInfo(null)
-  }
+    localStorage.removeItem("parentData");
+    localStorage.removeItem("kidsInfo");
+    setIsParentLoggedIn(false);
+    setKidsInfo(null);
+  };
 
   // Close modal
   const closeModal = () => {
-    setShowParentModal(false)
-    setError('')
-    setParentEmail('')
-    setParentPassword('')
-  }
+    setShowParentModal(false);
+    setError("");
+    setParentEmail("");
+    setParentPassword("");
+  };
 
   // Show parent login button
   const showParentLoginButton = () => {
-    setShowParentModal(true)
-    setError('')
-  }
+    setShowParentModal(true);
+    setError("");
+  };
 
   // Di chuyển function này ra ngoài return statement
   const getKidsList = () => {
     if (!kidsInfo || !kidsInfo.data || !kidsInfo.data.kids) {
-      return []
+      return [];
     }
-    return kidsInfo.data.kids
-  }
+    return kidsInfo.data.kids;
+  };
 
   if (initialLoading) {
     return (
@@ -156,22 +200,28 @@ export default function KidLoginPage() {
           <p className="text-[#6b7280]">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   function getKidColor(index: number) {
     const colors = [
-      'bg-[#d1fae5]', // green
-      'bg-[#feccd6]', // pink
-      'bg-[#d7ebf0]', // blue
-      'bg-[#fef3c7]', // yellow
-      'bg-[#e0e7ff]', // indigo
-      'bg-[#f3e8ff]', // purple
-    ]
-    return colors[index % colors.length]
+      "bg-[#d1fae5]", // green
+      "bg-[#feccd6]", // pink
+      "bg-[#d7ebf0]", // blue
+      "bg-[#fef3c7]", // yellow
+      "bg-[#e0e7ff]", // indigo
+      "bg-[#f3e8ff]", // purple
+    ];
+    return colors[index % colors.length];
   }
-  
-  function KidLoginOption({ name, color, onClick, isAdd = false, disabled = false }: {
+
+  function KidLoginOption({
+    name,
+    color,
+    onClick,
+    isAdd = false,
+    disabled = false,
+  }: {
     name: string;
     color: string;
     onClick: () => void;
@@ -182,7 +232,7 @@ export default function KidLoginPage() {
       <div
         onClick={disabled ? undefined : onClick}
         className={`${color} rounded-lg p-4 text-center transition-all cursor-pointer ${
-          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+          disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
         }`}
       >
         <div className="flex justify-center mb-2">
@@ -196,9 +246,9 @@ export default function KidLoginPage() {
         </div>
         <p className="font-medium text-[#1e1e1e]">{name}</p>
       </div>
-    )
+    );
   }
-  
+
   function UserIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg
@@ -216,9 +266,9 @@ export default function KidLoginPage() {
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
-    )
+    );
   }
-  
+
   function PlusCircleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg
@@ -237,10 +287,10 @@ export default function KidLoginPage() {
         <path d="M8 12h8" />
         <path d="M12 8v8" />
       </svg>
-    )
+    );
   }
-  
-  function XIcon(props : React.SVGProps<SVGSVGElement>) {
+
+  function XIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg
         {...props}
@@ -257,9 +307,9 @@ export default function KidLoginPage() {
         <path d="M18 6 6 18" />
         <path d="M6 6l12 12" />
       </svg>
-    )
+    );
   }
-  
+
   return (
     <div className="min-h-screen bg-[#eafff4] flex flex-col">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
@@ -274,8 +324,18 @@ export default function KidLoginPage() {
                 className="rounded-full bg-white p-2"
               />
             </div>
-            <h1 className="text-2xl font-bold text-[#1e1e1e]">Welcome to DailyMates</h1>
-            <p className="text-[#4b5563]">Fun learning zone for kids!</p>
+            <h1 className="text-2xl font-bold text-[#1e1e1e]">
+              🌟 Kids Learning Environment
+            </h1>
+            <p className="text-[#4b5563]">
+              Dedicated safe space for children to learn and play!
+            </p>
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>ℹ️ This is a separate login</strong> for the kids
+                environment only. Parents must login here first to manage kids.
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -313,21 +373,28 @@ export default function KidLoginPage() {
                       Please login as a parent first to see kids.
                     </p>
                   </div>
-                  
+
                   <Button
                     onClick={showParentLoginButton}
                     className="bg-[#10b981] hover:bg-[#059669] text-white px-8 py-3"
                     disabled={loading}
                   >
-                    {loading ? 'Loading...' : 'Parent Login'}
+                    {loading ? "Loading..." : "Parent Login"}
                   </Button>
-                  
+
                   <div className="mt-6">
                     <p className="text-sm text-[#6b7280]">
                       Need to access the main site?{" "}
-                      <Link href="/login" className="text-[#10b981] hover:underline font-medium">
+                      <Link
+                        href="/login"
+                        className="text-[#10b981] hover:underline font-medium"
+                      >
                         Go to Main Login
                       </Link>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      You must login here to access the kids learning
+                      environment.
                     </p>
                   </div>
                 </div>
@@ -335,8 +402,8 @@ export default function KidLoginPage() {
                 // Show kids grid when parent is logged in
                 <>
                   {(() => {
-                    const kidsList = getKidsList()
-                    
+                    const kidsList = getKidsList();
+
                     return (
                       <div className="grid grid-cols-2 gap-4">
                         {kidsList.length > 0 ? (
@@ -345,7 +412,9 @@ export default function KidLoginPage() {
                               key={kid._id || index}
                               name={kid.fullName || `Kid ${index + 1}`}
                               color={getKidColor(index)}
-                              onClick={() => handleKidLogin(kid._id, kid.fullName)}
+                              onClick={() =>
+                                handleKidLogin(kid._id, kid.fullName)
+                              }
                               disabled={loading}
                             />
                           ))
@@ -354,7 +423,7 @@ export default function KidLoginPage() {
                             No kids found.
                           </div>
                         )}
-                        
+
                         <KidLoginOption
                           name="Add New"
                           color="bg-[#f3f4f6]"
@@ -363,13 +432,16 @@ export default function KidLoginPage() {
                           disabled={loading}
                         />
                       </div>
-                    )
-                  })()} 
+                    );
+                  })()}
 
                   <div className="text-center">
                     <p className="text-sm text-[#6b7280]">
                       Need help?{" "}
-                      <Link href="/login" className="text-[#10b981] hover:underline font-medium">
+                      <Link
+                        href="/login"
+                        className="text-[#10b981] hover:underline font-medium"
+                      >
                         Ask a parent
                       </Link>
                     </p>
@@ -395,7 +467,7 @@ export default function KidLoginPage() {
                 <XIcon className="h-6 w-6" />
               </button>
             </div>
-            
+
             <p className="text-[#6b7280] mb-6">
               Please login to access kids and parent features.
             </p>
@@ -446,7 +518,7 @@ export default function KidLoginPage() {
                   className="flex-1 bg-[#10b981] hover:bg-[#059669]"
                   disabled={loading}
                 >
-                  {loading ? 'Logging in...' : 'Login'}
+                  {loading ? "Logging in..." : "Login"}
                 </Button>
               </div>
             </form>
@@ -458,6 +530,5 @@ export default function KidLoginPage() {
         <p>© 2025 DailyMates. All rights reserved.</p>
       </footer>
     </div>
-  )
+  );
 }
-

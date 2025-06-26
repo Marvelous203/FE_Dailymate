@@ -23,8 +23,7 @@ export const PUBLIC_ROUTES = [
   '/forgot-password',
   '/verify-email',
   '/auth/role-select',
-  '/environment-kid/login',
-  '/environment-kid', // Thêm dòng này
+  '/environment-kid/login', // Chỉ login page được public
   '/kid-login',
   '/payment',
   '/payment/success',
