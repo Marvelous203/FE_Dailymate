@@ -61,7 +61,7 @@ function PaymentCancelContent() {
           response.data.payosStatus === "PAID"
         ) {
           toast.success("Thanh toán đã thành công!");
-          router.push(`/payment/success?orderCode=${orderCode}`);
+          router.push(`/payment-success?orderCode=${orderCode}`);
         }
       } else {
         // Even if we can't get payment data, we still show the cancel page

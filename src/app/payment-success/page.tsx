@@ -5,10 +5,16 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Crown, ArrowRight, Home, Receipt } from "lucide-react";
-import { checkPaymentStatus } from "@/lib/api";
+import {
+  checkPaymentStatus,
+  refreshParentPremiumData,
+  getParentById,
+} from "@/lib/api";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
+import { PremiumBadge } from "@/components/premium-badge";
+import { getParentData } from "@/utils/premium";
 
 interface PaymentData {
   orderCode: number;
@@ -35,6 +41,7 @@ function LoadingFallback() {
 function PaymentSuccessContent() {
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [premiumUpdated, setPremiumUpdated] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -44,10 +51,48 @@ function PaymentSuccessContent() {
     if (orderCode) {
       checkPayment(orderCode);
     } else {
-      setLoading(false);
-      toast.error("Không tìm thấy mã đơn hàng");
+      // Nếu không có orderCode, vẫn coi như thanh toán thành công (từ backend redirect)
+      handlePaymentSuccess();
     }
   }, [orderCode]);
+
+  // Handle successful payment and update premium status
+  const handlePaymentSuccess = async () => {
+    try {
+      setLoading(true);
+
+      // Get parent data from localStorage
+      const parentData = getParentData();
+      const parentId =
+        (parentData as any)?.data?._id || (parentData as any)?._id;
+
+      if (parentId) {
+        // Refresh parent data from API to get updated premium status
+        const refreshedData = await refreshParentPremiumData(parentId);
+        if (refreshedData) {
+          setPremiumUpdated(true);
+          toast.success("Tài khoản Premium đã được kích hoạt!");
+        }
+      }
+
+      // Set dummy payment data for display if no orderCode
+      if (!orderCode) {
+        setPaymentData({
+          orderCode: Date.now(),
+          amount: 199000, // Default premium price
+          status: "SUCCESS",
+          payosStatus: "PAID",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating premium status:", error);
+      toast.error("Lỗi khi cập nhật trạng thái Premium");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const checkPayment = async (orderCode: string) => {
     try {
@@ -62,8 +107,12 @@ function PaymentSuccessContent() {
           response.data.payosStatus !== "PAID"
         ) {
           toast.error("Thanh toán chưa được hoàn thành");
-          router.push(`/payment/cancel?orderCode=${orderCode}`);
+          router.push(`/payment-cancelled?orderCode=${orderCode}`);
+          return;
         }
+
+        // Payment successful, update premium status
+        await handlePaymentSuccess();
       } else {
         throw new Error(
           response.message || "Không thể kiểm tra trạng thái thanh toán"
@@ -72,7 +121,6 @@ function PaymentSuccessContent() {
     } catch (error: any) {
       console.error("Check payment error:", error);
       toast.error(error.message || "Đã xảy ra lỗi khi kiểm tra thanh toán");
-    } finally {
       setLoading(false);
     }
   };
@@ -128,10 +176,19 @@ function PaymentSuccessContent() {
               <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#10b981] to-[#059669] bg-clip-text text-transparent">
                 Thanh toán thành công!
               </h1>
-              <p className="text-[#64748b] text-lg">
+              <p className="text-[#64748b] text-lg mb-6">
                 Cảm ơn bạn đã nâng cấp tài khoản. Bạn đã có thể sử dụng tất cả
                 tính năng premium.
               </p>
+
+              {/* Premium Status Badge */}
+              <div className="flex justify-center">
+                <PremiumBadge
+                  showUpgradeButton={false}
+                  size="lg"
+                  refreshFromAPI={true}
+                />
+              </div>
             </div>
           </div>
 
