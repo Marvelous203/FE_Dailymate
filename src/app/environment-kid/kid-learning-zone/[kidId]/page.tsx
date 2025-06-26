@@ -109,21 +109,36 @@ export default function KidLearningZonePage() {
               let lessonCount = 0;
 
               lessons.forEach((lesson: any) => {
-                const lessonProgressKey = `lesson_progress_${kidId}_${lesson._id}`;
-                const storedLessonProgress =
-                  localStorage.getItem(lessonProgressKey);
-                if (storedLessonProgress) {
-                  try {
-                    const lessonData = JSON.parse(storedLessonProgress);
-                    if (lessonData.currentProgress !== undefined) {
-                      totalLessonProgress += Math.min(
-                        100,
-                        lessonData.currentProgress
-                      );
-                      lessonCount++;
+                // Try new format first
+                const newProgress = kidLocalStorage.getLessonProgress(
+                  kidId,
+                  lesson._id
+                );
+
+                if (newProgress && newProgress.currentProgress !== undefined) {
+                  totalLessonProgress += Math.min(
+                    100,
+                    newProgress.currentProgress
+                  );
+                  lessonCount++;
+                } else {
+                  // Fallback to old format
+                  const lessonProgressKey = `lesson_progress_${kidId}_${lesson._id}`;
+                  const storedLessonProgress =
+                    localStorage.getItem(lessonProgressKey);
+                  if (storedLessonProgress) {
+                    try {
+                      const lessonData = JSON.parse(storedLessonProgress);
+                      if (lessonData.currentProgress !== undefined) {
+                        totalLessonProgress += Math.min(
+                          100,
+                          lessonData.currentProgress
+                        );
+                        lessonCount++;
+                      }
+                    } catch (error) {
+                      console.error("Error parsing lesson progress:", error);
                     }
-                  } catch (error) {
-                    console.error("Error parsing lesson progress:", error);
                   }
                 }
               });
@@ -133,10 +148,25 @@ export default function KidLearningZonePage() {
                 progressPercentage = Math.round(
                   totalLessonProgress / lessonCount
                 );
+
+                // Update overall progress using utility
+                kidLocalStorage.setCourseOverallProgress(
+                  kidId,
+                  courseId,
+                  progressPercentage
+                );
+                console.log(
+                  `💾 Calculated and saved overall progress: ${progressPercentage}% for course ${courseId}`
+                );
               } else if (totalLessons > 0 && completedLessons <= totalLessons) {
                 // Fallback to API calculation
                 progressPercentage = Math.round(
                   (completedLessons / totalLessons) * 100
+                );
+                kidLocalStorage.setCourseOverallProgress(
+                  kidId,
+                  courseId,
+                  progressPercentage
                 );
               } else if (completedLessons > 0) {
                 // Conservative estimate if data seems inconsistent
@@ -147,6 +177,11 @@ export default function KidLearningZonePage() {
                       Math.max(totalLessons, completedLessons)) *
                       100
                   )
+                );
+                kidLocalStorage.setCourseOverallProgress(
+                  kidId,
+                  courseId,
+                  progressPercentage
                 );
               }
 
@@ -686,11 +721,22 @@ export default function KidLearningZonePage() {
                     }
                   }
 
-                  // Ensure final value is capped at 100%
+                  // Save calculated progress and ensure final value is capped at 100%
                   progressPercentage = Math.min(
                     100,
                     Math.max(0, progressPercentage)
                   );
+
+                  if (progressPercentage > 0) {
+                    kidLocalStorage.setCourseOverallProgress(
+                      kidId,
+                      courseId,
+                      progressPercentage
+                    );
+                    console.log(
+                      `💾 Saved calculated progress: ${progressPercentage}% for course ${courseId}`
+                    );
+                  }
                 }
 
                 // Debug logging

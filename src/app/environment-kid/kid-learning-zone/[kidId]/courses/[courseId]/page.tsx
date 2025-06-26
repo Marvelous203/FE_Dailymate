@@ -65,26 +65,58 @@ export default function CoursePage({
     const progressData: Record<string, any> = {};
     let completedLessons = 0;
 
+    // Import utility functions
+    const { kidLocalStorage: kidProgressUtils } = await import(
+      "@/utils/kidProgress"
+    );
+
     lessonsData.forEach((lesson) => {
-      const storageKey = `lesson_progress_${resolvedParams.kidId}_${lesson._id}`;
-      const savedProgress = localStorage.getItem(storageKey);
+      // Try to get lesson progress using the new utility function first
+      let progress = kidProgressUtils.getLessonProgress(
+        resolvedParams.kidId,
+        lesson._id
+      );
 
-      if (savedProgress) {
-        try {
-          const progress = JSON.parse(savedProgress);
-          progressData[lesson._id] = progress;
+      // If not found, try the old format for backward compatibility
+      if (!progress) {
+        const oldStorageKey = `lesson_progress_${resolvedParams.kidId}_${lesson._id}`;
+        const savedProgress = localStorage.getItem(oldStorageKey);
 
-          // Check if lesson is completed
-          // A lesson is completed if currentProgress reaches 100%
-          if (progress.currentProgress >= 100) {
-            completedLessons++;
+        if (savedProgress) {
+          try {
+            progress = JSON.parse(savedProgress);
+
+            // Migrate to new format if progress is valid
+            if (progress && typeof progress === "object") {
+              console.log(
+                `🔄 Migrating lesson progress for lesson ${lesson._id} to new format`
+              );
+              kidProgressUtils.setLessonProgress(
+                resolvedParams.kidId,
+                lesson._id,
+                progress
+              );
+
+              // Remove old key
+              localStorage.removeItem(oldStorageKey);
+            }
+          } catch (error) {
+            console.error(
+              "Error parsing old progress for lesson:",
+              lesson._id,
+              error
+            );
           }
-        } catch (error) {
-          console.error(
-            "Error parsing progress for lesson:",
-            lesson._id,
-            error
-          );
+        }
+      }
+
+      if (progress) {
+        progressData[lesson._id] = progress;
+
+        // Check if lesson is completed
+        // A lesson is completed if currentProgress reaches 100%
+        if (progress.currentProgress >= 100) {
+          completedLessons++;
         }
       }
     });
@@ -98,17 +130,20 @@ export default function CoursePage({
         : 0;
     setOverallProgress(progressPercentage);
 
+    // ✅ ALWAYS update overall progress in localStorage using utility function
+    kidProgressUtils.setCourseOverallProgress(
+      resolvedParams.kidId,
+      resolvedParams.courseId,
+      progressPercentage
+    );
+
+    console.log(
+      `💾 Overall progress updated: ${progressPercentage}% for course ${resolvedParams.courseId}`
+    );
+
     // Check if course is completed and award points
     if (progressPercentage === 100 && !courseCompleted) {
       setCourseCompleted(true);
-
-      // Update overall progress in localStorage for API sync using utility function
-      const { kidLocalStorage } = await import("@/utils/kidProgress");
-      kidLocalStorage.setCourseOverallProgress(
-        resolvedParams.kidId,
-        resolvedParams.courseId,
-        100
-      );
 
       try {
         // First, update API progress status to completed

@@ -1073,7 +1073,7 @@ export default function LessonPage({
                 </div>
               </div>
               <Progress
-                value={currentProgress}
+                value={currentProgress || 0}
                 className="h-3 bg-gray-200 rounded-full overflow-hidden"
               >
                 <div
@@ -1092,7 +1092,7 @@ export default function LessonPage({
                     {completedTests.length}/{testsData.length}
                   </div>
                   <div>
-                    Progress: {currentProgress}% | Storage Key:{" "}
+                    Progress: {currentProgress || 0}% | Storage Key:{" "}
                     {getProgressKey(
                       resolvedParams.kidId,
                       resolvedParams.lessonId

@@ -21,7 +21,7 @@ interface PremiumStatus {
  * Custom hook để quản lý premium status
  * Có thể lấy từ localStorage hoặc refresh từ API
  */
-export function usePremium(refreshFromAPI: boolean = false) {
+export function usePremium(refreshFromAPI?: boolean) {
   const [premiumStatus, setPremiumStatus] = useState<PremiumStatus>({
     isPremium: false,
     subscriptionType: 'free',
@@ -101,7 +101,7 @@ export function usePremium(refreshFromAPI: boolean = false) {
 
   // Load on mount
   useEffect(() => {
-    loadPremiumStatus(refreshFromAPI);
+    loadPremiumStatus(refreshFromAPI || false);
   }, [refreshFromAPI]);
 
   // Function to refresh premium status from API
