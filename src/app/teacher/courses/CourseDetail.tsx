@@ -113,31 +113,37 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
 
     const handleCreateLesson = async (courseId: string, newLessonData: NewLessonData) => {
         try {
-            const dataToSend = {
+            // Tạo object mới chỉ chứa các trường có giá trị
+            const filteredData: any = {
                 ...newLessonData,
                 content: { sections: newLessonData.content },
                 courseId: courseId,
             };
+
+            // Xóa các trường media nếu rỗng
+            if (!filteredData.videoUrl) delete filteredData.videoUrl;
+            if (!filteredData.audioUrl) delete filteredData.audioUrl;
+            if (!filteredData.imageUrl) delete filteredData.imageUrl;
 
             const response = await fetch(`http://localhost:8386/api/lesson`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(dataToSend),
+                body: JSON.stringify(filteredData),
             });
 
             const data = await response.json();
 
             if (data.success) {
-                toast.success('Bài học đã được tạo thành công!');
+                toast.success('Lesson created successfully!');
                 fetchLessons();
                 setIsCreateLessonModalOpen(false);
             } else {
-                toast.error(`Tạo bài học thất bại: ${data.message}`);
+                toast.error(`Create lesson failed: ${data.message}`);
             }
         } catch (error: unknown) {
-            toast.error(`Lỗi khi tạo bài học: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            toast.error(`Error creating lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 

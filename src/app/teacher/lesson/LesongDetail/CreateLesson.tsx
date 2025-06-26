@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { VideoUpload } from '@/components/ui/video-upload';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { AudioUpload } from '@/components/ui/audio-upload';
+import { toast } from 'sonner';
 
 export interface NewLessonData {
     title: string;
@@ -36,9 +37,10 @@ interface CreateLessonModalProps {
     onClose: () => void;
     courseId: string; // To associate the lesson with a course
     onCreate: (courseId: string, newLessonData: NewLessonData) => void;
+    teacherId: string;
 }
 
-export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: CreateLessonModalProps) {
+export function CreateLessonModal({ isOpen, onClose, courseId, onCreate, teacherId }: CreateLessonModalProps) {
     const [formData, setFormData] = useState<NewLessonData>({
         title: '',
         description: '',
@@ -49,8 +51,12 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
         duration: 0,
         order: 0,
         isPublished: false,
-        createdBy: '60d21b4667d0d8992e610c86',
+        createdBy: teacherId,
     });
+
+    useEffect(() => {
+        setFormData(prev => ({ ...prev, createdBy: teacherId }));
+    }, [teacherId, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
@@ -101,7 +107,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
     const handleSubmit = () => {
         // Kiểm tra tiêu đề
         if (!formData.title.trim()) {
-            alert('Vui lòng nhập tiêu đề bài học');
+            toast('Vui lòng nhập tiêu đề bài học');
             return;
         }
 
@@ -133,7 +139,7 @@ export function CreateLessonModal({ isOpen, onClose, courseId, onCreate }: Creat
             duration: 0,
             order: 0,
             isPublished: false,
-            createdBy: '60d21b4667d0d8992e610c86',
+            createdBy: teacherId,
         });
     };
 

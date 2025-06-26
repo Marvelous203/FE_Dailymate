@@ -117,9 +117,9 @@ export async function sendVerificationEmail(email: string, forgotPassword: boole
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         email,
-        forgotPassword 
+        forgotPassword
       }),
       credentials: 'include',
     });
@@ -559,13 +559,13 @@ export async function getCourseWithLessons(courseId: string) {
 // Function để gọi multiple courses với lessons
 export async function getCoursesWithLessons(courseIds: string[]) {
   try {
-    const promises = courseIds.map(courseId => 
+    const promises = courseIds.map(courseId =>
       Promise.all([
         getCourseById(courseId),
         getLessonsByCourse(courseId)
       ]).then(([course, lessons]) => ({ courseId, course, lessons }))
     );
-    
+
     const results = await Promise.all(promises);
     return results;
   } catch (error) {
@@ -651,12 +651,12 @@ export async function fetchUserDataAfterLogin(parentId: string) {
   try {
     // Đầu tiên gọi API để lấy danh sách kid IDs từ parent ID
     const kidsResponse = await getKidsByParentId(parentId);
-    
+
     // Tạo array các promises để gọi song song
     const promises = [
       getParentById(parentId), // API parent
     ];
-    
+
     // Thêm các API calls cho từng kid nếu có
     if (kidsResponse.data && Array.isArray(kidsResponse.data)) {
       kidsResponse.data.forEach((kid: any) => {
@@ -665,10 +665,10 @@ export async function fetchUserDataAfterLogin(parentId: string) {
         }
       });
     }
-    
+
     // Gọi tất cả APIs cùng lúc bằng Promise.all
     const results = await Promise.all(promises);
-    
+
     return {
       parent: results[0], // Parent data
       kids: results.slice(1), // Kids data (nếu có)
@@ -730,7 +730,7 @@ export async function createKid(kidData: {
     return data;
   } catch (error) {
     console.error('Create kid error:', error);
-    
+
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
     }
@@ -895,7 +895,7 @@ export async function createPayment(paymentData: {
   try {
     console.log('🚀 Creating payment with URL:', `${API_URL}/api/payment/create-link`);
     console.log('📦 Payment data:', paymentData);
-    
+
     const response = await fetch(`${API_URL}/api/payment/create-link`, {
       method: 'POST',
       headers: {
@@ -954,5 +954,35 @@ export async function checkPaymentStatus(orderCode: string) {
       throw new Error(error.message);
     }
     throw new Error('Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán');
+  }
+}
+
+// Lấy top courses (title, enrollmentCount)
+export async function getTopCourses() {
+  try {
+    const response = await fetch(`${API_URL}/api/course/top-courses`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Get top courses error:', error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
+    }
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi lấy top courses');
   }
 }

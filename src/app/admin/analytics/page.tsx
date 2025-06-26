@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { getTopCourses } from '@/lib/api';
 
 export default function AnalyticsPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
@@ -24,6 +25,8 @@ export default function AnalyticsPage() {
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [activeUsers, setActiveUsers] = useState<number>(0);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [topCourses, setTopCourses] = useState<{ title: string; enrollmentCount: number }[]>([]);
+  const [loadingTopCourses, setLoadingTopCourses] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -87,6 +90,21 @@ export default function AnalyticsPage() {
       .catch(() => setRevenueData(null))
       .finally(() => setLoading(false));
   }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    setLoadingTopCourses(true);
+    getTopCourses()
+      .then((data) => {
+        console.log('Top courses data:', data);
+        if (data && data.data && Array.isArray(data.data.courses)) {
+          setTopCourses(data.data.courses);
+        } else {
+          setTopCourses([]);
+        }
+      })
+      .catch(() => setTopCourses([]))
+      .finally(() => setLoadingTopCourses(false));
+  }, []);
 
   return (
     <div>
@@ -198,27 +216,28 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {topCourses.map((course, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium">{course.title}</p>
-                          <p className="text-sm text-[#6b7280]">
-                            {course.enrollments} enrollments
-                          </p>
+                  {loadingTopCourses ? (
+                    <div>Loading top courses...</div>
+                  ) : (
+                    topCourses.map((course, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium">{course.title}</p>
+                            <p className="text-sm text-[#6b7280]">
+                              {course.enrollmentCount} enrollments
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-[#10b981] font-medium">
-                        ${course.revenue}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -416,34 +435,6 @@ function StatCard({
     </Card>
   );
 }
-
-const topCourses = [
-  {
-    title: "Mathematics for Kids",
-    enrollments: 248,
-    revenue: 12400,
-  },
-  {
-    title: "Science Experiments",
-    enrollments: 186,
-    revenue: 9300,
-  },
-  {
-    title: "English Vocabulary",
-    enrollments: 154,
-    revenue: 7700,
-  },
-  {
-    title: "Art & Craft",
-    enrollments: 132,
-    revenue: 6600,
-  },
-  {
-    title: "Music Basics",
-    enrollments: 98,
-    revenue: 4900,
-  },
-];
 
 const events = [
   {

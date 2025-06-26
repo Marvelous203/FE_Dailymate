@@ -29,7 +29,6 @@ export default function TeacherDashboard() {
               className="pl-10 bg-white border-none w-64"
             />
           </div>
-          <Button className="bg-[#702dff] hover:bg-[#5811f2]">Add Class</Button>
         </div>
       </div>
 
@@ -71,9 +70,7 @@ export default function TeacherDashboard() {
           <TabsTrigger value="class-3a">Class 3A</TabsTrigger>
           <TabsTrigger value="class-3b">Class 3B</TabsTrigger>
           <TabsTrigger value="class-4a">Class 4A</TabsTrigger>
-          <TabsTrigger value="add" className="text-[#702dff]">
-            + Add Class
-          </TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="class-3a" className="mt-6">

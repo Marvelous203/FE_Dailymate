@@ -1,18 +1,54 @@
+'use client'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ChevronLeft, Save, Plus, Trash, Clock, BookOpen, User } from "lucide-react"
+import { ChevronLeft, Save, Plus, Clock, BookOpen, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
-// Update the component to handle async params
-export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params
-  const courseId = resolvedParams.id
-  const course = courses.find((c) => c.id.toString() === courseId) || courses[0]
+export default function CourseDetailPage({ params }: { params: { id: string } }) {
+  const courseId = params.id
+  const [course, setCourse] = useState<any>(null)
+  const [loadingCourse, setLoadingCourse] = useState(true)
+  const [analyticsTab, setAnalyticsTab] = useState(false)
+  const [enrolledKids, setEnrolledKids] = useState<any[]>([])
+  const [loadingKids, setLoadingKids] = useState(false)
+
+  useEffect(() => {
+    setLoadingCourse(true)
+    fetch(`http://localhost:8386/api/course/${courseId}`)
+      .then(res => res.json())
+      .then(data => setCourse(data.data))
+      .catch(() => setCourse(null))
+      .finally(() => setLoadingCourse(false))
+  }, [courseId])
+
+  // Fetch enrolled kids when Analytics tab is selected
+  useEffect(() => {
+    if (!analyticsTab) return
+    setLoadingKids(true)
+    fetch(`http://localhost:8386/api/course/${courseId}/enrolled-kids?page=1&limit=100`)
+      .then(res => res.json())
+      .then(data => {
+        setEnrolledKids(data.data?.progressRecords || [])
+      })
+      .catch(() => setEnrolledKids([]))
+      .finally(() => setLoadingKids(false))
+  }, [analyticsTab, courseId])
+
+  // Tính toán dữ liệu cho biểu đồ: số học sinh theo level
+  const levelStats = enrolledKids.reduce((acc: Record<number, number>, kid) => {
+    const level = kid.kidLevel || 0
+    acc[level] = (acc[level] || 0) + 1
+    return acc
+  }, {})
+
+  if (loadingCourse) return <div>Loading...</div>
+  if (!course) return <div className="text-red-500">Course not found</div>
 
   return (
     <div>
@@ -24,16 +60,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-[#1e1e1e]">Edit Course</h1>
+        <h1 className="text-2xl font-bold text-[#1e1e1e]">Course Detail</h1>
         <div className="flex gap-3">
           <Button variant="outline">Preview</Button>
-          <Button className="bg-[#ef4444] hover:bg-[#dc2626]">
+          <Button className="bg-[#ef4444] hover:bg-[#dc2626]" disabled>
             <Save className="mr-2 h-4 w-4" /> Save Changes
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="details" className="mb-8">
+      <Tabs defaultValue="details" className="mb-8" onValueChange={tab => setAnalyticsTab(tab === "analytics")}>
         <TabsList className="bg-white">
           <TabsTrigger value="details">Course Details</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
@@ -52,43 +88,40 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title">Course Title</Label>
-                      <Input id="title" defaultValue={course.title} className="mt-1" />
+                      <Input id="title" defaultValue={course.title} className="mt-1" readOnly />
                     </div>
 
                     <div>
                       <Label htmlFor="description">Description</Label>
                       <Textarea
                         id="description"
-                        defaultValue="This comprehensive course is designed to help children learn mathematics in a fun and interactive way. Through engaging lessons and activities, students will develop essential skills and knowledge."
+                        defaultValue={course.description}
                         className="mt-1 min-h-[120px]"
+                        readOnly
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="category">Category</Label>
-                        <Input id="category" defaultValue={course.category} className="mt-1" />
-                      </div>
-                      <div>
-                        <Label htmlFor="level">Level</Label>
-                        <Input id="level" defaultValue="Beginner" className="mt-1" />
+                        <Input id="category" defaultValue={course.category} className="mt-1" readOnly />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="duration">Duration</Label>
-                        <Input id="duration" defaultValue={course.duration} className="mt-1" />
+                        <Label htmlFor="pointsEarned">Points Earned</Label>
+                        <Input id="pointsEarned" defaultValue={course.pointsEarned?.toString() || "0"} className="mt-1" readOnly />
                       </div>
                       <div>
-                        <Label htmlFor="price">Price ($)</Label>
-                        <Input id="price" type="number" defaultValue="49.99" className="mt-1" />
+                        <Label htmlFor="isPremium">Premium</Label>
+                        <Input id="isPremium" defaultValue={course.isPremium ? "Yes" : "No"} className="mt-1" readOnly />
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="ageRange">Age Range</Label>
-                      <Input id="ageRange" defaultValue="6-10 years" className="mt-1" />
+                      <Label htmlFor="ageGroup">Age Group</Label>
+                      <Input id="ageGroup" defaultValue={course.ageGroup} className="mt-1" readOnly />
                     </div>
                   </div>
                 </CardContent>
@@ -100,15 +133,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[1, 2, 3].map((outcome, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Input defaultValue={`Learning outcome ${outcome}`} className="flex-1" />
-                        <Button variant="ghost" size="icon" className="text-red-500">
-                          <Trash size={16} />
-                        </Button>
-                      </div>
-                    ))}
-
+                    {/* Hiện tại API chưa có learning outcomes, có thể bổ sung sau */}
                     <Button variant="outline" className="w-full">
                       <Plus size={16} className="mr-2" /> Add Learning Outcome
                     </Button>
@@ -126,7 +151,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   <div className="mb-4">
                     <div className="h-48 bg-[#d9d9d9] rounded-md overflow-hidden">
                       <Image
-                        src={`/placeholder.svg?height=192&width=384`}
+                        src={course.thumbnailUrl || "/placeholder.svg?height=192&width=384"}
                         alt="Course thumbnail"
                         width={384}
                         height={192}
@@ -148,41 +173,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="status">Status</Label>
-                      <select
-                        id="status"
-                        className="w-full border border-gray-300 rounded-md p-2 mt-1"
-                        defaultValue={course.status}
-                      >
-                        <option value="Published">Published</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Archived">Archived</option>
-                      </select>
+                      <Input id="status" defaultValue={course.isPublished ? "Published" : "Draft"} className="mt-1" readOnly />
                     </div>
-
-                    <div>
-                      <Label htmlFor="visibility">Visibility</Label>
-                      <select
-                        id="visibility"
-                        className="w-full border border-gray-300 rounded-md p-2 mt-1"
-                        defaultValue="Public"
-                      >
-                        <option value="Public">Public</option>
-                        <option value="Private">Private</option>
-                        <option value="Password Protected">Password Protected</option>
-                      </select>
-                    </div>
-
                     <div>
                       <Label htmlFor="instructor">Instructor</Label>
-                      <select
-                        id="instructor"
-                        className="w-full border border-gray-300 rounded-md p-2 mt-1"
-                        defaultValue="1"
-                      >
-                        <option value="1">Sarah Johnson</option>
-                        <option value="2">Michael Brown</option>
-                        <option value="3">Emily Davis</option>
-                      </select>
+                      <Input id="instructor" defaultValue={course.instructor} className="mt-1" readOnly />
                     </div>
                   </div>
                 </CardContent>
@@ -201,78 +196,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* Section 1 */}
-                <div className="border rounded-md">
-                  <div className="bg-gray-50 p-4 flex justify-between items-center border-b">
-                    <div>
-                      <h3 className="font-medium">Section 1: Introduction</h3>
-                      <p className="text-sm text-gray-500">3 lessons • 45 minutes</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-500">
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-3">
-                    {[1, 2, 3].map((lesson, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded-md">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#f0e5fc] text-[#8b5cf6] flex items-center justify-center">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <h4 className="font-medium">Lesson {index + 1}: Introduction to Numbers</h4>
-                            <div className="flex items-center text-sm text-[#6b7280]">
-                              <Clock className="h-4 w-4 mr-1" />
-                              <span>15 minutes</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">
-                            Edit
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <Button variant="outline" className="w-full">
-                      <Plus size={16} className="mr-2" /> Add Lesson
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Section 2 */}
-                <div className="border rounded-md">
-                  <div className="bg-gray-50 p-4 flex justify-between items-center border-b">
-                    <div>
-                      <h3 className="font-medium">Section 2: Basic Operations</h3>
-                      <p className="text-sm text-gray-500">4 lessons • 60 minutes</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-500">
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <Button variant="outline" className="w-full">
-                      <Plus size={16} className="mr-2" /> Add Lesson
-                    </Button>
-                  </div>
-                </div>
+                {/* Có thể fetch curriculum từ API nếu có */}
+                <div className="text-gray-400">No curriculum data.</div>
               </div>
             </CardContent>
           </Card>
@@ -357,63 +282,51 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              title="Total Enrollments"
-              value="248"
-              change="+12 this week"
-              icon={<User className="h-5 w-5 text-[#ef4444]" />}
-              bgColor="bg-red-50"
-            />
-            <StatCard
-              title="Completion Rate"
-              value="68%"
-              change="+5% from last month"
-              icon={<BookOpen className="h-5 w-5 text-[#0ea5e9]" />}
-              bgColor="bg-blue-50"
-            />
-            <StatCard
-              title="Average Rating"
-              value="4.8/5"
-              change="Based on 45 reviews"
-              icon={<Star className="h-5 w-5 text-[#f59e0b]" />}
-              bgColor="bg-amber-50"
-            />
-            <StatCard
-              title="Avg. Completion Time"
-              value="3.5 days"
-              change="-0.5 days from average"
-              icon={<Clock className="h-5 w-5 text-[#10b981]" />}
-              bgColor="bg-green-50"
-            />
-          </div>
-
-          <Card className="border-none shadow-sm">
+          <Card className="border-none shadow-sm mb-6">
             <CardHeader>
-              <CardTitle>Enrollment Analytics</CardTitle>
+              <CardTitle>Enrolled Kids</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80 w-full">
-                <div className="flex h-64 items-end gap-2 pt-6">
-                  {[45, 60, 30, 70, 85, 50, 20, 40, 65, 55, 75, 90].map((value, i) => (
-                    <div key={i} className="relative flex h-full w-full flex-col items-center">
-                      <div
-                        className="absolute bottom-0 w-full max-w-12 rounded-t bg-[#ef4444]"
-                        style={{ height: `${value}%` }}
-                      ></div>
-                    </div>
-                  ))}
+              {loadingKids ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3">Full Name</th>
+                        <th className="text-left p-3">Email</th>
+                        <th className="text-left p-3">Age</th>
+                        <th className="text-left p-3">Points</th>
+                        <th className="text-left p-3">Level</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {enrolledKids.length === 0 ? (
+                        <tr><td colSpan={6} className="text-center py-4">No kids enrolled</td></tr>
+                      ) : (
+                        enrolledKids.map((kid, idx) => (
+                          <tr key={kid.progressId || idx} className="border-b hover:bg-gray-50">
+                            <td className="p-3">{kid.kidFullName}</td>
+                            <td className="p-3">{kid.kidEmail}</td>
+                            <td className="p-3">{kid.kidDateOfBirth ? getAge(kid.kidDateOfBirth) : "-"}</td>
+                            <td className="p-3">{kid.kidPoints}</td>
+                            <td className="p-3">{kid.kidLevel}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="flex justify-between mt-2">
-                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(
-                    (month, i) => (
-                      <div key={i} className="text-xs text-[#6b7280]">
-                        {month}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="border-none shadow-sm">
+            <CardHeader>
+              <CardTitle>Kids by Level</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BarChart data={levelStats} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -465,33 +378,34 @@ function Star(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-const courses = [
-  {
-    id: 1,
-    title: "Mathematics for Kids",
-    category: "Mathematics",
-    rating: 4.8,
-    duration: "4 hours",
-    lessons: 12,
-    status: "Published",
-  },
-  {
-    id: 2,
-    title: "English Vocabulary",
-    category: "Language",
-    rating: 4.5,
-    duration: "6 hours",
-    lessons: 18,
-    status: "Published",
-  },
-  {
-    id: 3,
-    title: "Science Experiments",
-    category: "Science",
-    rating: 4.9,
-    duration: "5 hours",
-    lessons: 15,
-    status: "Published",
-  },
-]
+// Biểu đồ đơn giản bằng SVG (nếu chưa có thư viện chart)
+function BarChart({ data }: { data: Record<number, number> }) {
+  const levels = Object.keys(data).sort((a, b) => Number(a) - Number(b));
+  const max = Math.max(...Object.values(data), 1);
+  return (
+    <div className="flex items-end gap-2 h-40 mt-4">
+      {levels.map(level => (
+        <div key={level} className="flex flex-col items-center">
+          <div
+            className="bg-[#ef4444] w-8"
+            style={{ height: `${(data[Number(level)] / max) * 100}%` }}
+            title={`Level ${level}: ${data[Number(level)]}`}
+          ></div>
+          <span className="text-xs mt-1">{level}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function getAge(dateString: string) {
+  const today = new Date();
+  const birthDate = new Date(dateString);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
 
