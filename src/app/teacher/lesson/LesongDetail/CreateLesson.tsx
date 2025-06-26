@@ -54,7 +54,7 @@ export function CreateLessonModal({
     duration: 0,
     order: 0,
     isPublished: false,
-    createdBy: "60d21b4667d0d8992e610c86",
+    createdBy: "685a1fbd05372834986df9e1",
   });
 
   const handleChange = (

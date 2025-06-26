@@ -372,15 +372,15 @@ export async function deleteCourse(courseId: string) {
 // API cho lesson with improved error handling and retry mechanism
 export async function getLessonsByCourse(courseId: string, retryCount: number = 3) {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
       console.log(`🔄 Attempt ${attempt}/${retryCount}: Fetching lessons for course ${courseId}`);
-      
+
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+
       const response = await fetch(`${API_URL}/api/lesson/course/${courseId}`, {
         method: 'GET',
         headers: {
@@ -400,7 +400,7 @@ export async function getLessonsByCourse(courseId: string, retryCount: number = 
       const data = await response.json();
       console.log(`✅ Successfully fetched lessons for course ${courseId}:`, data);
       return data;
-      
+
     } catch (error) {
       lastError = error as Error;
       console.error(`❌ Attempt ${attempt}/${retryCount} failed for course ${courseId}:`, error);
@@ -435,7 +435,7 @@ export async function getLessonsByCourse(courseId: string, retryCount: number = 
   // All attempts failed, throw the last error with improved message
   if (lastError) {
     console.error(`🚫 All ${retryCount} attempts failed for getLessonsByCourse(${courseId})`);
-    
+
     if (lastError.message.includes('ECONNRESET')) {
       throw new Error(`Kết nối bị gián đoạn khi tải danh sách bài học. Server có thể đang quá tải. Vui lòng thử lại sau ít phút.`);
     } else if (lastError.message.includes('ENOTFOUND')) {
@@ -448,7 +448,7 @@ export async function getLessonsByCourse(courseId: string, retryCount: number = 
       throw new Error(`Không thể tải danh sách bài học: ${lastError.message}`);
     }
   }
-  
+
   throw new Error('Đã xảy ra lỗi không xác định khi lấy danh sách bài học');
 }
 
@@ -1020,15 +1020,15 @@ export async function getCourseProgress(kidId: string, courseId: string) {
   try {
     // Use the bulk progress API to find specific course progress
     const progressResponse = await getAllCourseProgressByKidId(kidId);
-    
+
     if (progressResponse?.success && progressResponse.data?.courseProgressList) {
       const courseProgress = progressResponse.data.courseProgressList.find((progress: any) => {
-        const currentCourseId = typeof progress.courseId === 'object' 
+        const currentCourseId = typeof progress.courseId === 'object'
           ? (progress.courseId._id || progress.courseId.id)
           : progress.courseId;
         return currentCourseId === courseId;
       });
-      
+
       if (courseProgress) {
         console.log('✅ Found course progress:', courseProgress);
         return {
@@ -1038,14 +1038,14 @@ export async function getCourseProgress(kidId: string, courseId: string) {
         };
       }
     }
-    
+
     // If not found, try to auto-enroll
     console.log('Course progress not found, trying to enroll...');
     try {
       return await enrollInCourse(kidId, courseId);
     } catch (enrollError) {
       console.error('Failed to enroll in course:', enrollError);
-      
+
       // Return fallback data to allow access but indicate not enrolled
       return {
         success: true,
@@ -1065,7 +1065,7 @@ export async function getCourseProgress(kidId: string, courseId: string) {
     }
   } catch (error) {
     console.error('Get course progress error:', error);
-    
+
     // Return fallback data
     return {
       success: true,
@@ -1101,7 +1101,7 @@ export async function getAllCourseProgressByKidId(kidId: string) {
 
     if (!response.ok) {
       console.log('❌ All progress endpoint failed, trying individual course checks...');
-      
+
       // If the bulk endpoint fails, we'll try to get enrollment status differently
       // For now, return empty but we'll implement a fallback in the component
       return {
@@ -1141,21 +1141,21 @@ export async function updateCourseProgress(kidId: string, courseId: string, prog
     // First, get the progress record to find the progressId
     const progressResponse = await getAllCourseProgressByKidId(kidId);
     let progressId = null;
-    
+
     if (progressResponse?.success && progressResponse.data?.courseProgressList) {
       const courseProgress = progressResponse.data.courseProgressList.find((progress: any) => {
-        const currentCourseId = typeof progress.courseId === 'object' 
+        const currentCourseId = typeof progress.courseId === 'object'
           ? (progress.courseId._id || progress.courseId.id)
           : progress.courseId;
         return currentCourseId === courseId;
       });
-      
+
       if (courseProgress) {
         progressId = courseProgress._id;
         console.log('✅ Found progressId:', progressId);
       }
     }
-    
+
     if (!progressId) {
       console.warn('❌ No progressId found for course, cannot update');
       return { success: false, message: 'No progress record found' };
@@ -1222,7 +1222,7 @@ export async function enrollInCourse(kidId: string, courseId: string) {
           };
         }
       }
-      
+
       const errorMessage = await handleErrorResponse(response);
       throw new Error(errorMessage);
     }
@@ -1253,10 +1253,10 @@ export async function updateLessonCompletion(kidId: string, courseId: string, le
 
 // Helper function to update test result  
 export async function updateTestResult(
-  kidId: string, 
-  courseId: string, 
-  testId: string, 
-  score: number, 
+  kidId: string,
+  courseId: string,
+  testId: string,
+  score: number,
   passed: boolean
 ) {
   return updateCourseProgress(kidId, courseId, {
@@ -1299,7 +1299,7 @@ export async function updateKidPointsForCourse(kidId: string, coursePoints: numb
     });
 
     console.log(`🎉 Updated kid points: ${currentPoints} -> ${newPoints}, Level: ${newLevel}`);
-    
+
     return updateResponse;
   } catch (error) {
     console.error('Error updating kid points:', error);
@@ -1312,7 +1312,7 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
   try {
     // Import the kid progress utilities
     const { kidLocalStorage } = await import('@/utils/kidProgress');
-    
+
     // Get course progress
     const progressResponse = await getCourseProgress(kidId, courseId);
     if (!progressResponse || !progressResponse.success) {
@@ -1320,7 +1320,7 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
     }
 
     const progress = progressResponse.data;
-    
+
     // Check if course is completed (status = true)
     if (progress.status === true) {
       // Get course details to find points
@@ -1328,12 +1328,12 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
       if (courseResponse && courseResponse.success) {
         const course = courseResponse.data;
         const coursePoints = course.pointsEarned || course.points || 50; // Default 50 points
-        
+
         // Check if points have already been awarded using our utility function
         if (!kidLocalStorage.hasPointsBeenAwarded(kidId, courseId)) {
           // Award points
           await updateKidPointsForCourse(kidId, coursePoints);
-          
+
           // Mark as awarded using our utility function
           kidLocalStorage.markPointsAwarded(kidId, courseId, {
             courseId: courseId,
@@ -1341,9 +1341,9 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
             timestamp: new Date().toISOString(),
             courseName: course.title
           });
-          
+
           console.log(`🏆 Course completed! Awarded ${coursePoints} points for course: ${course.title} to kid: ${kidId}`);
-          
+
           return {
             success: true,
             pointsAwarded: coursePoints,
@@ -1357,7 +1357,7 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
         }
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error checking course completion:', error);
@@ -1371,7 +1371,7 @@ export async function checkParentPremiumStatus(parentId: string) {
     const response = await getParentById(parentId);
     if (response && response.success && response.data) {
       const parentData = response.data;
-      
+
       // Extract premium information from parent data
       return {
         success: true,
@@ -1379,12 +1379,12 @@ export async function checkParentPremiumStatus(parentId: string) {
           subscriptionType: parentData.subscriptionType || 'free',
           subscriptionExpiry: parentData.subscriptionExpiry || null,
           isPremium: parentData.isPremium || false,
-          isExpired: parentData.subscriptionExpiry ? 
+          isExpired: parentData.subscriptionExpiry ?
             new Date(parentData.subscriptionExpiry) <= new Date() : false
         }
       };
     }
-    
+
     return {
       success: false,
       message: 'Không thể lấy thông tin parent'
@@ -1413,5 +1413,35 @@ export async function refreshParentPremiumData(parentId: string) {
   } catch (error) {
     console.error('Error refreshing parent premium data:', error);
     throw error;
+  }
+}
+
+// Lấy top 5 khóa học
+export async function getTopCourses() {
+  try {
+    const response = await fetch(`${API_URL}/api/course/top-courses`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Lỗi khi lấy top courses:', error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    }
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi lấy top courses');
   }
 }

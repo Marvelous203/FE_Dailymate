@@ -24,7 +24,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     <div className="min-h-screen flex flex-col">
       <header className="bg-[#4dacc4] text-white">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/teacher-dashboard" className="flex items-center gap-2">
+          <Link href="/teacher/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#4dacc4] font-bold">E</span>
             </div>
@@ -75,7 +75,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
         <nav className="container mx-auto px-4 py-1">
           <ul className="flex space-x-1 overflow-x-auto pb-2">
-            <NavItem href="/teacher-dashboard" icon={<Home size={18} />} label="Dashboard" />
+            <NavItem href="/teacher/dashboard" icon={<Home size={18} />} label="Dashboard" />
             <NavItem href="/teacher/courses" icon={<BookOpen size={18} />} label="Courses" />
             <NavItem href="/teacher/students" icon={<Users size={18} />} label="Students" />
             <NavItem href="/teacher/messages" icon={<MessageSquare size={18} />} label="Messages" />

@@ -63,6 +63,14 @@ const getDefaultCourseImage = (
   return defaultImages[Math.abs(hash) % defaultImages.length];
 };
 
+// Thêm helper chuẩn hóa lấy courseId
+function extractCourseId(courseId: any) {
+  if (!courseId) return "";
+  if (typeof courseId === "string") return courseId;
+  if (typeof courseId === "object") return courseId._id || courseId.id || "";
+  return "";
+}
+
 export default function CoursesPage() {
   const params = useParams();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -130,12 +138,7 @@ export default function CoursesPage() {
               );
 
               // Handle courseId as object or string
-              const extractedId =
-                typeof progress.courseId === "object"
-                  ? progress.courseId._id ||
-                    progress.courseId.id ||
-                    progress.courseId
-                  : progress.courseId;
+              const extractedId = extractCourseId(progress.courseId);
 
               console.log("📋 Extracted course ID:", extractedId);
               return extractedId;
@@ -150,11 +153,8 @@ export default function CoursesPage() {
               (progress: any) => {
                 console.log("📋 Progress item:", progress);
                 // Handle courseId as object or string
-                return typeof progress.courseId === "object"
-                  ? progress.courseId._id ||
-                      progress.courseId.id ||
-                      progress.courseId
-                  : progress.courseId;
+                const extractedId = extractCourseId(progress.courseId);
+                return extractedId;
               }
             );
           } else if (
@@ -164,7 +164,7 @@ export default function CoursesPage() {
             // Single object format - maybe the API returns just one enrollment record
             console.log("📋 Checking if single object format");
             if (progressResponse.data.courseId) {
-              enrolledCourseIds = [progressResponse.data.courseId];
+              enrolledCourseIds = [extractCourseId(progressResponse.data.courseId)];
             }
           }
 
@@ -265,11 +265,7 @@ export default function CoursesPage() {
         if (Array.isArray(progressResponse.data)) {
           // Direct array format
           enrolledCourseIds = progressResponse.data.map((progress: any) => {
-            return typeof progress.courseId === "object"
-              ? progress.courseId._id ||
-                  progress.courseId.id ||
-                  progress.courseId
-              : progress.courseId;
+            return extractCourseId(progress.courseId);
           });
         } else if (
           progressResponse.data?.courseProgressList &&
@@ -278,11 +274,7 @@ export default function CoursesPage() {
           // Object with courseProgressList format
           enrolledCourseIds = progressResponse.data.courseProgressList.map(
             (progress: any) => {
-              return typeof progress.courseId === "object"
-                ? progress.courseId._id ||
-                    progress.courseId.id ||
-                    progress.courseId
-                : progress.courseId;
+              return extractCourseId(progress.courseId);
             }
           );
         } else if (
@@ -291,7 +283,7 @@ export default function CoursesPage() {
         ) {
           // Single object format
           if (progressResponse.data.courseId) {
-            enrolledCourseIds = [progressResponse.data.courseId];
+            enrolledCourseIds = [extractCourseId(progressResponse.data.courseId)];
           }
         }
 
@@ -343,7 +335,7 @@ export default function CoursesPage() {
     if (isEnrollingThis) {
       return {
         text: "Đang đăng ký...",
-        action: () => {},
+        action: () => { },
         disabled: true,
         variant: "secondary" as const,
       };
@@ -514,9 +506,8 @@ export default function CoursesPage() {
             return (
               <Card
                 key={course._id}
-                className={`border-none shadow-sm overflow-hidden h-full ${
-                  !canAccess ? "opacity-75" : ""
-                }`}
+                className={`border-none shadow-sm overflow-hidden h-full ${!canAccess ? "opacity-75" : ""
+                  }`}
               >
                 <div className="h-48 bg-[#d9d9d9] relative">
                   <Image
@@ -584,15 +575,14 @@ export default function CoursesPage() {
 
                     {/* Dynamic Button */}
                     <Button
-                      className={`w-full flex items-center justify-center gap-2 ${
-                        buttonConfig.variant === "premium"
-                          ? "bg-[#f59e0b] hover:bg-[#d97706]"
-                          : buttonConfig.variant === "success"
+                      className={`w-full flex items-center justify-center gap-2 ${buttonConfig.variant === "premium"
+                        ? "bg-[#f59e0b] hover:bg-[#d97706]"
+                        : buttonConfig.variant === "success"
                           ? "bg-green-500 hover:bg-green-600"
                           : buttonConfig.variant === "secondary"
-                          ? "bg-gray-400 hover:bg-gray-500"
-                          : "bg-[#83d98c] hover:bg-[#6bc275]"
-                      }`}
+                            ? "bg-gray-400 hover:bg-gray-500"
+                            : "bg-[#83d98c] hover:bg-[#6bc275]"
+                        }`}
                       onClick={buttonConfig.action}
                       disabled={buttonConfig.disabled}
                     >

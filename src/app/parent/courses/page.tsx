@@ -33,6 +33,13 @@ import {
   checkCourseAccess,
 } from "@/utils/premium";
 import type { Course } from "@/utils/premium";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface Lesson {
   _id: string;
@@ -50,7 +57,6 @@ export default function ParentCourses() {
   }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
@@ -98,7 +104,7 @@ export default function ParentCourses() {
   }, []);
 
   // Filter courses
-  const filteredCourses = courses.filter((course) => {
+  const filteredCoursesList = courses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -114,7 +120,7 @@ export default function ParentCourses() {
 
   // Get filtered courses by access
   const { accessibleCourses, restrictedCourses, freeCourses, premiumCourses } =
-    filterCoursesByAccess(filteredCourses);
+    filterCoursesByAccess(filteredCoursesList);
 
   // Get unique categories and age groups
   const categories = Array.from(
@@ -184,9 +190,8 @@ export default function ParentCourses() {
         className="group"
       >
         <Card
-          className={`border-none shadow-md hover:shadow-lg transition-all duration-300 h-full ${
-            isRestricted ? "opacity-75" : ""
-          }`}
+          className={`border-none shadow-md hover:shadow-lg transition-all duration-300 h-full ${isRestricted ? "opacity-75" : ""
+            }`}
         >
           <div className="relative h-48 overflow-hidden rounded-t-lg">
             <Image
@@ -329,9 +334,8 @@ export default function ParentCourses() {
     <div className="min-h-screen bg-[#f8f9fc]">
       {/* Header */}
       <header
-        className={`sticky top-0 z-10 transition-all duration-300 ${
-          isScrolled ? "bg-white shadow-md py-3" : "bg-transparent py-5"
-        }`}
+        className={`sticky top-0 z-10 transition-all duration-300 ${isScrolled ? "bg-white shadow-md py-3" : "bg-transparent py-5"
+          }`}
       >
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#1e1e1e] flex items-center">
@@ -421,15 +425,15 @@ export default function ParentCourses() {
             </div>
 
             <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
+              value={selectedCategory || "all"}
+              onValueChange={v => setSelectedCategory(v === "all" ? "" : v)}
             >
               <SelectTrigger className="border-[#e5e7eb] focus:border-[#8b5cf6] focus:ring-[#8b5cf6]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Chọn danh mục" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả danh mục</SelectItem>
+                <SelectItem value="all">Tất cả danh mục</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -439,15 +443,15 @@ export default function ParentCourses() {
             </Select>
 
             <Select
-              value={selectedAgeGroup}
-              onValueChange={setSelectedAgeGroup}
+              value={selectedAgeGroup || "all"}
+              onValueChange={v => setSelectedAgeGroup(v === "all" ? "" : v)}
             >
               <SelectTrigger className="border-[#e5e7eb] focus:border-[#8b5cf6] focus:ring-[#8b5cf6]">
                 <User className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Chọn độ tuổi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả độ tuổi</SelectItem>
+                <SelectItem value="all">Tất cả độ tuổi</SelectItem>
                 {ageGroups.map((ageGroup) => (
                   <SelectItem key={ageGroup} value={ageGroup}>
                     {ageGroup}
@@ -481,7 +485,7 @@ export default function ParentCourses() {
             <CardContent className="p-6 text-center">
               <BookOpen className="h-8 w-8 text-[#8b5cf6] mx-auto mb-2" />
               <div className="text-2xl font-bold text-[#1e1e1e]">
-                {filteredCourses.length}
+                {filteredCoursesList.length}
               </div>
               <div className="text-[#6b7280]">Tổng khóa học</div>
             </CardContent>
@@ -574,7 +578,7 @@ export default function ParentCourses() {
         )}
 
         {/* Empty State */}
-        {filteredCourses.length === 0 && (
+        {filteredCoursesList.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
