@@ -1015,12 +1015,6 @@ export async function checkPaymentStatus(orderCode: string) {
   }
 }
 
-<<<<<<< UI/add-filter
-// Lấy top courses (title, enrollmentCount)
-export async function getTopCourses() {
-  try {
-    const response = await fetch(`${API_URL}/api/course/top-courses`, {
-=======
 // Course Progress API functions - Updated to match actual backend structure
 export async function getCourseProgress(kidId: string, courseId: string) {
   try {
@@ -1096,7 +1090,6 @@ export async function getAllCourseProgressByKidId(kidId: string) {
   try {
     console.log(`🔍 Fetching all progress for kid: ${kidId}`);
     const response = await fetch(`${API_URL}/api/progress/kid/${kidId}`, {
->>>>>>> main
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -1104,9 +1097,6 @@ export async function getAllCourseProgressByKidId(kidId: string) {
       credentials: 'include',
     });
 
-<<<<<<< UI/add-filter
-    if (!response.ok) {
-=======
     console.log(`📡 Progress API response status: ${response.status}`);
 
     if (!response.ok) {
@@ -1233,7 +1223,6 @@ export async function enrollInCourse(kidId: string, courseId: string) {
         }
       }
       
->>>>>>> main
       const errorMessage = await handleErrorResponse(response);
       throw new Error(errorMessage);
     }
@@ -1241,16 +1230,6 @@ export async function enrollInCourse(kidId: string, courseId: string) {
     const data = await response.json();
     return data;
   } catch (error) {
-<<<<<<< UI/add-filter
-    console.error('Get top courses error:', error);
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và đảm bảo server đang chạy.');
-    }
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error('Đã xảy ra lỗi khi lấy top courses');
-=======
     console.error('Enroll in course error:', error);
 
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -1383,6 +1362,56 @@ export async function checkAndAwardCourseCompletion(kidId: string, courseId: str
   } catch (error) {
     console.error('Error checking course completion:', error);
     return null;
->>>>>>> main
+  }
+}
+
+// Check parent premium status using existing getParentById API
+export async function checkParentPremiumStatus(parentId: string) {
+  try {
+    const response = await getParentById(parentId);
+    if (response && response.success && response.data) {
+      const parentData = response.data;
+      
+      // Extract premium information from parent data
+      return {
+        success: true,
+        data: {
+          subscriptionType: parentData.subscriptionType || 'free',
+          subscriptionExpiry: parentData.subscriptionExpiry || null,
+          isPremium: parentData.isPremium || false,
+          isExpired: parentData.subscriptionExpiry ? 
+            new Date(parentData.subscriptionExpiry) <= new Date() : false
+        }
+      };
+    }
+    
+    return {
+      success: false,
+      message: 'Không thể lấy thông tin parent'
+    };
+  } catch (error) {
+    console.error('Check parent premium status error:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Lỗi khi kiểm tra premium status'
+    };
+  }
+}
+
+// Refresh parent data with latest premium status
+export async function refreshParentPremiumData(parentId: string) {
+  try {
+    // Get fresh parent data from API
+    const parentResponse = await getParentById(parentId);
+    if (parentResponse && parentResponse.success) {
+      // Update localStorage with fresh data
+      localStorage.setItem('parentData', JSON.stringify(parentResponse));
+      console.log('✅ Refreshed parent data in localStorage');
+      return parentResponse;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error refreshing parent premium data:', error);
+    throw error;
   }
 }

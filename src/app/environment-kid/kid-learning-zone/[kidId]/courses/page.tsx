@@ -13,25 +13,11 @@ import {
   getCourseProgress,
 } from "@/lib/api";
 import { useParams } from "next/navigation";
-
-interface Course {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  ageGroup: string;
-  thumbnailUrl: string;
-  pointsEarned: number;
-  isPremium: boolean;
-  instructor: {
-    _id: string;
-    fullName: string;
-    specializations: string[];
-  } | null;
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  hasParentPremiumAccess,
+  canAccessCourse,
+  type Course,
+} from "@/utils/premium";
 
 // Thêm function helper để rút gọn text
 const truncateText = (text: string, maxLines: number = 3): string => {
@@ -209,12 +195,9 @@ export default function CoursesPage() {
           }
         }
 
-        // Check user premium status from localStorage
-        const parentData = localStorage.getItem("parentData");
-        if (parentData) {
-          const parent = JSON.parse(parentData);
-          setIsUserPremium(parent.isPremium || false);
-        }
+        // Check user premium status using utility
+        const premiumAccess = hasParentPremiumAccess();
+        setIsUserPremium(premiumAccess);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(
@@ -349,11 +332,7 @@ export default function CoursesPage() {
     }
   };
 
-  // Check if user can access course
-  const canAccessCourse = (course: Course) => {
-    if (!course.isPremium) return true; // Free courses
-    return isUserPremium; // Premium courses need premium account
-  };
+  // Note: canAccessCourse is now imported from utils/premium
 
   // Get button text and action
   const getCourseButton = (course: Course) => {

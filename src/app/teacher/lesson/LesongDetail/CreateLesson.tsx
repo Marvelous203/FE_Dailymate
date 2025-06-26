@@ -1,25 +1,5 @@
 "use client";
 
-<<<<<<< UI/add-filter
-import { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { VideoUpload } from '@/components/ui/video-upload';
-import { ImageUpload } from '@/components/ui/image-upload';
-import { AudioUpload } from '@/components/ui/audio-upload';
-import { toast } from 'sonner';
-=======
 import { useState } from "react";
 import {
   Dialog,
@@ -37,7 +17,6 @@ import { Switch } from "@/components/ui/switch";
 import { VideoUpload } from "@/components/ui/video-upload";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { AudioUpload } from "@/components/ui/audio-upload";
->>>>>>> main
 
 export interface NewLessonData {
   title: string;
@@ -53,40 +32,6 @@ export interface NewLessonData {
 }
 
 interface CreateLessonModalProps {
-<<<<<<< UI/add-filter
-    isOpen: boolean;
-    onClose: () => void;
-    courseId: string; // To associate the lesson with a course
-    onCreate: (courseId: string, newLessonData: NewLessonData) => void;
-    teacherId: string;
-}
-
-export function CreateLessonModal({ isOpen, onClose, courseId, onCreate, teacherId }: CreateLessonModalProps) {
-    const [formData, setFormData] = useState<NewLessonData>({
-        title: '',
-        description: '',
-        content: [],
-        videoUrl: '',
-        audioUrl: '',
-        imageUrl: '',
-        duration: 0,
-        order: 0,
-        isPublished: false,
-        createdBy: teacherId,
-    });
-
-    useEffect(() => {
-        setFormData(prev => ({ ...prev, createdBy: teacherId }));
-    }, [teacherId, isOpen]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { id, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [id]: value,
-        }));
-    };
-=======
   isOpen: boolean;
   onClose: () => void;
   courseId: string; // To associate the lesson with a course
@@ -121,7 +66,6 @@ export function CreateLessonModal({
       [id]: value,
     }));
   };
->>>>>>> main
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -165,21 +109,12 @@ export function CreateLessonModal({
     }));
   };
 
-<<<<<<< UI/add-filter
-    const handleSubmit = () => {
-        // Kiểm tra tiêu đề
-        if (!formData.title.trim()) {
-            toast('Vui lòng nhập tiêu đề bài học');
-            return;
-        }
-=======
   const handleSubmit = () => {
     // Kiểm tra tiêu đề
     if (!formData.title.trim()) {
       alert("Vui lòng nhập tiêu đề bài học");
       return;
     }
->>>>>>> main
 
     // Tạo dữ liệu bài học mới, cho phép các trường tài nguyên để trống
     const newLessonData = {
@@ -197,23 +132,6 @@ export function CreateLessonModal({
     // Gọi hàm tạo bài học
     onCreate(courseId, newLessonData);
 
-<<<<<<< UI/add-filter
-        // Đóng modal và reset form
-        onClose();
-        setFormData({
-            title: '',
-            description: '',
-            content: [],
-            videoUrl: '',
-            audioUrl: '',
-            imageUrl: '',
-            duration: 0,
-            order: 0,
-            isPublished: false,
-            createdBy: teacherId,
-        });
-    };
-=======
     // Đóng modal và reset form
     onClose();
     setFormData({
@@ -229,7 +147,6 @@ export function CreateLessonModal({
       createdBy: "",
     });
   };
->>>>>>> main
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

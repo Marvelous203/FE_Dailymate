@@ -16,11 +16,19 @@ import {
   Heart,
   Download,
   Share2,
+  Lock,
+  Crown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { getCourseById, getLessonsByCourse } from "@/lib/api";
 import { use } from "react";
+import {
+  canAccessCourse,
+  checkCourseAccess,
+  getPremiumStatusInfo,
+  redirectToPremiumUpgrade,
+} from "@/utils/premium";
 
 interface Course {
   _id: string;
@@ -79,6 +87,10 @@ export default function ParentCourseDetail({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [premiumStatus, setPremiumStatus] = useState({
+    isPremium: false,
+    displayText: "Gói Miễn phí",
+  });
 
   // Tối ưu hóa: Gọi course trước, sau đó lessons với better error handling
   useEffect(() => {
@@ -160,6 +172,14 @@ export default function ParentCourseDetail({
         }
 
         setLessons(lessonsData);
+
+        // Get premium status
+        const status = getPremiumStatusInfo();
+        setPremiumStatus({
+          isPremium: status.isPremium,
+          displayText: status.displayText,
+        });
+
         console.log("🎉 [Parent] Course page data loading completed");
       } catch (err) {
         console.error(
@@ -681,54 +701,107 @@ export default function ParentCourseDetail({
           >
             <Card className="border-none rounded-xl shadow-md sticky top-4">
               <CardContent className="p-6">
-                <div className="text-3xl font-bold text-[#1e1e1e] mb-6">
-                  {course.isPremium ? "Premium" : "Miễn phí"}
-                </div>
+                {(() => {
+                  const courseAccessInfo = checkCourseAccess(course);
+                  const canAccess = canAccessCourse(course);
 
-                <div className="space-y-5 mb-8">
-                  <div className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Truy cập đầy đủ khóa học</p>
-                      <p className="text-sm text-[#6b7280]">
-                        {lessons.length} bài học
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Thời gian truy cập</p>
-                      <p className="text-sm text-[#6b7280]">Trọn đời</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Hoạt động tương tác</p>
-                      <p className="text-sm text-[#6b7280]">
-                        Trò chơi và bài kiểm tra
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Điểm thưởng</p>
-                      <p className="text-sm text-[#6b7280]">
-                        {course.pointsEarned} điểm
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      <div className="mb-6">
+                        {/* Premium Status Badge */}
+                        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8b5cf6]/10 to-[#7c3aed]/10 rounded-full px-4 py-2 mb-4">
+                          <User className="h-4 w-4 text-[#8b5cf6]" />
+                          <span className="text-sm font-medium text-[#8b5cf6]">
+                            {premiumStatus.displayText}
+                          </span>
+                        </div>
 
-                <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-4">
-                  {course.isPremium ? "Mua ngay" : "Bắt đầu học"}
-                </Button>
+                        {/* Course Price Display */}
+                        <div className="text-3xl font-bold text-[#1e1e1e] mb-2">
+                          {course.isPremium ? (
+                            canAccess ? (
+                              <span className="text-[#10b981] flex items-center gap-2">
+                                <CheckCircle className="h-6 w-6" />
+                                Có quyền truy cập
+                              </span>
+                            ) : (
+                              <span className="text-[#f59e0b] flex items-center gap-2">
+                                <Lock className="h-6 w-6" />
+                                Cần Premium
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-[#10b981]">Miễn phí</span>
+                          )}
+                        </div>
 
-                <p className="text-xs text-[#6b7280] text-center">
-                  Đảm bảo hoàn tiền trong 30 ngày
-                </p>
+                        {/* Course access message */}
+                        <p className="text-[#6b7280] text-sm mb-4">
+                          {courseAccessInfo.message}
+                        </p>
+                      </div>
+
+                      <div className="space-y-5 mb-8">
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
+                          <div>
+                            <p className="font-medium">
+                              Truy cập đầy đủ khóa học
+                            </p>
+                            <p className="text-sm text-[#6b7280]">
+                              {lessons.length} bài học
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Thời gian truy cập</p>
+                            <p className="text-sm text-[#6b7280]">Trọn đời</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Hoạt động tương tác</p>
+                            <p className="text-sm text-[#6b7280]">
+                              Trò chơi và bài kiểm tra
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-[#8b5cf6] mr-3 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Điểm thưởng</p>
+                            <p className="text-sm text-[#6b7280]">
+                              {course.pointsEarned} điểm
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {canAccess ? (
+                        <Button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full py-6 text-lg mb-4">
+                          {courseAccessInfo.actionText}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => redirectToPremiumUpgrade()}
+                          className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FF8C00] text-black rounded-full py-6 text-lg mb-4 flex items-center justify-center gap-2"
+                        >
+                          <Crown className="h-5 w-5" />
+                          {courseAccessInfo.actionText}
+                        </Button>
+                      )}
+
+                      <p className="text-xs text-[#6b7280] text-center">
+                        {canAccess
+                          ? "Đảm bảo hoàn tiền trong 30 ngày"
+                          : "Nâng cấp để truy cập toàn bộ khóa học Premium"}
+                      </p>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
           </motion.div>
