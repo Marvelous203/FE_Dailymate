@@ -11,14 +11,12 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.config({
-    extends: ['next'],
+    extends: ["next"],
     rules: {
-      '@typescript-eslint/no-unused-vars': 'warn', // Change to warning instead of error
-      '@typescript-eslint/no-explicit-any': 'warn', // Change to warning
-      'react-hooks/exhaustive-deps': 'warn', // Change to warning
-      'react/no-unescaped-entities': 'off', // Disable if needed
+      "react-hooks/exhaustive-deps": "warn", // Change to warning
+      "react/no-unescaped-entities": "off", // Disable if needed
     },
   }),
-]
+];
 
 export default eslintConfig;

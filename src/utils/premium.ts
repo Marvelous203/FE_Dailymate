@@ -78,7 +78,7 @@ export function hasParentPremiumAccess(): boolean {
     const now = new Date();
     const hasValidExpiry = expiryDate > now;
     
-    return (isPremiumType || isPremium) && hasValidExpiry;
+    return (isPremiumType || Boolean(isPremium)) && hasValidExpiry;
   }
 
   // If no expiry date, just check premium status

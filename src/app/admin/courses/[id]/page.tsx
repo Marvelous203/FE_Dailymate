@@ -1,59 +1,78 @@
-'use client'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { ChevronLeft, Save, Plus, Clock, BookOpen, User } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ChevronLeft, Save, Plus, Clock, BookOpen, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
-  const courseId = params.id
-  const [course, setCourse] = useState<any>(null)
-  const [loadingCourse, setLoadingCourse] = useState(true)
-  const [analyticsTab, setAnalyticsTab] = useState(false)
-  const [enrolledKids, setEnrolledKids] = useState<any[]>([])
-  const [loadingKids, setLoadingKids] = useState(false)
+export default function CourseDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const [courseId, setCourseId] = useState<string>("");
+  const [course, setCourse] = useState<any>(null);
+  const [loadingCourse, setLoadingCourse] = useState(true);
+  const [analyticsTab, setAnalyticsTab] = useState(false);
+  const [enrolledKids, setEnrolledKids] = useState<any[]>([]);
+  const [loadingKids, setLoadingKids] = useState(false);
+
+  // Handle async params in Next.js 15
+  useEffect(() => {
+    const loadParams = async () => {
+      const resolvedParams = await params;
+      setCourseId(resolvedParams.id);
+    };
+    loadParams();
+  }, [params]);
 
   useEffect(() => {
-    setLoadingCourse(true)
+    if (!courseId) return;
+    setLoadingCourse(true);
     fetch(`http://localhost:8386/api/course/${courseId}`)
-      .then(res => res.json())
-      .then(data => setCourse(data.data))
+      .then((res) => res.json())
+      .then((data) => setCourse(data.data))
       .catch(() => setCourse(null))
-      .finally(() => setLoadingCourse(false))
-  }, [courseId])
+      .finally(() => setLoadingCourse(false));
+  }, [courseId]);
 
   // Fetch enrolled kids when Analytics tab is selected
   useEffect(() => {
-    if (!analyticsTab) return
-    setLoadingKids(true)
-    fetch(`http://localhost:8386/api/course/${courseId}/enrolled-kids?page=1&limit=100`)
-      .then(res => res.json())
-      .then(data => {
-        setEnrolledKids(data.data?.progressRecords || [])
+    if (!analyticsTab || !courseId) return;
+    setLoadingKids(true);
+    fetch(
+      `http://localhost:8386/api/course/${courseId}/enrolled-kids?page=1&limit=100`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setEnrolledKids(data.data?.progressRecords || []);
       })
       .catch(() => setEnrolledKids([]))
-      .finally(() => setLoadingKids(false))
-  }, [analyticsTab, courseId])
+      .finally(() => setLoadingKids(false));
+  }, [analyticsTab, courseId]);
 
   // Tính toán dữ liệu cho biểu đồ: số học sinh theo level
   const levelStats = enrolledKids.reduce((acc: Record<number, number>, kid) => {
-    const level = kid.kidLevel || 0
-    acc[level] = (acc[level] || 0) + 1
-    return acc
-  }, {})
+    const level = kid.kidLevel || 0;
+    acc[level] = (acc[level] || 0) + 1;
+    return acc;
+  }, {});
 
-  if (loadingCourse) return <div>Loading...</div>
-  if (!course) return <div className="text-red-500">Course not found</div>
+  if (loadingCourse) return <div>Loading...</div>;
+  if (!course) return <div className="text-red-500">Course not found</div>;
 
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
-        <Link href="/admin/courses" className="text-[#6b7280] hover:text-[#ef4444] flex items-center">
+        <Link
+          href="/admin/courses"
+          className="text-[#6b7280] hover:text-[#ef4444] flex items-center"
+        >
           <ChevronLeft size={20} className="mr-1" />
           Back to Courses
         </Link>
@@ -69,7 +88,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
         </div>
       </div>
 
-      <Tabs defaultValue="details" className="mb-8" onValueChange={tab => setAnalyticsTab(tab === "analytics")}>
+      <Tabs
+        defaultValue="details"
+        className="mb-8"
+        onValueChange={(tab) => setAnalyticsTab(tab === "analytics")}
+      >
         <TabsList className="bg-white">
           <TabsTrigger value="details">Course Details</TabsTrigger>
           <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
@@ -88,7 +111,12 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title">Course Title</Label>
-                      <Input id="title" defaultValue={course.title} className="mt-1" readOnly />
+                      <Input
+                        id="title"
+                        defaultValue={course.title}
+                        className="mt-1"
+                        readOnly
+                      />
                     </div>
 
                     <div>
@@ -104,24 +132,44 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="category">Category</Label>
-                        <Input id="category" defaultValue={course.category} className="mt-1" readOnly />
+                        <Input
+                          id="category"
+                          defaultValue={course.category}
+                          className="mt-1"
+                          readOnly
+                        />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="pointsEarned">Points Earned</Label>
-                        <Input id="pointsEarned" defaultValue={course.pointsEarned?.toString() || "0"} className="mt-1" readOnly />
+                        <Input
+                          id="pointsEarned"
+                          defaultValue={course.pointsEarned?.toString() || "0"}
+                          className="mt-1"
+                          readOnly
+                        />
                       </div>
                       <div>
                         <Label htmlFor="isPremium">Premium</Label>
-                        <Input id="isPremium" defaultValue={course.isPremium ? "Yes" : "No"} className="mt-1" readOnly />
+                        <Input
+                          id="isPremium"
+                          defaultValue={course.isPremium ? "Yes" : "No"}
+                          className="mt-1"
+                          readOnly
+                        />
                       </div>
                     </div>
 
                     <div>
                       <Label htmlFor="ageGroup">Age Group</Label>
-                      <Input id="ageGroup" defaultValue={course.ageGroup} className="mt-1" readOnly />
+                      <Input
+                        id="ageGroup"
+                        defaultValue={course.ageGroup}
+                        className="mt-1"
+                        readOnly
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -151,7 +199,10 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                   <div className="mb-4">
                     <div className="h-48 bg-[#d9d9d9] rounded-md overflow-hidden">
                       <Image
-                        src={course.thumbnailUrl || "/placeholder.svg?height=192&width=384"}
+                        src={
+                          course.thumbnailUrl ||
+                          "/placeholder.svg?height=192&width=384"
+                        }
                         alt="Course thumbnail"
                         width={384}
                         height={192}
@@ -173,11 +224,23 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="status">Status</Label>
-                      <Input id="status" defaultValue={course.isPublished ? "Published" : "Draft"} className="mt-1" readOnly />
+                      <Input
+                        id="status"
+                        defaultValue={
+                          course.isPublished ? "Published" : "Draft"
+                        }
+                        className="mt-1"
+                        readOnly
+                      />
                     </div>
                     <div>
                       <Label htmlFor="instructor">Instructor</Label>
-                      <Input id="instructor" defaultValue={course.instructor} className="mt-1" readOnly />
+                      <Input
+                        id="instructor"
+                        defaultValue={course.instructor}
+                        className="mt-1"
+                        readOnly
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -216,30 +279,50 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">Enable Discussion</p>
-                        <p className="text-sm text-gray-500">Allow students to comment and discuss</p>
+                        <p className="text-sm text-gray-500">
+                          Allow students to comment and discuss
+                        </p>
                       </div>
                       <div className="flex items-center">
-                        <input type="checkbox" id="discussion" className="w-4 h-4" defaultChecked />
+                        <input
+                          type="checkbox"
+                          id="discussion"
+                          className="w-4 h-4"
+                          defaultChecked
+                        />
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">Certificate on Completion</p>
-                        <p className="text-sm text-gray-500">Issue certificate when course is completed</p>
+                        <p className="text-sm text-gray-500">
+                          Issue certificate when course is completed
+                        </p>
                       </div>
                       <div className="flex items-center">
-                        <input type="checkbox" id="certificate" className="w-4 h-4" defaultChecked />
+                        <input
+                          type="checkbox"
+                          id="certificate"
+                          className="w-4 h-4"
+                          defaultChecked
+                        />
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">Featured Course</p>
-                        <p className="text-sm text-gray-500">Show this course on the homepage</p>
+                        <p className="text-sm text-gray-500">
+                          Show this course on the homepage
+                        </p>
                       </div>
                       <div className="flex items-center">
-                        <input type="checkbox" id="featured" className="w-4 h-4" />
+                        <input
+                          type="checkbox"
+                          id="featured"
+                          className="w-4 h-4"
+                        />
                       </div>
                     </div>
                   </div>
@@ -303,13 +386,24 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                     </thead>
                     <tbody>
                       {enrolledKids.length === 0 ? (
-                        <tr><td colSpan={6} className="text-center py-4">No kids enrolled</td></tr>
+                        <tr>
+                          <td colSpan={6} className="text-center py-4">
+                            No kids enrolled
+                          </td>
+                        </tr>
                       ) : (
                         enrolledKids.map((kid, idx) => (
-                          <tr key={kid.progressId || idx} className="border-b hover:bg-gray-50">
+                          <tr
+                            key={kid.progressId || idx}
+                            className="border-b hover:bg-gray-50"
+                          >
                             <td className="p-3">{kid.kidFullName}</td>
                             <td className="p-3">{kid.kidEmail}</td>
-                            <td className="p-3">{kid.kidDateOfBirth ? getAge(kid.kidDateOfBirth) : "-"}</td>
+                            <td className="p-3">
+                              {kid.kidDateOfBirth
+                                ? getAge(kid.kidDateOfBirth)
+                                : "-"}
+                            </td>
                             <td className="p-3">{kid.kidPoints}</td>
                             <td className="p-3">{kid.kidLevel}</td>
                           </tr>
@@ -332,10 +426,15 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
-function StatCard({ title, value, change, icon, bgColor,
+function StatCard({
+  title,
+  value,
+  change,
+  icon,
+  bgColor,
 }: {
   title: string;
   value: string;
@@ -352,11 +451,15 @@ function StatCard({ title, value, change, icon, bgColor,
             <p className="text-2xl font-bold mt-1">{value}</p>
             <p className="text-xs text-[#10b981] mt-1">{change}</p>
           </div>
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${bgColor}`}>{icon}</div>
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${bgColor}`}
+          >
+            {icon}
+          </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function Star(props: React.SVGProps<SVGSVGElement>) {
@@ -375,7 +478,7 @@ function Star(props: React.SVGProps<SVGSVGElement>) {
     >
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
-  )
+  );
 }
 
 // Biểu đồ đơn giản bằng SVG (nếu chưa có thư viện chart)
@@ -384,7 +487,7 @@ function BarChart({ data }: { data: Record<number, number> }) {
   const max = Math.max(...Object.values(data), 1);
   return (
     <div className="flex items-end gap-2 h-40 mt-4">
-      {levels.map(level => (
+      {levels.map((level) => (
         <div key={level} className="flex flex-col items-center">
           <div
             className="bg-[#ef4444] w-8"
@@ -408,4 +511,3 @@ function getAge(dateString: string) {
   }
   return age;
 }
-
