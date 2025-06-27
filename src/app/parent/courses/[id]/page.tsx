@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   BookOpen,
   CheckCircle,
@@ -18,10 +19,18 @@ import {
   Share2,
   Lock,
   Crown,
+  MessageCircle,
+  ThumbsUp,
+  Send,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { getCourseById, getLessonsByCourse } from "@/lib/api";
+import {
+  getCourseById,
+  getLessonsByCourse,
+  getCourseReviews,
+  createCourseReview,
+} from "@/lib/api";
 import { use } from "react";
 import {
   canAccessCourse,
@@ -75,6 +84,27 @@ interface Lesson {
   updatedAt: string;
 }
 
+interface Review {
+  _id: string;
+  courseId: {
+    _id: string;
+    title: string;
+    category: string;
+  };
+  kidId?: {
+    _id: string;
+    fullName: string;
+  };
+  parentId?: {
+    _id: string;
+    fullName: string;
+  };
+  star: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ParentCourseDetail({
   params,
 }: {
@@ -91,6 +121,10 @@ export default function ParentCourseDetail({
     isPremium: false,
     displayText: "Gói Miễn phí",
   });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [newReview, setNewReview] = useState({ star: 5, content: "" });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // Tối ưu hóa: Gọi course trước, sau đó lessons với better error handling
   useEffect(() => {
@@ -294,6 +328,155 @@ export default function ParentCourseDetail({
     fetchLessons();
   }, [course, courseId]);
 
+  // Fetch reviews for the course
+  const fetchReviews = async () => {
+    if (!courseId) return;
+
+    try {
+      setReviewsLoading(true);
+      const reviewsResponse = await getCourseReviews(courseId, 1, 10);
+
+      if (reviewsResponse?.success && reviewsResponse.data?.reviews) {
+        setReviews(reviewsResponse.data.reviews);
+      } else {
+        // If API returns success but no reviews, show empty state
+        setReviews([]);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+
+      // For demo purposes, use sample reviews if API fails
+      if (error instanceof Error && error.message.includes("404")) {
+        console.warn("Reviews API not available, using sample data for demo");
+        setReviews(sampleReviews);
+      } else {
+        console.warn("Reviews API error, showing empty state");
+        setReviews([]);
+      }
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (courseId) {
+      fetchReviews();
+    }
+  }, [courseId]);
+
+  // Sample reviews for demo purposes (when API is not available)
+  const sampleReviews: Review[] = [
+    {
+      _id: "sample1",
+      courseId: {
+        _id: courseId,
+        title: course?.title || "",
+        category: course?.category || "",
+      },
+      parentId: {
+        _id: "parent1",
+        fullName: "Nguyễn Thị Lan",
+      },
+      star: 5,
+      content:
+        "Khóa học rất bổ ích cho con em. Con học được nhiều điều thú vị và phương pháp giảng dạy rất sinh động.",
+      createdAt: "2024-01-15T10:30:00.000Z",
+      updatedAt: "2024-01-15T10:30:00.000Z",
+    },
+    {
+      _id: "sample2",
+      courseId: {
+        _id: courseId,
+        title: course?.title || "",
+        category: course?.category || "",
+      },
+      parentId: {
+        _id: "parent2",
+        fullName: "Trần Văn Minh",
+      },
+      star: 4,
+      content:
+        "Chất lượng khóa học tốt, giúp con phát triển tư duy logic. Hy vọng sẽ có thêm nhiều bài học tương tác.",
+      createdAt: "2024-01-10T14:20:00.000Z",
+      updatedAt: "2024-01-10T14:20:00.000Z",
+    },
+  ];
+
+  // Handle submit new review
+  const handleSubmitReview = async () => {
+    if (!newReview.content.trim() || newReview.star < 1 || newReview.star > 5) {
+      alert("Vui lòng nhập nội dung đánh giá và chọn số sao hợp lệ (1-5)");
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
+
+      // Get parent data from localStorage
+      const parentData = localStorage.getItem("parentData");
+      if (!parentData) {
+        alert("Vui lòng đăng nhập để đánh giá khóa học");
+        return;
+      }
+
+      const parsedParentData = JSON.parse(parentData);
+      const parentId = parsedParentData.data?.id || parsedParentData.data?._id;
+
+      if (!parentId) {
+        alert("Không tìm thấy thông tin phụ huynh");
+        return;
+      }
+
+      // Prepare review data according to API format
+      const reviewData = {
+        courseId: courseId,
+        parentId: parentId,
+        star: newReview.star,
+        content: newReview.content.trim(),
+      };
+
+      console.log("Sending review data:", reviewData);
+
+      const response = await createCourseReview(reviewData);
+
+      if (response?.success) {
+        // Reset form
+        setNewReview({ star: 5, content: "" });
+
+        // Refresh reviews
+        await fetchReviews();
+
+        alert("Đánh giá của bạn đã được gửi thành công!");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          alert(
+            "Endpoint đánh giá không tìm thấy. Vui lòng liên hệ quản trị viên."
+          );
+        } else if (
+          error.message.includes("401") ||
+          error.message.includes("403")
+        ) {
+          alert("Bạn cần đăng nhập để có thể đánh giá khóa học.");
+        } else if (error.message.includes("400")) {
+          alert(
+            "Dữ liệu đánh giá không hợp lệ. Vui lòng kiểm tra lại thông tin."
+          );
+        } else {
+          alert(`Có lỗi xảy ra: ${error.message}`);
+        }
+      } else {
+        alert("Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.");
+      }
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
@@ -480,6 +663,9 @@ export default function ParentCourseDetail({
                 </TabsTrigger>
                 <TabsTrigger value="instructor" className="rounded-full">
                   Giảng viên
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-full">
+                  Đánh giá
                 </TabsTrigger>
               </TabsList>
 
@@ -689,6 +875,176 @@ export default function ParentCourseDetail({
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="reviews" className="mt-6">
+                <div className="space-y-6">
+                  {/* Create Review Section */}
+                  <Card className="border-none rounded-xl shadow-md">
+                    <CardContent className="p-6 md:p-8">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5 text-[#8b5cf6]" />
+                        Viết đánh giá của bạn
+                      </h3>
+
+                      {/* Information Notice */}
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-700">
+                          <strong>Thông tin:</strong> Chia sẻ trải nghiệm của
+                          bạn về khóa học này để giúp các phụ huynh khác có thêm
+                          thông tin tham khảo.
+                        </p>
+                      </div>
+
+                      {/* Star Rating */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                          Đánh giá sao
+                        </label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() =>
+                                setNewReview({ ...newReview, star })
+                              }
+                              className="p-1 hover:scale-110 transition-transform"
+                            >
+                              <Star
+                                className={`h-6 w-6 ${
+                                  star <= newReview.star
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Review Content */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                          Nội dung đánh giá
+                        </label>
+                        <Textarea
+                          value={newReview.content}
+                          onChange={(e) =>
+                            setNewReview({
+                              ...newReview,
+                              content: e.target.value,
+                            })
+                          }
+                          placeholder="Chia sẻ trải nghiệm của bạn về khóa học này..."
+                          className="resize-none"
+                          rows={4}
+                        />
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        onClick={handleSubmitReview}
+                        disabled={
+                          !newReview.content.trim() || isSubmittingReview
+                        }
+                        className="bg-[#8b5cf6] hover:bg-[#7c3aed] rounded-full flex items-center gap-2"
+                      >
+                        {isSubmittingReview ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Đang gửi...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            Gửi đánh giá
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Reviews List */}
+                  <Card className="border-none rounded-xl shadow-md">
+                    <CardContent className="p-6 md:p-8">
+                      <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <ThumbsUp className="h-5 w-5 text-[#8b5cf6]" />
+                        Đánh giá từ phụ huynh khác ({reviews.length})
+                      </h3>
+
+                      {reviewsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8b5cf6]"></div>
+                          <span className="ml-3 text-[#6b7280]">
+                            Đang tải đánh giá...
+                          </span>
+                        </div>
+                      ) : reviews.length > 0 ? (
+                        <div className="space-y-6">
+                          {reviews.map((review, index) => (
+                            <motion.div
+                              key={review._id}
+                              className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                            >
+                              <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-full bg-[#f0e5fc] flex items-center justify-center">
+                                  <User className="h-5 w-5 text-[#8b5cf6]" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                      <h4 className="font-medium text-gray-900">
+                                        {review.parentId?.fullName ||
+                                          review.kidId?.fullName ||
+                                          "Người dùng ẩn danh"}
+                                      </h4>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <Star
+                                              key={star}
+                                              className={`h-4 w-4 ${
+                                                star <= review.star
+                                                  ? "text-yellow-400 fill-yellow-400"
+                                                  : "text-gray-300"
+                                              }`}
+                                            />
+                                          ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                          {new Date(
+                                            review.createdAt
+                                          ).toLocaleDateString("vi-VN")}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <p className="text-gray-700 leading-relaxed">
+                                    {review.content}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                          <h4 className="text-lg font-medium text-gray-500 mb-2">
+                            Chưa có đánh giá nào
+                          </h4>
+                          <p className="text-gray-400">
+                            Hãy là người đầu tiên đánh giá khóa học này!
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </motion.div>

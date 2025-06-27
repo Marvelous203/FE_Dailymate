@@ -141,7 +141,7 @@ export default function KidProfilePage() {
         // Count completed courses
         progressList.forEach((progress: any) => {
           const courseId =
-            typeof progress.courseId === "object"
+            typeof progress.courseId === "object" && progress.courseId !== null
               ? progress.courseId._id ||
                 progress.courseId.id ||
                 progress.courseId

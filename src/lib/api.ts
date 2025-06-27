@@ -1445,3 +1445,122 @@ export async function getTopCourses() {
     throw new Error('Đã xảy ra lỗi khi lấy top courses');
   }
 }
+
+// API functions for reviews
+export async function getCourseReviews(courseId: string, page: number = 1, limit: number = 5, sortBy: string = 'star', sortOrder: string = 'asc') {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/reviews/course/${courseId}?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching course reviews:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi tải đánh giá khóa học');
+  }
+}
+
+export async function createCourseReview(reviewData: {
+  courseId: string;
+  kidId?: string;
+  parentId?: string;
+  star: number;
+  content: string;
+}) {
+  try {
+    // Ensure we only send the required fields in the correct format
+    const payload = {
+      courseId: reviewData.courseId,
+      star: reviewData.star,
+      content: reviewData.content,
+      ...(reviewData.parentId && { parentId: reviewData.parentId }),
+      ...(reviewData.kidId && { kidId: reviewData.kidId }),
+    };
+
+    console.log("API payload for review:", payload);
+
+    const response = await fetch(`${API_URL}/api/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error creating course review:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi tạo đánh giá khóa học');
+  }
+}
+
+export async function updateCourseReview(reviewId: string, reviewData: {
+  star?: number;
+  content?: string;
+}) {
+  try {
+    const response = await fetch(`${API_URL}/api/reviews/${reviewId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorMessage = await handleErrorResponse(response);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating course review:', error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    }
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Đã xảy ra lỗi khi cập nhật đánh giá khóa học');
+  }
+}
