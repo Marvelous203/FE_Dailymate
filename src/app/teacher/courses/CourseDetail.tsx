@@ -78,6 +78,9 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
     const [isTestListModalOpen, setIsTestListModalOpen] = useState(false);
     const [selectedLessonForTestList, setSelectedLessonForTestList] = useState<Lesson | null>(null);
 
+    const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    const teacherId = userData?.roleData?._id || "";
+
     const fetchLessons = async () => {
         if (!course?._id) return;
         try {
@@ -315,6 +318,7 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
                         onClose={closeCreateLessonModal}
                         courseId={course._id}
                         onCreate={handleCreateLesson}
+                        teacherId={teacherId}
                     />
                     <UpdateLessonModal
                         isOpen={isUpdateLessonModalOpen}
