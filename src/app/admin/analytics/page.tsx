@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { getTopCourses } from '@/lib/api';
+import { getTopCourses, getAllCourses } from '@/lib/api';
+import { getAllTransactionsCount, getAllTransactions, getReviewsByCourseId } from "@/utils/apis";
 
 export default function AnalyticsPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
@@ -27,12 +28,16 @@ export default function AnalyticsPage() {
   const [loadingStats, setLoadingStats] = useState(false);
   const [topCourses, setTopCourses] = useState<{ title: string; enrollmentCount: number }[]>([]);
   const [loadingTopCourses, setLoadingTopCourses] = useState(false);
+  const [transactionCount, setTransactionCount] = useState(0);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [totalAllReviews, setTotalAllReviews] = useState<number>(0);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8386';
 
   useEffect(() => {
     setLoading(true);
     Promise.all(
       Array.from({ length: 12 }, (_, i) =>
-        fetch("https://dailymate-be.onrender.com/api/transaction", {
+        fetch(`${API_URL}/api/transaction`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ month: i + 1, year: 2025 }),
@@ -79,7 +84,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("https://dailymate-be.onrender.com/api/transaction", {
+    fetch(`${API_URL}/api/transaction`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ month: selectedMonth, year: selectedYear }),
@@ -104,6 +109,54 @@ export default function AnalyticsPage() {
       })
       .catch(() => setTopCourses([]))
       .finally(() => setLoadingTopCourses(false));
+  }, []);
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const count = await getAllTransactionsCount();
+        setTransactionCount(count);
+      } catch (error) {
+        setTransactionCount(0);
+      }
+    }
+    fetchCount();
+  }, []);
+
+  useEffect(() => {
+    async function fetchTransactions() {
+      try {
+        const res = await getAllTransactions(1, 100);
+        const allTransactions = res?.data?.transactions || [];
+        const filtered = allTransactions.filter((t: any) => {
+          const date = new Date(t.createdAt);
+          return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear;
+        });
+        setTransactions(filtered);
+      } catch {
+        setTransactions([]);
+      }
+    }
+    fetchTransactions();
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    async function fetchTotalAllReviews() {
+      try {
+        const coursesRes = await getAllCourses();
+        const courses = coursesRes.data?.courses || [];
+        let total = 0;
+        for (const course of courses) {
+          const reviewRes = await getReviewsByCourseId(course._id, 1, 1, 'star', 'asc');
+          // Ưu tiên lấy total, nếu không có thì lấy độ dài mảng reviews
+          total += reviewRes.data?.total || (reviewRes.data?.reviews?.length ?? 0);
+        }
+        setTotalAllReviews(total);
+      } catch {
+        setTotalAllReviews(0);
+      }
+    }
+    fetchTotalAllReviews();
   }, []);
 
   return (
@@ -135,15 +188,15 @@ export default function AnalyticsPage() {
           bgColor="bg-blue-50"
         />
         <StatCard
-          title="Course Enrollments"
-          value="1,432"
+          title="Transaction history"
+          value={`Total transactions: ${transactions.length}`}
           change="+7% from last month"
           icon={<BookOpen className="h-5 w-5 text-[#10b981]" />}
           bgColor="bg-green-50"
         />
         <StatCard
-          title="Completion Rate"
-          value="68%"
+          title="Review"
+          value={typeof totalAllReviews === 'number' ? totalAllReviews.toString() : "0"}
           change="+5% from last month"
           icon={<TrendingUp className="h-5 w-5 text-[#8b5cf6]" />}
           bgColor="bg-purple-50"
@@ -154,8 +207,7 @@ export default function AnalyticsPage() {
         <TabsList className="bg-white">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
+          <TabsTrigger value="reviews">Review</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -371,19 +423,55 @@ export default function AnalyticsPage() {
                   <div className="mt-2">
                     Số giao dịch thành công: {revenueData?.successfulTransactions ?? 0}
                   </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    Tổng số giao dịch: {transactions.length}
+                  </div>
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-2">Danh sách giao dịch gần đây</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border text-sm">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="px-2 py-1 border">Ngày</th>
+                            <th className="px-2 py-1 border">Tên</th>
+                            <th className="px-2 py-1 border">Email</th>
+                            <th className="px-2 py-1 border">Mô tả</th>
+                            <th className="px-2 py-1 border">Mã đơn</th>
+                            <th className="px-2 py-1 border">Giá</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {transactions.length === 0 ? (
+                            <tr><td colSpan={6} className="text-center py-2">Không có giao dịch</td></tr>
+                          ) : (
+                            transactions.map((t, idx) => (
+                              <tr key={t._id || idx}>
+                                <td className="px-2 py-1 border">{new Date(t.createdAt).toLocaleString('vi-VN')}</td>
+                                <td className="px-2 py-1 border">{t.parentFullName || '-'}</td>
+                                <td className="px-2 py-1 border">{t.userEmail || '-'}</td>
+                                <td className="px-2 py-1 border">{t.description || '-'}</td>
+                                <td className="px-2 py-1 border">{t.orderCode || '-'}</td>
+                                <td className="px-2 py-1 border">{t.amount?.toLocaleString('vi-VN')}₫</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="users" className="mt-6">
+        <TabsContent value="reviews" className="mt-6">
           <Card className="border-none shadow-sm">
             <CardHeader>
-              <CardTitle>User Analytics</CardTitle>
+              <CardTitle>Review từng khóa học</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>User analytics content would go here</p>
+              <ReviewTab />
             </CardContent>
           </Card>
         </TabsContent>
@@ -453,3 +541,84 @@ const events = [
     attendees: 85,
   },
 ];
+
+function ReviewTab() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [totalReviews, setTotalReviews] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getAllCourses()
+      .then((data) => setCourses(data.data?.courses || []))
+      .catch(() => setCourses([]));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourse) return;
+    setLoading(true);
+    getReviewsByCourseId(selectedCourse, 1, 10, 'star', 'asc')
+      .then((data) => {
+        setReviews(data.data?.reviews || []);
+        setTotalReviews(data.data?.total || (data.data?.reviews?.length ?? 0));
+      })
+      .catch(() => {
+        setReviews([]);
+        setTotalReviews(0);
+      })
+      .finally(() => setLoading(false));
+  }, [selectedCourse]);
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center gap-4">
+        <select
+          value={selectedCourse}
+          onChange={e => setSelectedCourse(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
+          <option value="">Chọn khóa học</option>
+          {courses.map(course => (
+            <option key={course._id} value={course._id}>
+              {course.title}
+            </option>
+          ))}
+        </select>
+        {selectedCourse && (
+          <span className="text-sm text-gray-600">
+            Tổng lượt review: <b>{totalReviews}</b>
+          </span>
+        )}
+      </div>
+      {loading ? (
+        <p>Đang tải review...</p>
+      ) : (
+        <table className="min-w-full border text-sm">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-2 py-1 border">Tên học sinh</th>
+              <th className="px-2 py-1 border">Số sao</th>
+              <th className="px-2 py-1 border">Nội dung</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reviews.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center py-2">Không có review</td>
+              </tr>
+            ) : (
+              reviews.map((r: any, idx: number) => (
+                <tr key={r._id || idx}>
+                  <td className="px-2 py-1 border">{r.kidId?.fullName || "-"}</td>
+                  <td className="px-2 py-1 border">{r.star}</td>
+                  <td className="px-2 py-1 border">{r.content}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}

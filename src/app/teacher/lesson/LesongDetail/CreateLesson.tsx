@@ -36,6 +36,7 @@ interface CreateLessonModalProps {
   onClose: () => void;
   courseId: string; // To associate the lesson with a course
   onCreate: (courseId: string, newLessonData: NewLessonData) => void;
+  teacherId: string;
 }
 
 export function CreateLessonModal({
@@ -43,6 +44,7 @@ export function CreateLessonModal({
   onClose,
   courseId,
   onCreate,
+  teacherId,
 }: CreateLessonModalProps) {
   const [formData, setFormData] = useState<NewLessonData>({
     title: "",
@@ -54,7 +56,7 @@ export function CreateLessonModal({
     duration: 0,
     order: 0,
     isPublished: false,
-    createdBy: "685a1fbd05372834986df9e1",
+    createdBy: teacherId,
   });
 
   const handleChange = (
@@ -144,7 +146,7 @@ export function CreateLessonModal({
       duration: 0,
       order: 0,
       isPublished: false,
-      createdBy: "",
+      createdBy: teacherId,
     });
   };
 

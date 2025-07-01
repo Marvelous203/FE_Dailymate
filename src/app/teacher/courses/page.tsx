@@ -129,15 +129,19 @@ export default function TeacherCoursesPage() {
 
   const handleEditCourse = async (courseId: string, updatedData: CourseUpdatePayload) => {
     try {
+      console.log("Dữ liệu gửi lên:", courseId, updatedData);
       const data = await updateCourse(courseId, updatedData);
+      console.log("Kết quả trả về:", data);
 
       if (data.success) {
         toast.success("Khóa học đã được cập nhật thành công!");
         fetchCourses(currentPage); // Refetch courses to update the list
+        closeEditModal(); // Đóng modal sau khi cập nhật thành công
       } else {
         toast.error("Cập nhật khóa học thất bại!");
       }
     } catch (error: unknown) {
+      toast.error("Có lỗi xảy ra khi cập nhật khóa học!");
       console.log(error)
     }
   };

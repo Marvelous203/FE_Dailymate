@@ -28,8 +28,8 @@ import { useState, useEffect } from "react";
 import {
   getCourseById,
   getLessonsByCourse,
-  getCourseReviews,
   createCourseReview,
+  
 } from "@/lib/api";
 import { use } from "react";
 import {
@@ -38,6 +38,9 @@ import {
   getPremiumStatusInfo,
   redirectToPremiumUpgrade,
 } from "@/utils/premium";
+import { toast } from "sonner";
+import { getReviewsByCourseId,updateCourseReview,
+  deleteCourseReview, } from "@/utils/apis";
 
 interface Course {
   _id: string;
@@ -125,6 +128,10 @@ export default function ParentCourseDetail({
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [newReview, setNewReview] = useState({ star: 5, content: "" });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editReview, setEditReview] = useState<{ star: number; content: string }>({ star: 5, content: "" });
+  const parentData = typeof window !== 'undefined' ? localStorage.getItem("parentData") : null;
+  const parentId = parentData ? (JSON.parse(parentData).data?.id || JSON.parse(parentData).data?._id) : null;
 
   // Tối ưu hóa: Gọi course trước, sau đó lessons với better error handling
   useEffect(() => {
@@ -334,25 +341,15 @@ export default function ParentCourseDetail({
 
     try {
       setReviewsLoading(true);
-      const reviewsResponse = await getCourseReviews(courseId, 1, 10);
-
+      const reviewsResponse = await getReviewsByCourseId(courseId, 1, 10, 'star', 'asc');
       if (reviewsResponse?.success && reviewsResponse.data?.reviews) {
         setReviews(reviewsResponse.data.reviews);
       } else {
-        // If API returns success but no reviews, show empty state
         setReviews([]);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
-
-      // For demo purposes, use sample reviews if API fails
-      if (error instanceof Error && error.message.includes("404")) {
-        console.warn("Reviews API not available, using sample data for demo");
-        setReviews(sampleReviews);
-      } else {
-        console.warn("Reviews API error, showing empty state");
-        setReviews([]);
-      }
+      setReviews([]);
     } finally {
       setReviewsLoading(false);
     }
@@ -446,7 +443,7 @@ export default function ParentCourseDetail({
         // Refresh reviews
         await fetchReviews();
 
-        alert("Đánh giá của bạn đã được gửi thành công!");
+        toast("Đánh giá của bạn đã được gửi thành công!");
       }
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -474,6 +471,34 @@ export default function ParentCourseDetail({
       }
     } finally {
       setIsSubmittingReview(false);
+    }
+  };
+
+  // Hàm cập nhật review
+  const handleUpdateReview = async (reviewId: string) => {
+    if (!editReview.content.trim() || editReview.star < 1 || editReview.star > 5) {
+      alert("Vui lòng nhập nội dung đánh giá và chọn số sao hợp lệ (1-5)");
+      return;
+    }
+    try {
+      await updateCourseReview(reviewId, { star: editReview.star, content: editReview.content });
+      setEditingReviewId(null);
+      await fetchReviews();
+      toast("Cập nhật đánh giá thành công!");
+    } catch (error) {
+      alert("Có lỗi khi cập nhật đánh giá");
+    }
+  };
+
+  // Hàm xóa review
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) return;
+    try {
+      await deleteCourseReview(reviewId);
+      await fetchReviews();
+      toast("Đã xóa đánh giá thành công!");
+    } catch (error) {
+      alert("Có lỗi khi xóa đánh giá");
     }
   };
 
@@ -912,11 +937,10 @@ export default function ParentCourseDetail({
                               className="p-1 hover:scale-110 transition-transform"
                             >
                               <Star
-                                className={`h-6 w-6 ${
-                                  star <= newReview.star
-                                    ? "text-yellow-400 fill-yellow-400"
-                                    : "text-gray-300"
-                                }`}
+                                className={`h-6 w-6 ${star <= newReview.star
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
                               />
                             </button>
                           ))}
@@ -1007,11 +1031,10 @@ export default function ParentCourseDetail({
                                           {[1, 2, 3, 4, 5].map((star) => (
                                             <Star
                                               key={star}
-                                              className={`h-4 w-4 ${
-                                                star <= review.star
-                                                  ? "text-yellow-400 fill-yellow-400"
-                                                  : "text-gray-300"
-                                              }`}
+                                              className={`h-4 w-4 ${star <= review.star
+                                                ? "text-yellow-400 fill-yellow-400"
+                                                : "text-gray-300"
+                                                }`}
                                             />
                                           ))}
                                         </div>
@@ -1022,10 +1045,41 @@ export default function ParentCourseDetail({
                                         </span>
                                       </div>
                                     </div>
+                                    {/* Nút Sửa/Xóa nếu đúng parentId */}
+                                    {parentId && review.parentId?._id === parentId && (
+                                      <div className="flex gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => {
+                                          setEditingReviewId(review._id);
+                                          setEditReview({ star: review.star, content: review.content });
+                                        }}>Sửa</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleDeleteReview(review._id)}>Xóa</Button>
+                                      </div>
+                                    )}
                                   </div>
-                                  <p className="text-gray-700 leading-relaxed">
-                                    {review.content}
-                                  </p>
+                                  {/* Nếu đang chỉnh sửa review này */}
+                                  {editingReviewId === review._id ? (
+                                    <div className="mb-2">
+                                      <div className="flex gap-1 mb-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <button key={star} type="button" onClick={() => setEditReview({ ...editReview, star })}>
+                                            <Star className={`h-5 w-5 ${star <= editReview.star ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <Textarea
+                                        value={editReview.content}
+                                        onChange={e => setEditReview({ ...editReview, content: e.target.value })}
+                                        rows={3}
+                                        className="mb-2"
+                                      />
+                                      <div className="flex gap-2">
+                                        <Button size="sm" onClick={() => handleUpdateReview(review._id)}>Lưu</Button>
+                                        <Button size="sm" variant="outline" onClick={() => setEditingReviewId(null)}>Hủy</Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-gray-700 leading-relaxed">{review.content}</p>
+                                  )}
                                 </div>
                               </div>
                             </motion.div>

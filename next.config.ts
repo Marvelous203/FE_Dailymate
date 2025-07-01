@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
       'template.canva.com',
       'youtube.com',
       'res.cloudinary.com',
-      'tinhdoanquangninh.vn'
+      'tinhdoanquangninh.vn',
+      'media.canva.com'
     ],
     remotePatterns: [
       {

@@ -449,7 +449,7 @@ export default function CoursesPage() {
       </div>
 
       {/* Debug Info */}
-      {process.env.NODE_ENV === "development" && (
+      {/* {process.env.NODE_ENV === "development" && (
         <div className="bg-blue-50 p-4 rounded-lg mb-6">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-semibold">Debug Info:</h3>
@@ -490,7 +490,7 @@ export default function CoursesPage() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-start">
         {courses.length > 0 ? (
