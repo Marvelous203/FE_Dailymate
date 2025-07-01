@@ -16,6 +16,10 @@ import {
   Send,
   Heart,
   User,
+  Edit,
+  Trash2,
+  Save,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +32,11 @@ import {
   getCourseReviews,
   createCourseReview,
 } from "@/lib/api";
+import {
+  updateCourseReview,
+  deleteCourseReview,
+} from "@/utils/apis";
+import { toast } from "sonner";
 
 interface Course {
   _id: string;
@@ -93,6 +102,10 @@ export default function CoursePage({
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [newReview, setNewReview] = useState({ star: 5, content: "" });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState<string | null>(null);
+  const [editReviewData, setEditReviewData] = useState({ star: 5, content: "" });
+  const [isUpdatingReview, setIsUpdatingReview] = useState(false);
+  const [isDeletingReview, setIsDeletingReview] = useState<string | null>(null);
 
   // Load lesson progress from localStorage
   const loadLessonProgress = async (lessonsData: Lesson[]) => {
@@ -289,7 +302,7 @@ export default function CoursePage({
   // Handle submit new review
   const handleSubmitReview = async () => {
     if (!newReview.content.trim() || newReview.star < 1 || newReview.star > 5) {
-      alert("Hãy viết nội dung và chọn số sao từ 1 đến 5 nhé! 😊");
+      toast("Hãy viết nội dung và chọn số sao từ 1 đến 5 nhé! 😊");
       return;
     }
 
@@ -299,7 +312,7 @@ export default function CoursePage({
       // Get kid data from localStorage
       const kidData = localStorage.getItem("kidData");
       if (!kidData) {
-        alert("Hãy đăng nhập để có thể đánh giá khóa học nhé! 🔑");
+        toast("Hãy đăng nhập để có thể đánh giá khóa học nhé! 🔑");
         return;
       }
 
@@ -307,7 +320,7 @@ export default function CoursePage({
       const kidId = parsedKidData.data?.id || parsedKidData.data?._id;
 
       if (!kidId) {
-        alert("Không tìm thấy thông tin bé");
+        toast("Không tìm thấy thông tin bé");
         return;
       }
 
@@ -329,7 +342,7 @@ export default function CoursePage({
         // Refresh reviews
         await fetchReviews();
 
-        alert(
+        toast(
           "Cảm ơn bé đã chia sẻ! Đánh giá của bé đã được gửi thành công! 🎉"
         );
       }
@@ -338,24 +351,128 @@ export default function CoursePage({
 
       if (error instanceof Error) {
         if (error.message.includes("404")) {
-          alert(
+          toast(
             "Chức năng đánh giá đang được phát triển. Cảm ơn bé đã quan tâm! 🚧"
           );
         } else if (
           error.message.includes("401") ||
           error.message.includes("403")
         ) {
-          alert("Bé cần đăng nhập để có thể đánh giá khóa học nhé! 🔐");
+          toast("Bé cần đăng nhập để có thể đánh giá khóa học nhé! 🔐");
         } else if (error.message.includes("400")) {
-          alert("Thông tin không hợp lệ. Hãy kiểm tra lại nhé! ❓");
+          toast("Thông tin không hợp lệ. Hãy kiểm tra lại nhé! ❓");
         } else {
-          alert(`Có lỗi xảy ra: ${error.message} 😅`);
+          toast(`Có lỗi xảy ra: ${error.message} 😅`);
         }
       } else {
-        alert("Có lỗi xảy ra khi gửi đánh giá. Thử lại sau nhé! 🔄");
+        toast("Có lỗi xảy ra khi gửi đánh giá. Thử lại sau nhé! 🔄");
       }
     } finally {
       setIsSubmittingReview(false);
+    }
+  };
+
+  // Handle edit review
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review._id);
+    setEditReviewData({ star: review.star, content: review.content });
+  };
+
+  // Handle update review
+  const handleUpdateReview = async () => {
+    if (!editingReview || !editReviewData.content.trim() || editReviewData.star < 1 || editReviewData.star > 5) {
+      toast("Hãy viết nội dung và chọn số sao từ 1 đến 5 nhé! 😊");
+      return;
+    }
+
+    try {
+      setIsUpdatingReview(true);
+
+      const response = await updateCourseReview(editingReview, {
+        star: editReviewData.star,
+        content: editReviewData.content.trim(),
+      });
+
+      if (response?.success) {
+        // Reset edit state
+        setEditingReview(null);
+        setEditReviewData({ star: 5, content: "" });
+
+        // Refresh reviews
+        await fetchReviews();
+
+        toast("Đánh giá của bé đã được cập nhật thành công! ✨");
+      }
+    } catch (error) {
+      console.error("Error updating review:", error);
+
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          toast("Chức năng chỉnh sửa đang được phát triển. Cảm ơn bé đã quan tâm! 🚧");
+        } else if (error.message.includes("401") || error.message.includes("403")) {
+          toast("Bé chỉ có thể chỉnh sửa đánh giá của chính mình nhé! 🔐");
+        } else if (error.message.includes("400")) {
+          toast("Thông tin không hợp lệ. Hãy kiểm tra lại nhé! ❓");
+        } else {
+          toast(`Có lỗi xảy ra: ${error.message} 😅`);
+        }
+      } else {
+        toast("Có lỗi xảy ra khi cập nhật đánh giá. Thử lại sau nhé! 🔄");
+      }
+    } finally {
+      setIsUpdatingReview(false);
+    }
+  };
+
+  // Handle delete review
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("Bé có chắc chắn muốn xóa đánh giá này không? 🗑️")) {
+      return;
+    }
+
+    try {
+      setIsDeletingReview(reviewId);
+
+      const response = await deleteCourseReview(reviewId);
+
+      if (response?.success) {
+        // Refresh reviews
+        await fetchReviews();
+
+        toast("Đánh giá của bé đã được xóa thành công! 🗑️");
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          toast("Chức năng xóa đang được phát triển. Cảm ơn bé đã quan tâm! 🚧");
+        } else if (error.message.includes("401") || error.message.includes("403")) {
+          toast("Bé chỉ có thể xóa đánh giá của chính mình nhé! 🔐");
+        } else if (error.message.includes("400")) {
+          toast("Không thể xóa đánh giá này. Hãy thử lại nhé! ❓");
+        } else {
+          toast(`Có lỗi xảy ra: ${error.message} 😅`);
+        }
+      } else {
+        toast("Có lỗi xảy ra khi xóa đánh giá. Thử lại sau nhé! 🔄");
+      }
+    } finally {
+      setIsDeletingReview(null);
+    }
+  };
+
+  // Check if review belongs to current kid
+  const isOwnReview = (review: Review) => {
+    const kidData = localStorage.getItem("kidData");
+    if (!kidData) return false;
+
+    try {
+      const parsedKidData = JSON.parse(kidData);
+      const currentKidId = parsedKidData.data?.id || parsedKidData.data?._id;
+      return review.kidId?._id === currentKidId;
+    } catch {
+      return false;
     }
   };
 
@@ -575,9 +692,9 @@ export default function CoursePage({
                 <span>
                   {Array.isArray(lessons)
                     ? lessons.reduce(
-                        (total, lesson) => total + (lesson.duration || 0),
-                        0
-                      )
+                      (total, lesson) => total + (lesson.duration || 0),
+                      0
+                    )
                     : 0}{" "}
                   Minutes
                 </span>
@@ -649,21 +766,19 @@ export default function CoursePage({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div
-                            className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                              isCompleted
-                                ? "bg-green-500"
-                                : hasStarted
+                            className={`w-12 h-12 rounded-lg flex items-center justify-center ${isCompleted
+                              ? "bg-green-500"
+                              : hasStarted
                                 ? "bg-blue-500"
                                 : "bg-[#e5e7eb]"
-                            }`}
+                              }`}
                           >
                             {isCompleted ? (
                               <CheckCircle className="w-6 h-6 text-white" />
                             ) : (
                               <span
-                                className={`text-lg font-bold ${
-                                  hasStarted ? "text-white" : "text-[#6b7280]"
-                                }`}
+                                className={`text-lg font-bold ${hasStarted ? "text-white" : "text-[#6b7280]"
+                                  }`}
                               >
                                 {index + 1}
                               </span>
@@ -690,15 +805,13 @@ export default function CoursePage({
                               <div className="mt-1">
                                 <div className="w-32 bg-gray-200 h-1 rounded-full">
                                   <div
-                                    className={`h-1 rounded-full transition-all ${
-                                      isCompleted
-                                        ? "bg-green-500"
-                                        : "bg-blue-500"
-                                    }`}
+                                    className={`h-1 rounded-full transition-all ${isCompleted
+                                      ? "bg-green-500"
+                                      : "bg-blue-500"
+                                      }`}
                                     style={{
-                                      width: `${
-                                        progress.currentProgress || 0
-                                      }%`,
+                                      width: `${progress.currentProgress || 0
+                                        }%`,
                                     }}
                                   ></div>
                                 </div>
@@ -710,13 +823,12 @@ export default function CoursePage({
                           </div>
                         </div>
                         <Button
-                          className={`${
-                            isCompleted
-                              ? "bg-green-500 hover:bg-green-600 text-white"
-                              : hasStarted
+                          className={`${isCompleted
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : hasStarted
                               ? "bg-blue-500 hover:bg-blue-600 text-white"
                               : "bg-[#e5e7eb] text-[#6b7280] hover:bg-gray-300"
-                          }`}
+                            }`}
                         >
                           <Link
                             href={`/environment-kid/kid-learning-zone/${resolvedParams.kidId}/courses/${resolvedParams.courseId}/lessons/${lesson._id}`}
@@ -821,11 +933,10 @@ export default function CoursePage({
                   className="p-2 hover:scale-125 transition-transform"
                 >
                   <Star
-                    className={`h-8 w-8 ${
-                      star <= newReview.star
-                        ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-300"
-                    }`}
+                    className={`h-8 w-8 ${star <= newReview.star
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300"
+                      }`}
                   />
                 </button>
               ))}
@@ -880,6 +991,12 @@ export default function CoursePage({
           <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-purple-700">
             👥 Các bé khác nói gì về khóa học này ({reviews.length})
           </h3>
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700 flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              <strong>Mẹo:</strong> Bé có thể nhấn nút "Sửa" hoặc "Xóa" để chỉnh sửa đánh giá của chính mình nhé! ✨
+            </p>
+          </div>
 
           {reviewsLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -914,11 +1031,10 @@ export default function CoursePage({
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                   key={star}
-                                  className={`h-4 w-4 ${
-                                    star <= review.star
-                                      ? "text-yellow-400 fill-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
+                                  className={`h-4 w-4 ${star <= review.star
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-300"
+                                    }`}
                                 />
                               ))}
                             </div>
@@ -926,13 +1042,128 @@ export default function CoursePage({
                               {new Date(review.createdAt).toLocaleDateString(
                                 "vi-VN"
                               )}
+                              {review.updatedAt !== review.createdAt && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  (đã chỉnh sửa)
+                                </span>
+                              )}
                             </span>
                           </div>
                         </div>
+
+                        {/* Action buttons for own reviews */}
+                        {isOwnReview(review) && (
+                          <div className="flex gap-2">
+                            {editingReview === review._id ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={handleUpdateReview}
+                                  disabled={isUpdatingReview}
+                                  className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1"
+                                >
+                                  {isUpdatingReview ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                  ) : (
+                                    <>
+                                      <Save className="h-3 w-3 mr-1" />
+                                      Lưu
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingReview(null);
+                                    setEditReviewData({ star: 5, content: "" });
+                                  }}
+                                  className="text-xs px-2 py-1"
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Hủy
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleEditReview(review)}
+                                  className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1"
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Sửa
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteReview(review._id)}
+                                  disabled={isDeletingReview === review._id}
+                                  className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+                                >
+                                  {isDeletingReview === review._id ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-500"></div>
+                                  ) : (
+                                    <>
+                                      <Trash2 className="h-3 w-3 mr-1" />
+                                      Xóa
+                                    </>
+                                  )}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-gray-700 leading-relaxed font-medium">
-                        {review.content}
-                      </p>
+
+                      {/* Review content - show edit form if editing */}
+                      {editingReview === review._id ? (
+                        <div className="space-y-3">
+                          {/* Edit Star Rating */}
+                          <div>
+                            <label className="block text-sm font-bold mb-2 text-purple-700">
+                              🌟 Bé cho bao nhiêu sao?
+                            </label>
+                            <div className="flex gap-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setEditReviewData({ ...editReviewData, star })}
+                                  className="p-1 hover:scale-125 transition-transform"
+                                >
+                                  <Star
+                                    className={`h-6 w-6 ${star <= editReviewData.star
+                                      ? "text-yellow-400 fill-yellow-400"
+                                      : "text-gray-300"
+                                      }`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Edit Review Content */}
+                          <div>
+                            <label className="block text-sm font-bold mb-2 text-purple-700">
+                              ✍️ Bé muốn chia sẻ gì về khóa học này?
+                            </label>
+                            <Textarea
+                              value={editReviewData.content}
+                              onChange={(e) =>
+                                setEditReviewData({ ...editReviewData, content: e.target.value })
+                              }
+                              placeholder="Mình thích khóa học này vì... 😊"
+                              className="resize-none text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 leading-relaxed font-medium">
+                          {review.content}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

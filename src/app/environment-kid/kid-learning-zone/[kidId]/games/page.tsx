@@ -12,48 +12,9 @@ export default function GamesPage() {
   const kidId = params.kidId;
   const availableGames = [
     {
-      id: 1,
-      title: "Math Adventure",
-      description: "Solve math problems in a fun adventure game.",
-      highScore: 2500,
-      stars: 20,
-      multiplayer: false,
-    },
-    {
-      id: 2,
-      title: "Word Quest",
-      description: "Build vocabulary through an exciting word game.",
-      highScore: 1800,
-      stars: 15,
-      multiplayer: true,
-    },
-    {
-      id: 3,
-      title: "Science Explorer",
-      description: "Learn science concepts through interactive experiments.",
-      highScore: 3000,
-      stars: 25,
-      multiplayer: false,
-    },
-    {
-      id: 4,
-      title: "Memory Match",
-      description: "Improve memory skills with matching pairs.",
-      highScore: 1500,
-      stars: 15,
-      multiplayer: true,
-    },
-    {
-      id: 5,
-      title: "Logic Puzzles",
-      description: "Enhance logical thinking with fun puzzles.",
-      highScore: 2200,
-      stars: 20,
-      multiplayer: false,
-    },
-    {
       id: 6,
       title: "Typing Race",
+      image: "https://template.canva.com/EAGZa5jXR5w/2/0/1600w-rkrsaNiGy38.jpg",
       description: "Learn typing while racing against friends.",
       highScore: 2800,
       stars: 18,
@@ -62,6 +23,7 @@ export default function GamesPage() {
     {
       id: 7,
       title: "Phản xạ màu chữ",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000009_000?csig=AAAAAAAAAAAAAAAAAAAAAIDk7YZs7TostQYH396DvfRNVRVM2L3EBquxGscrZXB8&exp=1751336930&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAwOV8wMDAAAAAAAZfD0MtFG8xCrX-fM2ipPpheVtGGJFM60sFf8NJ-1cEnLdHiWMg",
       description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
       highScore: 0,
       stars: 25,
@@ -70,6 +32,7 @@ export default function GamesPage() {
     {
       id: 8,
       title: "Xếp hình",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000016_002?csig=AAAAAAAAAAAAAAAAAAAAAMNUOj5Dc8plxYNtw6WXJTi9sNKsJB__jEGwz2xn9T8j&exp=1751337025&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAxNl8wMDIAAAAAAZfD0j_gklZrwhDflGvORjp3PkCIROnnwqXY6Dm0FsgwZ_pOfyg",
       description: "Học xếp hình và giải trí trí tuệ",
       highScore: 0,
       stars: 25,
@@ -78,6 +41,7 @@ export default function GamesPage() {
     {
       id: 9,
       title: "Phán đoán tình huống",
+      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F425105d1-e246-4853-859e-683433db72fe/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAADg11Sn-5QeGYubZZY2kPzhkqzm8b8Hscm-Sc5q8McCM&exp=1751349186&osig=AAAAAAAAAAAAAAAAAAAAALKOYngWSkrLn1r7NuAzvJOHENio5KfG6q16_6yAng6t&signer=media-rpc&x-canva-quality=screen",
       description: "Phán đoán tình huống trong cuộc sống",
       highScore: 0,
       stars: 25,
@@ -86,6 +50,7 @@ export default function GamesPage() {
     {
       id: 10,
       title: "Tô màu tự do",
+      image:"https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F9dedc566-5c43-4f0c-bca8-c71c2dfc81ae/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAI3l7zsCDjGeWrS5qwrVPRVsWx7uQMbisOV0QYXr3Yzc&exp=1751348974&osig=AAAAAAAAAAAAAAAAAAAAADhJxQKx31IzUnB9B3inj_LrWa4pfucRlmHaYY9Hlipj&signer=media-rpc&x-canva-quality=screen",
       description:
         "Bảng vẽ online với nhiều màu sắc để phát triển sáng tạo và cảm xúc",
       highScore: 0,
@@ -95,6 +60,7 @@ export default function GamesPage() {
     {
       id: 11,
       title: "Vẽ theo mẫu",
+      image:"https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F65e4ea76-e5ad-467a-87ba-473aad2a262f/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAADPo-x6ST0LIzVLe7YPBczpdmm3VnfWzeZXlW-A12MEr&exp=1751349233&osig=AAAAAAAAAAAAAAAAAAAAABMrRGtgIrJOiSXDlkgi4XcBm0wNaDa9U0mqxzppbGaJ&signer=media-rpc&x-canva-quality=screen",
       description:
         "Quan sát và sao chép hình ảnh để phát triển kỹ năng quan sát",
       highScore: 0,
@@ -121,7 +87,7 @@ export default function GamesPage() {
           <Card key={index} className="border-none shadow-sm overflow-hidden">
             <div className="h-48 bg-[#d9d9d9] relative">
               <Image
-                src={`/placeholder.svg?height=192&width=384`}
+                src={game.image}
                 alt={game.title}
                 width={384}
                 height={192}

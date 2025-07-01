@@ -108,7 +108,6 @@ export default function TeacherDashboardPage() {
                           <th className="text-left p-3">Age</th>
                           <th className="text-left p-3">Points</th>
                           <th className="text-left p-3">Level</th>
-                          <th className="text-left p-3">Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -122,7 +121,6 @@ export default function TeacherDashboardPage() {
                               <td className="p-3">{kid.kidDateOfBirth ? getAge(kid.kidDateOfBirth) : "-"}</td>
                               <td className="p-3">{kid.kidPoints}</td>
                               <td className="p-3">{kid.kidLevel}</td>
-                              <td className="p-3">{kid.status ? <span className="text-green-600">Active</span> : <span className="text-red-500">Inactive</span>}</td>
                             </tr>
                           ))
                         )}

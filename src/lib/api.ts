@@ -1529,38 +1529,3 @@ export async function createCourseReview(reviewData: {
     throw new Error('Đã xảy ra lỗi khi tạo đánh giá khóa học');
   }
 }
-
-export async function updateCourseReview(reviewId: string, reviewData: {
-  star?: number;
-  content?: string;
-}) {
-  try {
-    const response = await fetch(`${API_URL}/api/reviews/${reviewId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorMessage = await handleErrorResponse(response);
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error updating course review:', error);
-
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
-    }
-
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error('Đã xảy ra lỗi khi cập nhật đánh giá khóa học');
-  }
-}

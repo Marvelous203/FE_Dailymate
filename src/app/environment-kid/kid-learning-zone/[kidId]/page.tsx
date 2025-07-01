@@ -88,8 +88,8 @@ export default function KidLearningZonePage() {
             const lessons = Array.isArray(lessonsResponse)
               ? lessonsResponse
               : lessonsResponse?.lessons ||
-                lessonsResponse?.data?.lessons ||
-                [];
+              lessonsResponse?.data?.lessons ||
+              [];
 
             // Calculate progress percentage using utility function
             let progressPercentage = kidLocalStorage.getCourseOverallProgress(
@@ -175,7 +175,7 @@ export default function KidLearningZonePage() {
                   Math.round(
                     (completedLessons /
                       Math.max(totalLessons, completedLessons)) *
-                      100
+                    100
                   )
                 );
                 kidLocalStorage.setCourseOverallProgress(
@@ -239,8 +239,8 @@ export default function KidLearningZonePage() {
             const lessons = Array.isArray(lessonsResponse)
               ? lessonsResponse
               : lessonsResponse?.lessons ||
-                lessonsResponse?.data?.lessons ||
-                [];
+              lessonsResponse?.data?.lessons ||
+              [];
 
             const course = allCourses.find((c: any) => c._id === courseId);
             if (course) {
@@ -355,10 +355,10 @@ export default function KidLearningZonePage() {
             progressList.forEach((progress: any) => {
               const courseId =
                 typeof progress.courseId === "object" &&
-                progress.courseId !== null
+                  progress.courseId !== null
                   ? progress.courseId._id ||
-                    progress.courseId.id ||
-                    progress.courseId
+                  progress.courseId.id ||
+                  progress.courseId
                   : progress.courseId;
 
               if (courseId) {
@@ -495,8 +495,8 @@ export default function KidLearningZonePage() {
                       {kid?.gender === "male"
                         ? "Nam"
                         : kid?.gender === "female"
-                        ? "Nữ"
-                        : "Chưa xác định"}
+                          ? "Nữ"
+                          : "Chưa xác định"}
                     </span>
                   </div>
                 </div>
@@ -619,9 +619,8 @@ export default function KidLearningZonePage() {
                 </div>
                 <Button className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                   <Link
-                    href={`/environment-kid/kid-learning-zone/${kidId}/courses/${
-                      continueLearningCourse._id
-                    }/lessons/${continueLearningCourse.nextLesson?._id || ""}`}
+                    href={`/environment-kid/kid-learning-zone/${kidId}/courses/${continueLearningCourse._id
+                      }/lessons/${continueLearningCourse.nextLesson?._id || ""}`}
                     className="flex items-center justify-center gap-2"
                   >
                     Tiếp tục học
@@ -633,19 +632,11 @@ export default function KidLearningZonePage() {
           </div>
         ) : (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              Bắt đầu học tập
-            </h2>
             <Card className="border-0 shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300">
               <div className="h-48 bg-gradient-to-r from-blue-400 to-purple-500 relative overflow-hidden flex items-center justify-center">
                 <div className="text-center text-white">
                   <BookOpen size={48} className="mx-auto mb-4 opacity-80" />
-                  <h3 className="text-2xl font-bold mb-2">
-                    Chưa có khóa học nào
-                  </h3>
+
                   <p className="text-white/90">
                     Hãy khám phá các khóa học thú vị!
                   </p>

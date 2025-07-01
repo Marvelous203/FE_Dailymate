@@ -47,7 +47,9 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
                 thumbnailUrl: course.thumbnailUrl || '',
                 pointsEarned: course.pointsEarned || 0,
                 isPremium: course.isPremium || false,
-                instructor: course.instructor?._id || '',
+                instructor: typeof course.instructor === "object"
+                    ? course.instructor?._id || ""
+                    : course.instructor || "",
                 isPublished: course.isPublished || false,
             });
         }
@@ -77,6 +79,14 @@ export function EditCourseModal({ isOpen, onClose, course, onSave }: EditCourseM
     };
 
     const handleSubmit = () => {
+        if (!(formData.title || '').trim()) {
+            alert("Vui lòng nhập tiêu đề khóa học");
+            return;
+        }
+        if (!(formData.category || '').trim()) {
+            alert("Vui lòng nhập danh mục (category) cho khóa học");
+            return;
+        }
         if (course) {
             onSave(course._id, formData);
             onClose();
