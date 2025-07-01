@@ -9,12 +9,24 @@ import type { UserRole } from '@/constants/routes';
  * @returns SessionData hoặc null nếu không có session
  */
 export function getSessionFromRequest(request: NextRequest): SessionData | null {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   try {
     // Với server riêng sử dụng passport session, 
     // middleware sẽ check session cookie và user data
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+    const userCookie = request.cookies.get('user')?.value;
     
-    if (!sessionCookie) {
+    if (isProduction) {
+      console.log(`🔍 [Auth] Session cookie (${SESSION_COOKIE_NAME}):`, sessionCookie ? 'Found' : 'Not found');
+      console.log(`🔍 [Auth] User cookie:`, userCookie ? 'Found' : 'Not found');
+    }
+    
+    // Kiểm tra session cookie trước
+    if (!sessionCookie && !userCookie) {
+      if (isProduction) {
+        console.log(`❌ [Auth] No authentication cookies found`);
+      }
       return null;
     }
 
@@ -24,29 +36,51 @@ export function getSessionFromRequest(request: NextRequest): SessionData | null 
     // 2. Decode session cookie nếu có shared secret
     // 3. Sử dụng JWT token trong cookie
     
-    const userCookie = request.cookies.get('user')?.value;
     if (userCookie) {
       try {
         // Decode the cookie value since it's encoded
         const decodedCookie = decodeURIComponent(userCookie);
         const userData = JSON.parse(decodedCookie) as UserData;
+        
+        if (isProduction) {
+          console.log(`✅ [Auth] Successfully parsed user data for role: ${userData.role}`);
+        }
+        
         return {
           user: userData,
           isAuthenticated: true
         };
       } catch (decodeError) {
-        // Fallback for old format cookies
-        const userData = JSON.parse(userCookie) as UserData;
-        return {
-          user: userData,
-          isAuthenticated: true
-        };
+        if (isProduction) {
+          console.log(`⚠️ [Auth] Failed to decode cookie, trying fallback...`);
+        }
+        
+        try {
+          // Fallback for old format cookies
+          const userData = JSON.parse(userCookie) as UserData;
+          
+          if (isProduction) {
+            console.log(`✅ [Auth] Fallback parse successful for role: ${userData.role}`);
+          }
+          
+          return {
+            user: userData,
+            isAuthenticated: true
+          };
+        } catch (fallbackError) {
+          if (isProduction) {
+            console.error(`❌ [Auth] Both decode methods failed:`, fallbackError);
+          }
+          return null;
+        }
       }
     }
     
     return null;
   } catch (error) {
-    console.error('Error parsing session:', error);
+    if (isProduction) {
+      console.error('❌ [Auth] Error parsing session:', error);
+    }
     return null;
   }
 }

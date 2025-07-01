@@ -107,18 +107,45 @@ function LoginPageContent() {
         updatedAt: response.user.updatedAt || new Date().toISOString(),
       };
 
-      // Lưu user info vào cookie để middleware có thể đọc (tạm thời)
-      // Trong production, session sẽ được quản lý hoàn toàn bởi passport
+      // Lưu user info vào cookie để middleware có thể đọc
+      // Cải thiện cookie settings cho production
       const cookieValue = encodeURIComponent(JSON.stringify(userData));
-      document.cookie = `user=${cookieValue}; path=/; max-age=86400; secure=${
-        window.location.protocol === "https:"
+      const isSecure = window.location.protocol === "https:";
+      const cookieOptions = [
+        `user=${cookieValue}`,
+        `path=/`,
+        `max-age=86400`,
+        ...(isSecure ? ["secure"] : []),
+        `samesite=lax`,
+      ].join("; ");
+
+      document.cookie = cookieOptions;
+
+      // Set session cookie name để middleware có thể đọc
+      document.cookie = `connect.sid=user-session-${Date.now()}; path=/; max-age=86400${
+        isSecure ? "; secure" : ""
       }; samesite=lax`;
 
       // Dispatch action và đợi cho state được cập nhật
       await Promise.all([
         dispatch(loginSuccess({ user: userData })),
-        new Promise((resolve) => setTimeout(resolve, 100)), // Đợi một chút để đảm bảo state được cập nhật
+        new Promise((resolve) => setTimeout(resolve, 200)), // Tăng thời gian chờ
       ]);
+
+      // Verify cookie đã được set thành công
+      await new Promise((resolve) => {
+        let attempts = 0;
+        const checkCookie = () => {
+          const cookies = document.cookie;
+          if (cookies.includes("user=") || attempts >= 5) {
+            resolve(undefined);
+          } else {
+            attempts++;
+            setTimeout(checkCookie, 100);
+          }
+        };
+        checkCookie();
+      });
 
       // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
       if (response.user.role === "parent" && response.user.roleData?._id) {
@@ -178,34 +205,110 @@ function LoginPageContent() {
       console.log("Redirecting user with role:", response.user.role);
       console.log("User data:", response.user);
 
-      // Helper function to safely redirect
-      const safeRedirect = (url: string) => {
+      // Helper function to safely redirect với production support
+      const safeRedirect = async (url: string) => {
         console.log(`🔄 Redirecting to: ${url}`);
+
+        // Đợi thêm một chút để đảm bảo cookies đã được lưu hoàn toàn
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         try {
-          // Use window.location for hard navigation to ensure fresh page load
-          window.location.href = url;
+          // Kiểm tra nếu đang ở production
+          const isProduction = window.location.hostname !== "localhost";
+
+          if (isProduction) {
+            // Trên production, thử multiple methods
+            console.log(
+              "🌐 Production environment detected, using enhanced redirect"
+            );
+
+            // Method 1: router.push với replace
+            try {
+              await router.replace(url);
+              // Chờ một chút để route có thể được process
+              await new Promise((resolve) => setTimeout(resolve, 500));
+
+              // Nếu vẫn ở trang login sau 500ms, force reload
+              if (window.location.pathname === "/login") {
+                console.log("🔄 Router.replace failed, using window.location");
+                window.location.replace(url);
+              }
+            } catch (routerError) {
+              console.error("Router error:", routerError);
+              // Fallback to window.location
+              window.location.replace(url);
+            }
+          } else {
+            // Localhost: sử dụng window.location.href như cũ
+            window.location.href = url;
+          }
         } catch (error) {
-          console.error("Error with window.location.href:", error);
-          // Fallback to router.push
-          router.push(url);
+          console.error("Error with primary redirect method:", error);
+          // Final fallback
+          try {
+            router.push(url);
+          } catch (finalError) {
+            console.error("Final fallback failed:", finalError);
+            // Show error to user
+            toast.error("Không thể chuyển hướng. Vui lòng tải lại trang.");
+          }
         }
       };
 
       if (response.user.role === "parent") {
-        safeRedirect("/parent/dashboard");
+        await safeRedirect("/parent/dashboard");
       } else if (response.user.role === "admin") {
-        safeRedirect("/admin/dashboard");
+        await safeRedirect("/admin/dashboard");
       } else if (response.user.role === "teacher") {
-        safeRedirect("/teacher/dashboard");
+        await safeRedirect("/teacher/dashboard");
       } else if (response.user.role === "kid") {
         // Fix: Include kidId in the URL for kid routing
         const kidId = response.user.roleData?._id || response.user._id;
         console.log(`🧒 Kid ID for routing: ${kidId}`);
-        safeRedirect(`/environment-kid/kid-learning-zone/${kidId}`);
+        await safeRedirect(`/environment-kid/kid-learning-zone/${kidId}`);
       } else {
         console.error("Unknown user role:", response.user.role);
         toast.error("Vai trò người dùng không hợp lệ");
       }
+
+      // Fallback: Nếu redirect không thành công sau 3 giây, hiển thị manual redirect
+      setTimeout(() => {
+        if (window.location.pathname === "/login") {
+          console.warn("🚨 Redirect failed, showing manual redirect option");
+
+          let dashboardUrl = "/";
+          if (response.user.role === "parent") {
+            dashboardUrl = "/parent/dashboard";
+          } else if (response.user.role === "admin") {
+            dashboardUrl = "/admin/dashboard";
+          } else if (response.user.role === "teacher") {
+            dashboardUrl = "/teacher/dashboard";
+          } else if (response.user.role === "kid") {
+            const kidId = response.user.roleData?._id || response.user._id;
+            dashboardUrl = `/environment-kid/kid-learning-zone/${kidId}`;
+          }
+
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <span>
+                Đăng nhập thành công nhưng không thể chuyển hướng tự động
+              </span>
+              <button
+                onClick={() => {
+                  window.location.href = dashboardUrl;
+                }}
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                Nhấn để vào trang chính
+              </button>
+            </div>,
+            {
+              duration: 10000,
+              position: "top-center",
+            }
+          );
+        }
+      }, 3000);
     } catch (error) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
       const elapsedTime = Date.now() - startTime;
@@ -426,7 +529,46 @@ function LoginPageContent() {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200"
                       >
-                        {error}
+                        <div>{error}</div>
+                        {process.env.NODE_ENV === "production" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cookies = document.cookie;
+                              const userAgent = navigator.userAgent;
+                              const currentUrl = window.location.href;
+
+                              console.log("🔍 Debug Info:");
+                              console.log("Cookies:", cookies);
+                              console.log("User Agent:", userAgent);
+                              console.log("Current URL:", currentUrl);
+                              console.log(
+                                "Protocol:",
+                                window.location.protocol
+                              );
+                              console.log(
+                                "Hostname:",
+                                window.location.hostname
+                              );
+
+                              toast.info(
+                                <div className="text-xs">
+                                  <div>Debug info logged to console</div>
+                                  <div>
+                                    Cookies: {cookies ? "Present" : "None"}
+                                  </div>
+                                  <div>
+                                    Protocol: {window.location.protocol}
+                                  </div>
+                                </div>,
+                                { duration: 5000 }
+                              );
+                            }}
+                            className="mt-2 px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
+                          >
+                            Debug Info
+                          </button>
+                        )}
                       </motion.div>
                     )}
                     <motion.div className="space-y-2" variants={itemVariants}>
