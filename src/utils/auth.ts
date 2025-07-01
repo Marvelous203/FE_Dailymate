@@ -26,11 +26,22 @@ export function getSessionFromRequest(request: NextRequest): SessionData | null 
     
     const userCookie = request.cookies.get('user')?.value;
     if (userCookie) {
-      const userData = JSON.parse(userCookie) as UserData;
-      return {
-        user: userData,
-        isAuthenticated: true
-      };
+      try {
+        // Decode the cookie value since it's encoded
+        const decodedCookie = decodeURIComponent(userCookie);
+        const userData = JSON.parse(decodedCookie) as UserData;
+        return {
+          user: userData,
+          isAuthenticated: true
+        };
+      } catch (decodeError) {
+        // Fallback for old format cookies
+        const userData = JSON.parse(userCookie) as UserData;
+        return {
+          user: userData,
+          isAuthenticated: true
+        };
+      }
     }
     
     return null;
