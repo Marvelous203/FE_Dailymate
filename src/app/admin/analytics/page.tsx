@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
         <TabsContent value="reviews" className="mt-6">
           <Card className="border-none shadow-sm">
             <CardHeader>
-              <CardTitle>Review từng khóa học</CardTitle>
+              <CardTitle>Review Course</CardTitle>
             </CardHeader>
             <CardContent>
               <ReviewTab />
@@ -578,7 +578,7 @@ function ReviewTab() {
           onChange={e => setSelectedCourse(e.target.value)}
           className="border rounded px-2 py-1"
         >
-          <option value="">Chọn khóa học</option>
+          <option value="">Select course</option>
           {courses.map(course => (
             <option key={course._id} value={course._id}>
               {course.title}
@@ -587,30 +587,32 @@ function ReviewTab() {
         </select>
         {selectedCourse && (
           <span className="text-sm text-gray-600">
-            Tổng lượt review: <b>{totalReviews}</b>
+            Total reviews: <b>{totalReviews}</b>
           </span>
         )}
       </div>
       {loading ? (
-        <p>Đang tải review...</p>
+        <p>Loading reviews...</p>
       ) : (
         <table className="min-w-full border text-sm">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-2 py-1 border">Tên học sinh</th>
-              <th className="px-2 py-1 border">Số sao</th>
-              <th className="px-2 py-1 border">Nội dung</th>
+              <th className="px-2 py-1 border">Student/Parent Name</th>
+              <th className="px-2 py-1 border">Role</th>
+              <th className="px-2 py-1 border">Stars</th>
+              <th className="px-2 py-1 border">Content</th>
             </tr>
           </thead>
           <tbody>
             {reviews.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center py-2">Không có review</td>
+                <td colSpan={4} className="text-center py-2">No reviews</td>
               </tr>
             ) : (
               reviews.map((r: any, idx: number) => (
                 <tr key={r._id || idx}>
-                  <td className="px-2 py-1 border">{r.kidId?.fullName || "-"}</td>
+                  <td className="px-2 py-1 border">{r.kidId?.fullName || r.parentId?.fullName || "-"}</td>
+                  <td className="px-2 py-1 border">{r.kidId ? "Student" : r.parentId ? "Parent" : "-"}</td>
                   <td className="px-2 py-1 border">{r.star}</td>
                   <td className="px-2 py-1 border">{r.content}</td>
                 </tr>
