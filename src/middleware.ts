@@ -24,8 +24,8 @@ export function middleware(request: NextRequest) {
   
   // Xử lý đặc biệt cho environment-kid routes
   if (pathname.startsWith('/environment-kid')) {
-    // Environment-kid sử dụng localStorage authentication
-    // Middleware sẽ để client-side guards xử lý
+    // Allow kid-learning-zone routes without middleware check
+    // These routes use client-side authentication
     console.log('🔧 Environment-kid route detected:', pathname);
     return NextResponse.next();
   }

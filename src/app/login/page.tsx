@@ -109,9 +109,10 @@ function LoginPageContent() {
 
       // Lưu user info vào cookie để middleware có thể đọc (tạm thời)
       // Trong production, session sẽ được quản lý hoàn toàn bởi passport
-      document.cookie = `user=${JSON.stringify(
-        userData
-      )}; path=/; max-age=86400`;
+      const cookieValue = encodeURIComponent(JSON.stringify(userData));
+      document.cookie = `user=${cookieValue}; path=/; max-age=86400; secure=${
+        window.location.protocol === "https:"
+      }; samesite=lax`;
 
       // Dispatch action và đợi cho state được cập nhật
       await Promise.all([
@@ -156,9 +157,12 @@ function LoginPageContent() {
           };
 
           // Cập nhật cookie với dữ liệu mới
-          document.cookie = `user=${JSON.stringify(
-            updatedUserData
-          )}; path=/; max-age=86400`;
+          const updatedCookieValue = encodeURIComponent(
+            JSON.stringify(updatedUserData)
+          );
+          document.cookie = `user=${updatedCookieValue}; path=/; max-age=86400; secure=${
+            window.location.protocol === "https:"
+          }; samesite=lax`;
 
           localStorage.setItem("kidData", JSON.stringify(kidCompleteData));
           console.log("Kid data loaded:", kidCompleteData);
@@ -168,18 +172,39 @@ function LoginPageContent() {
       }
 
       // Đợi một chút để đảm bảo tất cả dữ liệu đã được lưu
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Redirect based on role
       console.log("Redirecting user with role:", response.user.role);
+      console.log("User data:", response.user);
+
+      // Helper function to safely redirect
+      const safeRedirect = (url: string) => {
+        console.log(`🔄 Redirecting to: ${url}`);
+        try {
+          // Use window.location for hard navigation to ensure fresh page load
+          window.location.href = url;
+        } catch (error) {
+          console.error("Error with window.location.href:", error);
+          // Fallback to router.push
+          router.push(url);
+        }
+      };
+
       if (response.user.role === "parent") {
-        await router.push("/parent/dashboard");
+        safeRedirect("/parent/dashboard");
       } else if (response.user.role === "admin") {
-        await router.push("/admin/dashboard");
+        safeRedirect("/admin/dashboard");
       } else if (response.user.role === "teacher") {
-        await router.push("/teacher/dashboard");
+        safeRedirect("/teacher/dashboard");
       } else if (response.user.role === "kid") {
-        await router.push("/environment-kid/kid-learning-zone");
+        // Fix: Include kidId in the URL for kid routing
+        const kidId = response.user.roleData?._id || response.user._id;
+        console.log(`🧒 Kid ID for routing: ${kidId}`);
+        safeRedirect(`/environment-kid/kid-learning-zone/${kidId}`);
+      } else {
+        console.error("Unknown user role:", response.user.role);
+        toast.error("Vai trò người dùng không hợp lệ");
       }
     } catch (error) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
