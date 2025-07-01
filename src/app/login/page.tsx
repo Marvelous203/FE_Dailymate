@@ -1,51 +1,73 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Eye, EyeOff, Globe, BookOpen, Loader2 } from "lucide-react";
+import {
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Globe,
+  BookOpen,
+  Loader2,
+} from "lucide-react";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { loginUser, createParent, fetchUserDataAfterLogin, fetchKidDataAfterLogin } from '@/lib/api';
-import { useAppDispatch } from '@/redux/hook';
-import { loginStart, loginSuccess, loginFailure } from '@/redux/features/auth/authSlice';
-import { toast } from 'sonner'; // Chỉ import toast, không import Toaster
+import {
+  loginUser,
+  createParent,
+  fetchUserDataAfterLogin,
+  fetchKidDataAfterLogin,
+} from "@/lib/api";
+import { useAppDispatch } from "@/redux/hook";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/features/auth/authSlice";
+import { toast } from "sonner"; // Chỉ import toast, không import Toaster
 
 // Component to handle search params
-function SearchParamsHandler({ setEmail, setActiveTab }: { setEmail: (email: string) => void; setActiveTab: (tab: string) => void }) {
+function SearchParamsHandler({
+  setEmail,
+  setActiveTab,
+}: {
+  setEmail: (email: string) => void;
+  setActiveTab: (tab: string) => void;
+}) {
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
-    const emailParam = searchParams.get('email');
+    const emailParam = searchParams.get("email");
     if (emailParam) {
       setEmail(emailParam);
       // Tự động chuyển sang tab login nếu đang ở tab signup
-      setActiveTab('login');
+      setActiveTab("login");
     }
   }, [searchParams, setEmail, setActiveTab]);
-  
+
   return null;
 }
 
 function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [gender, setGender] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [gender, setGender] = useState("");
   // Thêm các state mới cho verification
-  const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [signupError, setSignupError] = useState('');
+  const [error, setError] = useState("");
+  const [signupError, setSignupError] = useState("");
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -53,7 +75,7 @@ function LoginPageContent() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     const minLoadingTime = 3000;
@@ -65,11 +87,11 @@ function LoginPageContent() {
       // Sử dụng Promise.all để đồng bộ hóa API call và minimum loading time
       const [response] = await Promise.all([
         loginUser(email, password),
-        new Promise(resolve => {
+        new Promise((resolve) => {
           const elapsedTime = Date.now() - startTime;
           const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
           setTimeout(resolve, remainingTime);
-        })
+        }),
       ]);
 
       const userData = {
@@ -82,69 +104,95 @@ function LoginPageContent() {
         avatar: response.user.avatar,
         roleData: response.user.roleData,
         createdAt: response.user.createdAt || new Date().toISOString(),
-        updatedAt: response.user.updatedAt || new Date().toISOString()
+        updatedAt: response.user.updatedAt || new Date().toISOString(),
       };
-      
+
       // Lưu user info vào cookie để middleware có thể đọc (tạm thời)
       // Trong production, session sẽ được quản lý hoàn toàn bởi passport
-      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`;
-      
-      dispatch(loginSuccess({ user: userData }));
+      document.cookie = `user=${JSON.stringify(
+        userData
+      )}; path=/; max-age=86400`;
+
+      // Dispatch action và đợi cho state được cập nhật
+      await Promise.all([
+        dispatch(loginSuccess({ user: userData })),
+        new Promise((resolve) => setTimeout(resolve, 100)), // Đợi một chút để đảm bảo state được cập nhật
+      ]);
 
       // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
-      if (response.user.role === 'parent' && response.user.roleData?._id) {
+      if (response.user.role === "parent" && response.user.roleData?._id) {
         try {
-          const userCompleteData = await fetchUserDataAfterLogin(response.user.roleData._id);
-          localStorage.setItem('parentData', JSON.stringify(userCompleteData.parent));
-          localStorage.setItem('kidsData', JSON.stringify(userCompleteData.kids));
-          localStorage.setItem('kidsInfo', JSON.stringify(userCompleteData.kidsInfo));
+          const userCompleteData = await fetchUserDataAfterLogin(
+            response.user.roleData._id
+          );
+          localStorage.setItem(
+            "parentData",
+            JSON.stringify(userCompleteData.parent)
+          );
+          localStorage.setItem(
+            "kidsData",
+            JSON.stringify(userCompleteData.kids)
+          );
+          localStorage.setItem(
+            "kidsInfo",
+            JSON.stringify(userCompleteData.kidsInfo)
+          );
         } catch (dataError) {
-          console.error('Error fetching additional user data:', dataError);
+          console.error("Error fetching additional user data:", dataError);
         }
       }
 
       // THÊM LOGIC CHO KID
-      else if (response.user.role === 'kid' && response.user.roleData?._id) {
+      else if (response.user.role === "kid" && response.user.roleData?._id) {
         try {
-          const kidCompleteData = await fetchKidDataAfterLogin(response.user.roleData._id);
-          
+          const kidCompleteData = await fetchKidDataAfterLogin(
+            response.user.roleData._id
+          );
+
           // Tạo một object mới thay vì modify object hiện tại
           const updatedUserData = {
             ...userData,
-            roleData: kidCompleteData.data || kidCompleteData
+            roleData: kidCompleteData.data || kidCompleteData,
           };
-          
+
           // Cập nhật cookie với dữ liệu mới
-          document.cookie = `user=${JSON.stringify(updatedUserData)}; path=/; max-age=86400`;
-          
-          localStorage.setItem('kidData', JSON.stringify(kidCompleteData));
-          console.log('Kid data loaded:', kidCompleteData);
+          document.cookie = `user=${JSON.stringify(
+            updatedUserData
+          )}; path=/; max-age=86400`;
+
+          localStorage.setItem("kidData", JSON.stringify(kidCompleteData));
+          console.log("Kid data loaded:", kidCompleteData);
         } catch (dataError) {
-          console.error('Error fetching kid data:', dataError);
+          console.error("Error fetching kid data:", dataError);
         }
       }
 
+      // Đợi một chút để đảm bảo tất cả dữ liệu đã được lưu
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Redirect based on role
-      if (response.user.role === 'parent') {
-        router.push('/parent/dashboard');
-      } else if (response.user.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else if (response.user.role === 'teacher') {
-        router.push('/teacher/dashboard');
-      } else if (response.user.role === 'kid') {
-        router.push('/environment-kid/kid-learning-zone'); // Sửa lỗi chính tả
+      console.log("Redirecting user with role:", response.user.role);
+      if (response.user.role === "parent") {
+        await router.push("/parent/dashboard");
+      } else if (response.user.role === "admin") {
+        await router.push("/admin/dashboard");
+      } else if (response.user.role === "teacher") {
+        await router.push("/teacher/dashboard");
+      } else if (response.user.role === "kid") {
+        await router.push("/environment-kid/kid-learning-zone");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       // Đảm bảo minimum loading time ngay cả khi có lỗi
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
 
       if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
       }
 
-      console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      console.error("Login error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
       dispatch(loginFailure(errorMessage));
       setError(errorMessage);
     } finally {
@@ -154,21 +202,27 @@ function LoginPageContent() {
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSignupError('');
+    setSignupError("");
 
     // Validation
-    if (!name || !signupEmail || !signupPassword || !confirmPassword || !gender) {
-      setSignupError('Vui lòng điền đầy đủ thông tin');
+    if (
+      !name ||
+      !signupEmail ||
+      !signupPassword ||
+      !confirmPassword ||
+      !gender
+    ) {
+      setSignupError("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
     if (signupPassword !== confirmPassword) {
-      setSignupError('Mật khẩu xác nhận không khớp');
+      setSignupError("Mật khẩu xác nhận không khớp");
       return;
     }
 
     if (signupPassword.length < 6) {
-      setSignupError('Mật khẩu phải có ít nhất 6 ký tự');
+      setSignupError("Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
 
@@ -179,10 +233,9 @@ function LoginPageContent() {
         email: signupEmail,
         password: signupPassword,
         fullName: name,
-        gender: gender
+        gender: gender,
       };
 
-      
       const response = await createParent(parentData);
 
       // Toast với action buttons
@@ -190,19 +243,21 @@ function LoginPageContent() {
         <div className="flex flex-col gap-2">
           <span>Đăng ký thành công! 🎉</span>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => {
                 toast.dismiss();
-                router.push(`/verify-email?email=${encodeURIComponent(signupEmail)}`);
+                router.push(
+                  `/verify-email?email=${encodeURIComponent(signupEmail)}`
+                );
               }}
               className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
               Xác thực ngay
             </button>
-            <button 
+            <button
               onClick={() => {
                 toast.dismiss();
-                setActiveTab('login');
+                setActiveTab("login");
                 setEmail(signupEmail);
                 // Reset form...
               }}
@@ -214,14 +269,14 @@ function LoginPageContent() {
         </div>,
         {
           duration: 8000,
-          position: 'top-center'
+          position: "top-center",
         }
       );
-
     } catch (error: unknown) {
-      console.error('Signup error:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Đã có lỗi xảy ra khi đăng ký';
+      console.error("Signup error:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Đã có lỗi xảy ra khi đăng ký";
 
       // Toast lỗi đơn giản
       toast.error(errorMessage);
@@ -238,14 +293,14 @@ function LoginPageContent() {
       transition: {
         duration: 0.5,
         when: "beforeChildren",
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
   };
 
   return (
@@ -322,13 +377,17 @@ function LoginPageContent() {
                 <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100 p-1 rounded-lg">
                   <TabsTrigger
                     value="login"
-                    className={`text-base font-medium rounded-md ${activeTab === 'login' ? 'bg-white shadow-sm' : ''}`}
+                    className={`text-base font-medium rounded-md ${
+                      activeTab === "login" ? "bg-white shadow-sm" : ""
+                    }`}
                   >
                     Login
                   </TabsTrigger>
                   <TabsTrigger
                     value="signup"
-                    className={`text-base font-medium rounded-md ${activeTab === 'signup' ? 'bg-white shadow-sm' : ''}`}
+                    className={`text-base font-medium rounded-md ${
+                      activeTab === "signup" ? "bg-white shadow-sm" : ""
+                    }`}
                   >
                     Sign Up
                   </TabsTrigger>
@@ -345,11 +404,13 @@ function LoginPageContent() {
                         {error}
                       </motion.div>
                     )}
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label htmlFor="email" className="text-[#374151] font-medium">Email</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label
+                        htmlFor="email"
+                        className="text-[#374151] font-medium"
+                      >
+                        Email
+                      </Label>
                       <Input
                         id="email"
                         type="email"
@@ -361,13 +422,18 @@ function LoginPageContent() {
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
+                    <motion.div className="space-y-2" variants={itemVariants}>
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="password" className="text-[#374151] font-medium">Password</Label>
-                        <Link href="/forgot-password" className="text-sm text-[#10b981] hover:text-[#059669] hover:underline transition-colors">
+                        <Label
+                          htmlFor="password"
+                          className="text-[#374151] font-medium"
+                        >
+                          Password
+                        </Label>
+                        <Link
+                          href="/forgot-password"
+                          className="text-sm text-[#10b981] hover:text-[#059669] hover:underline transition-colors"
+                        >
                           Forgot password?
                         </Link>
                       </div>
@@ -388,7 +454,11 @@ function LoginPageContent() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
                           disabled={loading}
                         >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
                         </button>
                       </div>
                     </motion.div>
@@ -406,7 +476,10 @@ function LoginPageContent() {
                         ) : (
                           <>
                             <span>Login</span>
-                            <motion.span whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400 }}>
+                            <motion.span
+                              whileHover={{ x: 5 }}
+                              transition={{ type: "spring", stiffness: 400 }}
+                            >
                               <CheckCircle size={18} />
                             </motion.span>
                           </>
@@ -426,7 +499,10 @@ function LoginPageContent() {
                     </div>
                     <p className="text-sm text-[#6b7280]">
                       Looking for the children&apos;s area?{" "}
-                      <Link href="/environment-kid/login" className="text-[#10b981] hover:text-[#059669] hover:underline font-medium transition-colors">
+                      <Link
+                        href="/environment-kid/login"
+                        className="text-[#10b981] hover:text-[#059669] hover:underline font-medium transition-colors"
+                      >
                         Go to Kid&apos;s Login
                       </Link>
                     </p>
@@ -444,11 +520,13 @@ function LoginPageContent() {
                         {signupError}
                       </motion.div>
                     )}
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label htmlFor="name" className="text-[#374151] font-medium">Full Name</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label
+                        htmlFor="name"
+                        className="text-[#374151] font-medium"
+                      >
+                        Full Name
+                      </Label>
                       <Input
                         id="name"
                         type="text"
@@ -460,11 +538,13 @@ function LoginPageContent() {
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label htmlFor="signup-email" className="text-[#374151] font-medium">Email</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label
+                        htmlFor="signup-email"
+                        className="text-[#374151] font-medium"
+                      >
+                        Email
+                      </Label>
                       <Input
                         id="signup-email"
                         type="email"
@@ -476,18 +556,17 @@ function LoginPageContent() {
                         disabled={loading}
                       />
                     </motion.div>
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label className="text-[#374151] font-medium">Gender</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label className="text-[#374151] font-medium">
+                        Gender
+                      </Label>
                       <div className="flex gap-4">
                         <label className="flex items-center space-x-2 cursor-pointer">
                           <input
                             type="radio"
                             name="gender"
                             value="male"
-                            checked={gender === 'male'}
+                            checked={gender === "male"}
                             onChange={(e) => setGender(e.target.value)}
                             className="w-4 h-4 text-[#10b981] border-gray-300 focus:ring-[#10b981] focus:ring-2"
                             required
@@ -500,7 +579,7 @@ function LoginPageContent() {
                             type="radio"
                             name="gender"
                             value="female"
-                            checked={gender === 'female'}
+                            checked={gender === "female"}
                             onChange={(e) => setGender(e.target.value)}
                             className="w-4 h-4 text-[#10b981] border-gray-300 focus:ring-[#10b981] focus:ring-2"
                             required
@@ -510,11 +589,13 @@ function LoginPageContent() {
                         </label>
                       </div>
                     </motion.div>
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label htmlFor="signup-password" className="text-[#374151] font-medium">Password</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label
+                        htmlFor="signup-password"
+                        className="text-[#374151] font-medium"
+                      >
+                        Password
+                      </Label>
                       <div className="relative">
                         <Input
                           id="signup-password"
@@ -532,15 +613,21 @@ function LoginPageContent() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
                           disabled={loading}
                         >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
                         </button>
                       </div>
                     </motion.div>
-                    <motion.div
-                      className="space-y-2"
-                      variants={itemVariants}
-                    >
-                      <Label htmlFor="confirm-password" className="text-[#374151] font-medium">Confirm Password</Label>
+                    <motion.div className="space-y-2" variants={itemVariants}>
+                      <Label
+                        htmlFor="confirm-password"
+                        className="text-[#374151] font-medium"
+                      >
+                        Confirm Password
+                      </Label>
                       <Input
                         id="confirm-password"
                         type="password"
@@ -566,7 +653,10 @@ function LoginPageContent() {
                         ) : (
                           <>
                             <span>Sign Up</span>
-                            <motion.span whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400 }}>
+                            <motion.span
+                              whileHover={{ x: 5 }}
+                              transition={{ type: "spring", stiffness: 400 }}
+                            >
                               <CheckCircle size={18} />
                             </motion.span>
                           </>
@@ -582,11 +672,17 @@ function LoginPageContent() {
               className="mt-6 flex justify-center gap-6 text-gray-500"
               variants={itemVariants}
             >
-              <Link href="#" className="flex items-center gap-1 hover:text-[#10b981] transition-colors">
+              <Link
+                href="#"
+                className="flex items-center gap-1 hover:text-[#10b981] transition-colors"
+              >
                 <Globe size={16} />
                 <span className="text-sm">Language</span>
               </Link>
-              <Link href="#" className="flex items-center gap-1 hover:text-[#10b981] transition-colors">
+              <Link
+                href="#"
+                className="flex items-center gap-1 hover:text-[#10b981] transition-colors"
+              >
                 <BookOpen size={16} />
                 <span className="text-sm">Help</span>
               </Link>
@@ -609,16 +705,17 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-[#e8f5e8] to-[#c8e6c9] flex items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10b981] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[#e8f5e8] to-[#c8e6c9] flex items-center justify-center">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10b981] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Đang tải...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   );
 }
-
