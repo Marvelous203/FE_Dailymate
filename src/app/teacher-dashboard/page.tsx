@@ -17,9 +17,8 @@ import { Input } from "@/components/ui/input";
 import TeacherLayout from "@/components/layouts/teacher-layout";
 import React, { useEffect, useState } from "react";
 
-const TEACHER_ID = "685a0acf48b93074f74ed155"; // hardcode hoặc lấy từ session
-
 export default function TeacherDashboardPage() {
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [totalStudents, setTotalStudents] = useState<number | null>(null);
   const [loadingStudents, setLoadingStudents] = useState<boolean>(true);
   const [courses, setCourses] = useState<any[]>([]);
@@ -27,11 +26,26 @@ export default function TeacherDashboardPage() {
   const [enrolledKids, setEnrolledKids] = useState<any[]>([]);
   const [loadingKids, setLoadingKids] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          setTeacherId(user._id); // hoặc user.id tuỳ backend trả về
+        } catch (e) {
+          setTeacherId(null);
+        }
+      }
+    }
+  }, []);
+
   // Lấy danh sách khoá học của giáo viên
   useEffect(() => {
+    if (!teacherId) return;
     async function fetchCourses() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8386";
-      const res = await fetch(`${apiUrl}/api/teacher/${TEACHER_ID}/courses`);
+      const res = await fetch(`${apiUrl}/api/teacher/${teacherId}/courses`);
       const data = await res.json();
       setCourses(data.data?.courses || []);
       if (data.data?.courses?.length > 0) {
@@ -39,7 +53,7 @@ export default function TeacherDashboardPage() {
       }
     }
     fetchCourses();
-  }, []);
+  }, [teacherId]);
 
   // Lấy danh sách học sinh đã tham gia khoá học khi đổi tab
   useEffect(() => {
@@ -60,6 +74,8 @@ export default function TeacherDashboardPage() {
     const uniqueKids = new Set(enrolledKids.map((k) => k.kidId));
     setTotalStudents(uniqueKids.size);
   }, [enrolledKids]);
+
+  if (!teacherId) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
