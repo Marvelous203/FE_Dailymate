@@ -10,8 +10,25 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
 // Định nghĩa các route cho từng role
 export const ROLE_ROUTES: Record<UserRole, string[]> = {
-  [USER_ROLES.PARENT]: ['/parent'],
-  [USER_ROLES.ADMIN]: ['/admin'],
+  [USER_ROLES.PARENT]: [
+    '/parent',
+    '/parent/dashboard',
+    '/parent/children',
+    '/parent/courses',
+    '/parent/analytics',
+    '/parent/messages',
+    '/parent/profile',
+    '/parent/settings',
+    '/parent/premium',
+    '/parent/join'
+  ],
+  [USER_ROLES.ADMIN]: [
+    '/admin',
+    '/admin/dashboard',
+    '/admin/users',
+    '/admin/courses',
+    '/admin/analytics'
+  ],
   [USER_ROLES.TEACHER]: ['/teacher', '/teacher/dashboard', '/teacher/courses', '/teacher/students', '/teacher/messages', '/teacher/profile', '/teacher/settings'],
   [USER_ROLES.KID]: ['/kid', '/environment-kid']
 };
