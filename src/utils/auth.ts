@@ -20,6 +20,7 @@ export function getSessionFromRequest(request: NextRequest): SessionData | null 
     if (isProduction) {
       console.log(`🔍 [Auth] Session cookie (${SESSION_COOKIE_NAME}):`, sessionCookie ? 'Found' : 'Not found');
       console.log(`🔍 [Auth] User cookie:`, userCookie ? 'Found' : 'Not found');
+      console.log(`🔍 [Auth] Raw user cookie value:`, userCookie);
     }
     
     // Kiểm tra session cookie trước
@@ -30,50 +31,45 @@ export function getSessionFromRequest(request: NextRequest): SessionData | null 
       return null;
     }
 
-    // Tạm thời sử dụng user cookie để demo
-    // Trong production, bạn có thể:
-    // 1. Gọi API đến server riêng để verify session
-    // 2. Decode session cookie nếu có shared secret
-    // 3. Sử dụng JWT token trong cookie
-    
+    // Ưu tiên sử dụng user cookie vì nó chứa đầy đủ thông tin
     if (userCookie) {
       try {
-        // Decode the cookie value since it's encoded
-        const decodedCookie = decodeURIComponent(userCookie);
-        const userData = JSON.parse(decodedCookie) as UserData;
+        // Decode base64 và parse user data
+        const decodedValue = atob(userCookie);
+        const userData = JSON.parse(decodedValue) as UserData;
+        
+        // Validate required fields
+        if (!userData._id || !userData.email || !userData.role) {
+          if (isProduction) {
+            console.error('❌ [Auth] Invalid user data in cookie:', userData);
+          }
+          return null;
+        }
         
         if (isProduction) {
           console.log(`✅ [Auth] Successfully parsed user data for role: ${userData.role}`);
+          console.log('📝 [Auth] User data:', userData);
         }
         
         return {
           user: userData,
           isAuthenticated: true
         };
-      } catch (decodeError) {
+      } catch (error) {
         if (isProduction) {
-          console.log(`⚠️ [Auth] Failed to decode cookie, trying fallback...`);
+          console.error('❌ [Auth] Error parsing user cookie:', error);
         }
-        
-        try {
-          // Fallback for old format cookies
-          const userData = JSON.parse(userCookie) as UserData;
-          
-          if (isProduction) {
-            console.log(`✅ [Auth] Fallback parse successful for role: ${userData.role}`);
-          }
-          
-          return {
-            user: userData,
-            isAuthenticated: true
-          };
-        } catch (fallbackError) {
-          if (isProduction) {
-            console.error(`❌ [Auth] Both decode methods failed:`, fallbackError);
-          }
-          return null;
-        }
+        return null;
       }
+    }
+    
+    // Fallback: Nếu không có user cookie nhưng có session cookie
+    if (sessionCookie) {
+      if (isProduction) {
+        console.log('⚠️ [Auth] No user cookie found, but session cookie exists');
+      }
+      // Có thể thêm logic verify session với server ở đây
+      return null;
     }
     
     return null;

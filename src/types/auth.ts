@@ -22,14 +22,15 @@ export interface RoleData {
 
 // Interface cho user data
 export interface UserData {
-  _id: string; // Thay đổi từ id thành _id để match với API
-  name?: string; // Optional vì API có thể không trả về
+  _id: string;
+  username?: string;
+  name?: string;
   email: string;
   role: UserRole;
   isActive: boolean;
   isVerified: boolean;
   avatar?: string;
-  roleData?: RoleData; // Thêm roleData
+  roleData?: RoleData;
   createdAt: string;
   updatedAt: string;
   __v?: number;

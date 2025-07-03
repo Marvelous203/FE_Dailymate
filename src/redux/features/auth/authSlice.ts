@@ -71,7 +71,10 @@ const authSlice = createSlice({
         document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         
         // Gọi API logout để destroy session trên server
-        // fetch('/api/auth/logout', { method: 'POST' });
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, { 
+          method: 'POST',
+          credentials: 'include'
+        });
       }
     },
     updateUser: (state, action: PayloadAction<Partial<UserData>>) => {

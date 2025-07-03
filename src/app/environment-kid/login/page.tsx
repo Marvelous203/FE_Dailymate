@@ -163,11 +163,27 @@ export default function KidLoginPage() {
   };
 
   // Handle parent logout
-  const handleParentLogout = () => {
-    localStorage.removeItem("parentData");
-    localStorage.removeItem("kidsInfo");
-    setIsParentLoggedIn(false);
-    setKidsInfo(null);
+  const handleParentLogout = async () => {
+    try {
+      // Gọi API logout
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // Clear local storage
+      localStorage.removeItem("parentData");
+      localStorage.removeItem("kidsInfo");
+      setIsParentLoggedIn(false);
+      setKidsInfo(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Vẫn clear local storage ngay cả khi API call thất bại
+      localStorage.removeItem("parentData");
+      localStorage.removeItem("kidsInfo");
+      setIsParentLoggedIn(false);
+      setKidsInfo(null);
+    }
   };
 
   // Close modal

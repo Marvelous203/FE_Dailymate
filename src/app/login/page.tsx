@@ -96,7 +96,8 @@ function LoginPageContent() {
 
       const userData = {
         _id: response.user._id,
-        name: response.user.username,
+        username: response.user.username,
+        name: response.user.username, // Fallback to username if name not provided
         email: response.user.email,
         role: response.user.role,
         isActive: response.user.isActive || true,
@@ -109,30 +110,106 @@ function LoginPageContent() {
 
       // Set session cookie name để middleware có thể đọc
       const isSecure = window.location.protocol === "https:";
-      document.cookie = `connect.sid=user-session-${Date.now()}; path=/; max-age=86400${
+      console.log("🔒 Setting cookies with secure:", isSecure);
+
+      // Chuẩn bị user data để lưu cookie
+      const cookieData = {
+        _id: response.user._id,
+        username: response.user.username,
+        email: response.user.email,
+        role: response.user.role,
+      };
+
+      // Set connect.sid cookie
+      const connectSidValue = `user-session-${Date.now()}`;
+      const connectSidCookie = `connect.sid=${connectSidValue}; path=/; max-age=86400${
         isSecure ? "; secure" : ""
       }; samesite=lax`;
+      document.cookie = connectSidCookie;
+      console.log("📝 Set connect.sid cookie:", connectSidCookie);
 
-      // Dispatch action - cookies sẽ được set trong authSlice
-      await Promise.all([
-        dispatch(loginSuccess({ user: userData })),
-        new Promise((resolve) => setTimeout(resolve, 200)), // Tăng thời gian chờ
-      ]);
+      // Set user cookie với minimal data
+      const userCookieValue = btoa(JSON.stringify(cookieData)); // Use base64 encoding
+      const userCookie = `user=${userCookieValue}; path=/; max-age=86400${
+        isSecure ? "; secure" : ""
+      }; samesite=lax`;
+      document.cookie = userCookie;
+      console.log("📝 Set user cookie:", userCookie);
+
+      // Log tất cả cookies hiện tại
+      console.log("🍪 All cookies after setting:", document.cookie);
 
       // Verify cookie đã được set thành công
+      let cookieVerified = false;
       await new Promise((resolve) => {
         let attempts = 0;
+        const maxAttempts = 5; // Giảm số lần thử xuống
         const checkCookie = () => {
-          const cookies = document.cookie;
-          if (cookies.includes("user=") || attempts >= 5) {
+          const allCookies = document.cookie;
+          console.log(
+            `🔍 Checking cookies (Attempt ${attempts + 1}/${maxAttempts}):`,
+            allCookies
+          );
+
+          const cookies = allCookies.split(";").reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split("=");
+            acc[key] = value;
+            return acc;
+          }, {} as Record<string, string>);
+
+          if (cookies.user) {
+            console.log("✅ User cookie found:", cookies.user);
+            cookieVerified = true;
             resolve(undefined);
           } else {
             attempts++;
-            setTimeout(checkCookie, 100);
+            console.log(
+              `⏳ User cookie not found, attempt ${attempts}/${maxAttempts}`
+            );
+
+            if (attempts >= maxAttempts) {
+              console.error(
+                "❌ Failed to verify user cookie after multiple attempts"
+              );
+              console.log("🔄 Final attempt to set cookie...");
+
+              // Thử set cookie một lần cuối với cách khác
+              const finalCookie = `user=${userCookieValue}; path=/`;
+              document.cookie = finalCookie;
+              console.log("📝 Final cookie attempt:", finalCookie);
+
+              resolve(undefined);
+            } else {
+              setTimeout(checkCookie, 500);
+            }
           }
         };
         checkCookie();
       });
+
+      // Log kết quả cuối cùng
+      console.log("🏁 Final cookie verification result:", cookieVerified);
+      console.log("🍪 Final cookies:", document.cookie);
+
+      // Lưu đầy đủ data vào localStorage
+      localStorage.setItem("user", JSON.stringify(userData));
+      console.log("💾 User data saved to localStorage");
+
+      // Dispatch action và đợi thêm thời gian
+      await Promise.all([
+        dispatch(loginSuccess({ user: userData })),
+        new Promise((resolve) => setTimeout(resolve, 1000)),
+      ]);
+      console.log("✅ Login success dispatched");
+
+      // Đợi thêm 2 giây trước khi redirect để có thể xem logs
+      console.log("⏳ Waiting 2 seconds before redirect...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Log thông tin redirect
+      console.log("🔄 Starting redirect process...");
+      console.log("👤 User role:", response.user.role);
+      console.log("📝 User data:", response.user);
 
       // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
       if (response.user.role === "parent" && response.user.roleData?._id) {
@@ -182,6 +259,19 @@ function LoginPageContent() {
           console.log("Kid data loaded:", kidCompleteData);
         } catch (dataError) {
           console.error("Error fetching kid data:", dataError);
+        }
+      }
+
+      // THÊM LOGIC CHO TEACHER
+      else if (
+        response.user.role === "teacher" &&
+        response.user.roleData?._id
+      ) {
+        try {
+          // Lưu teacher data vào localStorage
+          localStorage.setItem("teacherData", JSON.stringify(response.user));
+        } catch (dataError) {
+          console.error("Error saving teacher data:", dataError);
         }
       }
 
@@ -248,10 +338,10 @@ function LoginPageContent() {
         await safeRedirect("/admin/dashboard");
       } else if (response.user.role === "teacher") {
         console.log(
-          "🧑‍🏫 Teacher login detected, redirecting to teacher-dashboard"
+          "🧑‍🏫 Teacher login detected, redirecting to teacher dashboard"
         );
         console.log("🔍 Teacher data:", response.user);
-        await safeRedirect("/teacher-dashboard");
+        await safeRedirect("/teacher/dashboard");
       } else if (response.user.role === "kid") {
         // Fix: Include kidId in the URL for kid routing
         const kidId = response.user.roleData?._id || response.user._id;
@@ -273,7 +363,7 @@ function LoginPageContent() {
           } else if (response.user.role === "admin") {
             dashboardUrl = "/admin/dashboard";
           } else if (response.user.role === "teacher") {
-            dashboardUrl = "/teacher-dashboard";
+            dashboardUrl = "/teacher/dashboard";
           } else if (response.user.role === "kid") {
             const kidId = response.user.roleData?._id || response.user._id;
             dashboardUrl = `/environment-kid/kid-learning-zone/${kidId}`;
