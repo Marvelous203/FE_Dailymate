@@ -112,12 +112,35 @@ function LoginPageContent() {
       const isSecure = window.location.protocol === "https:";
       console.log("🔒 Setting cookies with secure:", isSecure);
 
+      // Helper function để encode dựa theo role
+      const encodeByRole = (data: any, role: string) => {
+        if (role === "teacher") {
+          // Teacher: Chuyển Unicode thành Latin1 trước khi dùng base64
+          try {
+            const jsonString = JSON.stringify(data);
+            // Chuyển Unicode thành UTF-8 bytes
+            const utf8String = unescape(encodeURIComponent(jsonString));
+            // Encode UTF-8 bytes thành base64
+            return btoa(utf8String);
+          } catch (e) {
+            console.error("Error encoding teacher data:", e);
+            // Fallback to URI encoding nếu có lỗi
+            return encodeURIComponent(JSON.stringify(data));
+          }
+        } else {
+          // Parent và Admin sử dụng encodeURIComponent
+          return encodeURIComponent(JSON.stringify(data));
+        }
+      };
+
       // Chuẩn bị user data để lưu cookie
       const cookieData = {
         _id: response.user._id,
         username: response.user.username,
         email: response.user.email,
         role: response.user.role,
+        isAuthenticated: true,
+        roleData: response.user.roleData,
       };
 
       // Set connect.sid cookie
@@ -128,13 +151,17 @@ function LoginPageContent() {
       document.cookie = connectSidCookie;
       console.log("📝 Set connect.sid cookie:", connectSidCookie);
 
-      // Set user cookie với minimal data
-      const userCookieValue = btoa(JSON.stringify(cookieData)); // Use base64 encoding
+      // Set user cookie với encoding phù hợp theo role
+      const userCookieValue = encodeByRole(cookieData, response.user.role);
       const userCookie = `user=${userCookieValue}; path=/; max-age=86400${
         isSecure ? "; secure" : ""
       }; samesite=lax`;
       document.cookie = userCookie;
       console.log("📝 Set user cookie:", userCookie);
+      console.log(
+        "🔑 Using encoding method:",
+        response.user.role === "teacher" ? "base64" : "encodeURIComponent"
+      );
 
       // Log tất cả cookies hiện tại
       console.log("🍪 All cookies after setting:", document.cookie);
@@ -143,7 +170,7 @@ function LoginPageContent() {
       let cookieVerified = false;
       await new Promise((resolve) => {
         let attempts = 0;
-        const maxAttempts = 5; // Giảm số lần thử xuống
+        const maxAttempts = 5;
         const checkCookie = () => {
           const allCookies = document.cookie;
           console.log(
@@ -161,27 +188,21 @@ function LoginPageContent() {
             console.log("✅ User cookie found:", cookies.user);
             cookieVerified = true;
             resolve(undefined);
-          } else {
-            attempts++;
-            console.log(
-              `⏳ User cookie not found, attempt ${attempts}/${maxAttempts}`
+            return;
+          }
+
+          attempts++;
+          console.log(
+            `⏳ User cookie verification attempt ${attempts}/${maxAttempts}`
+          );
+
+          if (attempts >= maxAttempts) {
+            console.error(
+              "❌ Failed to verify user cookie after multiple attempts"
             );
-
-            if (attempts >= maxAttempts) {
-              console.error(
-                "❌ Failed to verify user cookie after multiple attempts"
-              );
-              console.log("🔄 Final attempt to set cookie...");
-
-              // Thử set cookie một lần cuối với cách khác
-              const finalCookie = `user=${userCookieValue}; path=/`;
-              document.cookie = finalCookie;
-              console.log("📝 Final cookie attempt:", finalCookie);
-
-              resolve(undefined);
-            } else {
-              setTimeout(checkCookie, 500);
-            }
+            resolve(undefined);
+          } else {
+            setTimeout(checkCookie, 500);
           }
         };
         checkCookie();
@@ -195,28 +216,35 @@ function LoginPageContent() {
       localStorage.setItem("user", JSON.stringify(userData));
       console.log("💾 User data saved to localStorage");
 
-      // Dispatch action và đợi thêm thời gian
-      await Promise.all([
-        dispatch(loginSuccess({ user: userData })),
-        new Promise((resolve) => setTimeout(resolve, 1000)),
-      ]);
-      console.log("✅ Login success dispatched");
+      // THÊM LOGIC CHO ADMIN
+      if (response.user.role === "admin" && response.user.roleData?._id) {
+        try {
+          // Lưu admin data vào localStorage
+          localStorage.setItem("adminData", JSON.stringify(response.user));
+          console.log("👑 Admin data saved:", response.user);
+        } catch (dataError) {
+          console.error("Error saving admin data:", dataError);
+        }
+      }
 
-      // Đợi thêm 2 giây trước khi redirect để có thể xem logs
-      console.log("⏳ Waiting 2 seconds before redirect...");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Log thông tin redirect
-      console.log("🔄 Starting redirect process...");
-      console.log("👤 User role:", response.user.role);
-      console.log("📝 User data:", response.user);
-
-      // Nếu là parent, gọi thêm các APIs để lấy dữ liệu
-      if (response.user.role === "parent" && response.user.roleData?._id) {
+      // THÊM LOGIC CHO PARENT
+      else if (response.user.role === "parent" && response.user.roleData?._id) {
         try {
           const userCompleteData = await fetchUserDataAfterLogin(
             response.user.roleData._id
           );
+
+          // Update cookie với parent data đầy đủ
+          const updatedCookieData = {
+            ...cookieData,
+            roleData: userCompleteData.parent,
+          };
+          const updatedUserCookie = `user=${encodeByRole(
+            updatedCookieData,
+            "parent"
+          )}; path=/; max-age=86400${isSecure ? "; secure" : ""}; samesite=lax`;
+          document.cookie = updatedUserCookie;
+
           localStorage.setItem(
             "parentData",
             JSON.stringify(userCompleteData.parent)
@@ -229,36 +257,9 @@ function LoginPageContent() {
             "kidsInfo",
             JSON.stringify(userCompleteData.kidsInfo)
           );
+          console.log("👨‍👩‍👧‍👦 Parent data loaded:", userCompleteData);
         } catch (dataError) {
-          console.error("Error fetching additional user data:", dataError);
-        }
-      }
-
-      // THÊM LOGIC CHO KID
-      else if (response.user.role === "kid" && response.user.roleData?._id) {
-        try {
-          const kidCompleteData = await fetchKidDataAfterLogin(
-            response.user.roleData._id
-          );
-
-          // Tạo một object mới thay vì modify object hiện tại
-          const updatedUserData = {
-            ...userData,
-            roleData: kidCompleteData.data || kidCompleteData,
-          };
-
-          // Cập nhật cookie với dữ liệu mới
-          const updatedCookieValue = encodeURIComponent(
-            JSON.stringify(updatedUserData)
-          );
-          document.cookie = `user=${updatedCookieValue}; path=/; max-age=86400; secure=${
-            window.location.protocol === "https:"
-          }; samesite=lax`;
-
-          localStorage.setItem("kidData", JSON.stringify(kidCompleteData));
-          console.log("Kid data loaded:", kidCompleteData);
-        } catch (dataError) {
-          console.error("Error fetching kid data:", dataError);
+          console.error("Error fetching parent data:", dataError);
         }
       }
 
@@ -268,12 +269,33 @@ function LoginPageContent() {
         response.user.roleData?._id
       ) {
         try {
+          // Update cookie với teacher data
+          const updatedCookieData = {
+            ...cookieData,
+            roleData: response.user.roleData,
+          };
+          const updatedUserCookie = `user=${encodeByRole(
+            updatedCookieData,
+            "teacher"
+          )}; path=/; max-age=86400${isSecure ? "; secure" : ""}; samesite=lax`;
+          document.cookie = updatedUserCookie;
+
           // Lưu teacher data vào localStorage
           localStorage.setItem("teacherData", JSON.stringify(response.user));
+          console.log("👨‍🏫 Teacher data saved:", response.user);
         } catch (dataError) {
           console.error("Error saving teacher data:", dataError);
         }
       }
+
+      // Đợi thêm 2 giây trước khi redirect để có thể xem logs
+      console.log("⏳ Waiting 2 seconds before redirect...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Log thông tin redirect
+      console.log("🔄 Starting redirect process...");
+      console.log("👤 User role:", response.user.role);
+      console.log("📝 User data:", response.user);
 
       // Đợi một chút để đảm bảo tất cả dữ liệu đã được lưu
       await new Promise((resolve) => setTimeout(resolve, 200));
