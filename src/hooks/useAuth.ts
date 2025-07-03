@@ -40,7 +40,7 @@ export function useAuth() {
   const logout = useCallback(async () => {
     try {
       // Gọi API logout từ server riêng
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });

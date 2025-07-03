@@ -1,22 +1,51 @@
-'use client'
+"use client";
 
-import React from 'react'
-import Link from "next/link"
-import { Bell, BookOpen, Home, LineChart, Settings, User, Users, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useRouter } from "next/navigation"
-import { useAppDispatch } from "@/redux/hook"
-import { logout } from "@/redux/features/auth/authSlice"
+import React from "react";
+import Link from "next/link";
+import {
+  Bell,
+  BookOpen,
+  Home,
+  LineChart,
+  Settings,
+  User,
+  Users,
+  LogOut,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/hook";
+import { logout } from "@/redux/features/auth/authSlice";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const dispatch = useAppDispatch()
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  const handleLogout = () => {
-    dispatch(logout())
-    router.push('/login')
-  }
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // Dispatch action và clear state
+      dispatch(logout());
+
+      // Redirect
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Vẫn logout ngay cả khi API call thất bại
+      dispatch(logout());
+      router.push("/login");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,12 +59,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
+            >
               <Bell size={20} />
             </Button>
 
             <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Admin" />
+              <AvatarImage
+                src="/placeholder.svg?height=32&width=32"
+                alt="Admin"
+              />
               <AvatarFallback>A</AvatarFallback>
             </Avatar>
 
@@ -53,11 +89,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="container mx-auto px-4 py-1">
           <ul className="flex space-x-1 overflow-x-auto pb-2">
-            <NavItem href="/admin/analytics" icon={<LineChart size={18} />} label="Dashboard " />
-            <NavItem href="/admin/users" icon={<Users size={18} />} label="Users" />
-            <NavItem href="/admin/courses" icon={<BookOpen size={18} />} label="Courses" />
-            <NavItem href="/admin/profile" icon={<User size={18} />} label="Profile" />
-            <NavItem href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
+            <NavItem
+              href="/admin/analytics"
+              icon={<LineChart size={18} />}
+              label="Dashboard "
+            />
+            <NavItem
+              href="/admin/users"
+              icon={<Users size={18} />}
+              label="Users"
+            />
+            <NavItem
+              href="/admin/courses"
+              icon={<BookOpen size={18} />}
+              label="Courses"
+            />
+            <NavItem
+              href="/admin/profile"
+              icon={<User size={18} />}
+              label="Profile"
+            />
+            <NavItem
+              href="/admin/settings"
+              icon={<Settings size={18} />}
+              label="Settings"
+            />
           </ul>
         </nav>
       </header>
@@ -72,18 +128,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
-function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+function NavItem({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+}) {
   return (
     <li>
       <Link href={href}>
-        <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 flex gap-1 items-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white hover:bg-white/10 flex gap-1 items-center"
+        >
           {icon}
           <span>{label}</span>
         </Button>
       </Link>
     </li>
-  )
+  );
 }

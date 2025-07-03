@@ -54,11 +54,25 @@ export default function KidLayout({ children }: { children: React.ReactNode }) {
     : "/environment-kid/kid-learning-zone";
 
   // Cập nhật các liên kết navigation
-  const handleLogout = () => {
-    // Clear environment-kid authentication data
-    clearKidEnvironmentAuth();
-    // Redirect to environment-kid login
-    window.location.href = "/environment-kid/login";
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // Clear environment-kid authentication data
+      clearKidEnvironmentAuth();
+
+      // Redirect to environment-kid login
+      window.location.href = "/environment-kid/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Vẫn clear data và redirect ngay cả khi API call thất bại
+      clearKidEnvironmentAuth();
+      window.location.href = "/environment-kid/login";
+    }
   };
 
   return (
