@@ -954,10 +954,25 @@ export async function createPayment(paymentData: {
     console.log('🚀 Creating payment with URL:', `${API_URL}/api/payment/create-link`);
     console.log('📦 Payment data:', paymentData);
 
+    // Get user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('Vui lòng đăng nhập để tiếp tục thanh toán');
+    }
+
+    // Parse user data to get token
+    const user = JSON.parse(userData);
+    const token = user.token;
+
+    if (!token) {
+      throw new Error('Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại');
+    }
+
     const response = await fetch(`${API_URL}/api/payment/create-link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(paymentData),
       credentials: 'include',
@@ -986,10 +1001,25 @@ export async function createPayment(paymentData: {
 
 export async function checkPaymentStatus(orderCode: string) {
   try {
+    // Get user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('Vui lòng đăng nhập để kiểm tra trạng thái thanh toán');
+    }
+
+    // Parse user data to get token
+    const user = JSON.parse(userData);
+    const token = user.token;
+
+    if (!token) {
+      throw new Error('Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại');
+    }
+
     const response = await fetch(`${API_URL}/api/payment/${orderCode}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       credentials: 'include',
     });
