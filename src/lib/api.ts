@@ -954,28 +954,28 @@ export async function createPayment(paymentData: {
     console.log('🚀 Creating payment with URL:', `${API_URL}/api/payment/create-link`);
     console.log('📦 Payment data:', paymentData);
 
-    // Get user data from localStorage
+    // Get user data from localStorage to verify login state
     const userData = localStorage.getItem('user');
     if (!userData) {
       throw new Error('Vui lòng đăng nhập để tiếp tục thanh toán');
     }
 
-    // Parse user data to get token
+    // Parse user data to verify role
     const user = JSON.parse(userData);
-    const token = user.token;
-
-    if (!token) {
-      throw new Error('Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại');
+    if (!user || user.role !== 'parent') {
+      throw new Error('Bạn cần đăng nhập với tài khoản phụ huynh để thực hiện thanh toán');
     }
 
     const response = await fetch(`${API_URL}/api/payment/create-link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(paymentData),
-      credentials: 'include',
+      body: JSON.stringify({
+        ...paymentData,
+        userId: user._id // Add user ID to payment data
+      }),
+      credentials: 'include', // Important: Send cookies
     });
 
     if (!response.ok) {
@@ -1001,27 +1001,24 @@ export async function createPayment(paymentData: {
 
 export async function checkPaymentStatus(orderCode: string) {
   try {
-    // Get user data from localStorage
+    // Get user data from localStorage to verify login state
     const userData = localStorage.getItem('user');
     if (!userData) {
       throw new Error('Vui lòng đăng nhập để kiểm tra trạng thái thanh toán');
     }
 
-    // Parse user data to get token
+    // Parse user data to verify role
     const user = JSON.parse(userData);
-    const token = user.token;
-
-    if (!token) {
-      throw new Error('Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại');
+    if (!user || user.role !== 'parent') {
+      throw new Error('Bạn cần đăng nhập với tài khoản phụ huynh để kiểm tra thanh toán');
     }
 
     const response = await fetch(`${API_URL}/api/payment/${orderCode}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
       },
-      credentials: 'include',
+      credentials: 'include', // Important: Send cookies
     });
 
     if (!response.ok) {
