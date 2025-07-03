@@ -41,8 +41,18 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(action.payload.user));
         
-        // Lưu user info vào cookie
-        document.cookie = `user=${JSON.stringify(action.payload.user)}; path=/; max-age=86400`;
+        // Lưu user info vào cookie với proper encoding
+        const cookieValue = encodeURIComponent(JSON.stringify(action.payload.user));
+        const isSecure = window.location.protocol === "https:";
+        const cookieOptions = [
+          `user=${cookieValue}`,
+          `path=/`,
+          `max-age=86400`,
+          ...(isSecure ? ["secure"] : []),
+          `samesite=lax`,
+        ].join("; ");
+        
+        document.cookie = cookieOptions;
       }
     },
     loginFailure: (state, action: PayloadAction<string>) => {

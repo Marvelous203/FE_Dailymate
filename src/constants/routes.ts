@@ -46,7 +46,7 @@ export const STATIC_ROUTES = [
 export const ROLE_DASHBOARDS: Record<UserRole, string> = {
   [USER_ROLES.PARENT]: '/parent/dashboard',
   [USER_ROLES.ADMIN]: '/admin/dashboard',
-  [USER_ROLES.TEACHER]: '/teacher/dashboard',
+  [USER_ROLES.TEACHER]: '/teacher-dashboard',
   [USER_ROLES.KID]: '/environment-kid/kid-learning-zone'
 };
 

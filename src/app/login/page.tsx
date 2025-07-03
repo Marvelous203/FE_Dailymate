@@ -107,26 +107,13 @@ function LoginPageContent() {
         updatedAt: response.user.updatedAt || new Date().toISOString(),
       };
 
-      // Lưu user info vào cookie để middleware có thể đọc
-      // Cải thiện cookie settings cho production
-      const cookieValue = encodeURIComponent(JSON.stringify(userData));
-      const isSecure = window.location.protocol === "https:";
-      const cookieOptions = [
-        `user=${cookieValue}`,
-        `path=/`,
-        `max-age=86400`,
-        ...(isSecure ? ["secure"] : []),
-        `samesite=lax`,
-      ].join("; ");
-
-      document.cookie = cookieOptions;
-
       // Set session cookie name để middleware có thể đọc
+      const isSecure = window.location.protocol === "https:";
       document.cookie = `connect.sid=user-session-${Date.now()}; path=/; max-age=86400${
         isSecure ? "; secure" : ""
       }; samesite=lax`;
 
-      // Dispatch action và đợi cho state được cập nhật
+      // Dispatch action - cookies sẽ được set trong authSlice
       await Promise.all([
         dispatch(loginSuccess({ user: userData })),
         new Promise((resolve) => setTimeout(resolve, 200)), // Tăng thời gian chờ
@@ -260,7 +247,11 @@ function LoginPageContent() {
       } else if (response.user.role === "admin") {
         await safeRedirect("/admin/dashboard");
       } else if (response.user.role === "teacher") {
-        await safeRedirect("/teacher/dashboard");
+        console.log(
+          "🧑‍🏫 Teacher login detected, redirecting to teacher-dashboard"
+        );
+        console.log("🔍 Teacher data:", response.user);
+        await safeRedirect("/teacher-dashboard");
       } else if (response.user.role === "kid") {
         // Fix: Include kidId in the URL for kid routing
         const kidId = response.user.roleData?._id || response.user._id;
@@ -282,7 +273,7 @@ function LoginPageContent() {
           } else if (response.user.role === "admin") {
             dashboardUrl = "/admin/dashboard";
           } else if (response.user.role === "teacher") {
-            dashboardUrl = "/teacher/dashboard";
+            dashboardUrl = "/teacher-dashboard";
           } else if (response.user.role === "kid") {
             const kidId = response.user.roleData?._id || response.user._id;
             dashboardUrl = `/environment-kid/kid-learning-zone/${kidId}`;
