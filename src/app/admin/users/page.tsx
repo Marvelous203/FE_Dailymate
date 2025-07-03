@@ -25,7 +25,7 @@ export default function UsersPage() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [tab, setTab] = useState("all");
+  const [tab, setTab] = useState("teachers");
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);

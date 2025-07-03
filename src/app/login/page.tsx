@@ -357,7 +357,7 @@ function LoginPageContent() {
       if (response.user.role === "parent") {
         await safeRedirect("/parent/dashboard");
       } else if (response.user.role === "admin") {
-        await safeRedirect("/admin/dashboard");
+        await safeRedirect("/admin/analytics");
       } else if (response.user.role === "teacher") {
         console.log(
           "🧑‍🏫 Teacher login detected, redirecting to teacher dashboard"
@@ -383,7 +383,7 @@ function LoginPageContent() {
           if (response.user.role === "parent") {
             dashboardUrl = "/parent/dashboard";
           } else if (response.user.role === "admin") {
-            dashboardUrl = "/admin/dashboard";
+            dashboardUrl = "/admin/analytics";
           } else if (response.user.role === "teacher") {
             dashboardUrl = "/teacher/dashboard";
           } else if (response.user.role === "kid") {

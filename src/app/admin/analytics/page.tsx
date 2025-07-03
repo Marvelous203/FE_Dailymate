@@ -147,9 +147,17 @@ export default function AnalyticsPage() {
         const courses = coursesRes.data?.courses || [];
         let total = 0;
         for (const course of courses) {
-          const reviewRes = await getReviewsByCourseId(course._id, 1, 1, 'star', 'asc');
-          // Ưu tiên lấy total, nếu không có thì lấy độ dài mảng reviews
-          total += reviewRes.data?.total || (reviewRes.data?.reviews?.length ?? 0);
+          let page = 1;
+          let totalReviews = 0;
+          let hasNext = true;
+          while (hasNext) {
+            const reviewRes = await getReviewsByCourseId(course._id, page, 50, 'star', 'asc');
+            const reviews = reviewRes.data?.reviews || [];
+            totalReviews += reviews.length;
+            hasNext = reviews.length === 50; // Nếu trả về đủ 50 thì còn trang tiếp
+            page++;
+          }
+          total += totalReviews;
         }
         setTotalAllReviews(total);
       } catch {

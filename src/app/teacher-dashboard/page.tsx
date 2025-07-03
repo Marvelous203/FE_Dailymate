@@ -29,16 +29,10 @@ export default function TeacherDashboardPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const userStr = localStorage.getItem("user");
-      console.log("userStr:", userStr);
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          console.log("user:", user);
-          if (user.role === "teacher" && user.roleData && user.roleData._id) {
-            setTeacherId(user.roleData._id);
-          } else {
-            setTeacherId(user._id);
-          }
+          setTeacherId(user._id); // hoặc user.id tuỳ backend trả về
         } catch (e) {
           setTeacherId(null);
         }
@@ -46,6 +40,7 @@ export default function TeacherDashboardPage() {
     }
   }, []);
 
+  // Lấy danh sách khoá học của giáo viên
   useEffect(() => {
     if (!teacherId) return;
     async function fetchCourses() {
@@ -60,6 +55,7 @@ export default function TeacherDashboardPage() {
     fetchCourses();
   }, [teacherId]);
 
+  // Lấy danh sách học sinh đã tham gia khoá học khi đổi tab
   useEffect(() => {
     if (!selectedCourseId) return;
     setLoadingKids(true);
@@ -73,21 +69,11 @@ export default function TeacherDashboardPage() {
       .finally(() => setLoadingKids(false));
   }, [selectedCourseId]);
 
+  // Tính tổng số học sinh (unique kidId)
   useEffect(() => {
-    async function fetchTotalKids() {
-      try {
-        const res = await fetch("http://localhost:8386/api/kids");
-        const data = await res.json();
-        console.log("API /api/kids trả về:", data);
-        setTotalStudents(data.data?.kids?.length || 0);
-      } catch (e) {
-        setTotalStudents(0);
-      } finally {
-        setLoadingStudents(false);
-      }
-    }
-    fetchTotalKids();
-  }, []);
+    const uniqueKids = new Set(enrolledKids.map((k) => k.kidId));
+    setTotalStudents(uniqueKids.size);
+  }, [enrolledKids]);
 
   if (!teacherId) return <div>Loading...</div>;
 
@@ -119,7 +105,7 @@ export default function TeacherDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Students"
-          value={loadingStudents ? "..." : totalStudents?.toString() ?? "0"}
+          value={loadingKids ? "..." : totalStudents?.toString() ?? "0"}
           change=""
           icon={<User className="h-5 w-5 text-[#4dacc4]" />}
           bgColor="bg-[#d7ebf0]"
