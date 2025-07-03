@@ -51,7 +51,7 @@ export default function AdminLayout({
     <div className="min-h-screen flex flex-col">
       <header className="bg-[#f15f6c] text-white">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
+          <Link href="/admin/analytics" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <span className="text-[#f15f6c] font-bold">E</span>
             </div>

@@ -225,11 +225,11 @@ function CourseCard({ course }: { course: any }) {
           </div>
           <div className="flex items-center text-[#6b7280]">
             <BookOpen size={16} className="mr-1" />
-            <span>{course.lessons ?? 0} lessons</span>
+            {/* <span>{course.lessons ?? 0} lessons</span> */}
           </div>
         </div>
         <div className="flex justify-between mt-4">
-          <Button size="sm" variant="outline">
+          {/* <Button size="sm" variant="outline">
             Edit
           </Button>
           <Button
@@ -238,7 +238,7 @@ function CourseCard({ course }: { course: any }) {
             className="text-red-500 hover:text-red-600"
           >
             Delete
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
     </Card>

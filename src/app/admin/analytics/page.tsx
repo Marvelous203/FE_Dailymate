@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
           icon={<Users className="h-5 w-5 text-[#0ea5e9]" />}
           bgColor="bg-blue-50"
         />
-        <StatCard
+        <StatCard 
           title="Transaction history"
           value={`Total transactions: ${transactions.length}`}
           change="+7% from last month"
