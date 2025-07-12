@@ -23,7 +23,7 @@ export default function GamesPage() {
     {
       id: 7,
       title: "Phản xạ màu chữ",
-      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F50a48f19-7faa-45c3-a597-fca5c3006c0c/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAEoKyUKcdDRthmVh7R8O5nZSH5PPsBy_t6QY9eqnkr7m&exp=1751549268&osig=AAAAAAAAAAAAAAAAAAAAAPSz_Pc0i83cGzTJCdzyaswgGkO3cfpL8CzD_984BDrk&signer=media-rpc&x-canva-quality=screen",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000009_000?csig=AAAAAAAAAAAAAAAAAAAAADCUsbbADoKoor8aemJFj-tJPDkpRakiUiWWnazQa5Gl&exp=1752300086&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAwOV8wMDAAAAAAAZf9OWRtOJ9S6aIEd8MxEDR5xkmpSOTfpVlhcwpP_qY_c6WTJ-M",
       description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
       highScore: 0,
       stars: 25,
@@ -32,7 +32,7 @@ export default function GamesPage() {
     {
       id: 8,
       title: "Xếp hình",
-      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F9dedc566-5c43-4f0c-bca8-c71c2dfc81ae/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAATDaK7fwWZ3PJmnIvJtEPTqkQyQLIqGN4cvS6KEmSTt&exp=1751546974&osig=AAAAAAAAAAAAAAAAAAAAABF0Ly1GbOpbp-hagKck3flJPYfCfBNXTQkKJGTolMsI&signer=media-rpc&x-canva-quality=screen",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000016_002?csig=AAAAAAAAAAAAAAAAAAAAABbW0b4klDPXKj4gfyEN7gG3PxNDWEAwszYhZ0NE5b5E&exp=1752300086&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAxNl8wMDIAAAAAAZf9OWRtoN9pL8Wl9p1qcrgPEkX8Ye_foFzeW0ndoeBbVwprHtM",
       description: "Học xếp hình và giải trí trí tuệ",
       highScore: 0,
       stars: 25,
@@ -41,7 +41,7 @@ export default function GamesPage() {
     {
       id: 9,
       title: "Phán đoán tình huống",
-      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F425105d1-e246-4853-859e-683433db72fe/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAF1mYt_e1FqmtweMk6-f025Q9KU28BUkP38n5wSeX8ZX&exp=1751547186&osig=AAAAAAAAAAAAAAAAAAAAAPAEv4DgwjBF4LV_ZhfMBP3MfRBSdwyMbNDjH30tFD24&signer=media-rpc&x-canva-quality=screen",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FM%2F92b0ec5d-0f0b-4b49-8c08-dd02e9f8dbb3?csig=AAAAAAAAAAAAAAAAAAAAAHfkKBJmzlQVsLlQwwr5C1GgiXNtmsjfi4yPqt8dH_Hq&exp=1752314325&signer=media-rpc&token=AAIAAU0AJDkyYjBlYzVkLTBmMGItNGI0OS04YzA4LWRkMDJlOWY4ZGJiMwAAAAABl_4SqAgSgBdiDxlp9LPqAZ-QBkeI-4yz7lhghyOqeAnoUMWyag",
       description: "Phán đoán tình huống trong cuộc sống",
       highScore: 0,
       stars: 25,
@@ -50,7 +50,7 @@ export default function GamesPage() {
     {
       id: 10,
       title: "Tô màu tự do",
-      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F47770229-3fef-460c-9ee0-99cbb14ba617/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAA5mpt19XNrySDsJoz0ZKcyR7VBvMYoUdYNt2-JG_kDw&exp=1751546863&osig=AAAAAAAAAAAAAAAAAAAAAHQXliwxIDXixgzKU_SYvOMYxmFqi9Z9BAdSsuRI3f-W&signer=media-rpc&x-canva-quality=screen",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000036_002?csig=AAAAAAAAAAAAAAAAAAAAABvQp29Uo0H0aw6L-Ouzpr7Q2SBts5aY5fBylZh6Aadw&exp=1752300405&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAzNl8wMDIAAAAAAZf9PkPQaX01W9sXPRubg2hMwBd3GuRAtXdbca1exVan1mHNMUM",
       description:
         "Bảng vẽ online với nhiều màu sắc để phát triển sáng tạo và cảm xúc",
       highScore: 0,
@@ -60,7 +60,7 @@ export default function GamesPage() {
     {
       id: 11,
       title: "Vẽ theo mẫu",
-      image: "https://media.canva.com/v2/image-resize/format:JPG/height:452/quality:92/uri:ifs%3A%2F%2FM%2F771c536c-e7d4-47eb-aecc-cbbf2e90519f/watermark:F/width:800?csig=AAAAAAAAAAAAAAAAAAAAAKYbQAIkPdXgtw3Ik7m-TLVSzvn7r3AefcuTqqIlTcwr&exp=1751547212&osig=AAAAAAAAAAAAAAAAAAAAACndWRhG3qocnE_TV3ebzBlFS2PdXSL6Stoaue1E9aKj&signer=media-rpc&x-canva-quality=screen",
+      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000057_000?csig=AAAAAAAAAAAAAAAAAAAAAOPbmhz3B2vWdeC8gRi7JUGUH_bxfR4tgpnE7n1kjiM1&exp=1752300545&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDA1N18wMDAAAAAAAZf9QGXBetpmJtS2Dfh_C5dQTUMMKrFSyulE8zka5t2KQGhdu3E",
       description:
         "Quan sát và sao chép hình ảnh để phát triển kỹ năng quan sát",
       highScore: 0,
