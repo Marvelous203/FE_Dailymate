@@ -953,6 +953,7 @@ export async function createPayment(paymentData: {
   try {
     console.log('🚀 Creating payment with URL:', `${API_URL}/api/payment/create-link`);
     console.log('📦 Payment data:', paymentData);
+    console.log('🌐 Environment:', process.env.NODE_ENV);
 
     // Get user data from localStorage to verify login state
     const userData = localStorage.getItem('user');
@@ -966,7 +967,8 @@ export async function createPayment(paymentData: {
       throw new Error('Bạn cần đăng nhập với tài khoản phụ huynh để thực hiện thanh toán');
     }
 
-    const response = await fetch(`${API_URL}/api/payment/create-link`, {
+    // Cấu hình request cho production
+    const requestOptions: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -975,12 +977,21 @@ export async function createPayment(paymentData: {
         ...paymentData,
         userId: user._id // Add user ID to payment data
       }),
-      credentials: 'include',
-      // Thêm mode cho production
-      ...(process.env.NODE_ENV === 'production' && {
-        mode: 'cors'
-      })
-    });
+      credentials: 'include', // Important: Send cookies
+    };
+
+    // Thêm cấu hình cho production
+    if (process.env.NODE_ENV === 'production') {
+      requestOptions.mode = 'cors';
+      (requestOptions.headers as Record<string, string>)['Access-Control-Allow-Credentials'] = 'true';
+    }
+
+    console.log('📡 Request options:', requestOptions);
+
+    const response = await fetch(`${API_URL}/api/payment/create-link`, requestOptions);
+
+    console.log('📥 Response status:', response.status);
+    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorMessage = await handleErrorResponse(response);
