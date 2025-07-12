@@ -975,7 +975,11 @@ export async function createPayment(paymentData: {
         ...paymentData,
         userId: user._id // Add user ID to payment data
       }),
-      credentials: 'include', // Important: Send cookies
+      credentials: 'include',
+      // Thêm mode cho production
+      ...(process.env.NODE_ENV === 'production' && {
+        mode: 'cors'
+      })
     });
 
     if (!response.ok) {
