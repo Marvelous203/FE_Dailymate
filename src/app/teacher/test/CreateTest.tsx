@@ -24,9 +24,10 @@ interface CreateTestProps {
     isOpen: boolean;
     onClose: () => void;
     lessonId: string;
+    teacherId: string; // thêm teacherId vào props
 }
 
-export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
+export function CreateTest({ isOpen, onClose, lessonId, teacherId }: CreateTestProps) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [timeLimit, setTimeLimit] = useState(30);
@@ -102,7 +103,7 @@ export function CreateTest({ isOpen, onClose, lessonId }: CreateTestProps) {
                 passingScore,
                 attempts,
                 questions: questions.length > 0 ? questions : [currentQuestion],
-                createdBy: "685a1fbd05372834986df9e1"
+                createdBy: teacherId // dùng teacherId thay vì hardcode
             };
 
             const response = await fetch('http://localhost:8386/api/test', {

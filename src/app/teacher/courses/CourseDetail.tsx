@@ -334,6 +334,7 @@ export function CourseDetailModal({ isOpen, onClose, course }: CourseDetailModal
                     />
                     {selectedLessonForTest && (
                         <CreateTest
+                            teacherId={teacherId}
                             isOpen={isCreateTestModalOpen}
                             onClose={closeCreateTestModal}
                             lessonId={selectedLessonForTest._id}
