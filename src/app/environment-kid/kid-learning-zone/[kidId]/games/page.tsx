@@ -14,7 +14,7 @@ export default function GamesPage() {
     {
       id: 6,
       title: "Typing Race",
-      image: "https://template.canva.com/EAGZa5jXR5w/2/0/1600w-rkrsaNiGy38.jpg",
+      image: "https://images.unsplash.com/photo-1730091500672-d74549d1119a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       description: "Learn typing while racing against friends.",
       highScore: 2800,
       stars: 18,
@@ -23,7 +23,7 @@ export default function GamesPage() {
     {
       id: 7,
       title: "Phản xạ màu chữ",
-      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000009_000?csig=AAAAAAAAAAAAAAAAAAAAADCUsbbADoKoor8aemJFj-tJPDkpRakiUiWWnazQa5Gl&exp=1752300086&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAwOV8wMDAAAAAAAZf9OWRtOJ9S6aIEd8MxEDR5xkmpSOTfpVlhcwpP_qY_c6WTJ-M",
+      image: "https://images.unsplash.com/photo-1593791718814-b720d7979607?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGNvbG9yZnVsJTIwdGV4dCUyMGFiY3xlbnwwfHwwfHx8MA%3D%3D",
       description: "Kiểm tra phản xạ và khả năng nhận biết màu sắc của bạn.",
       highScore: 0,
       stars: 25,
@@ -32,7 +32,7 @@ export default function GamesPage() {
     {
       id: 8,
       title: "Xếp hình",
-      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000016_002?csig=AAAAAAAAAAAAAAAAAAAAABbW0b4klDPXKj4gfyEN7gG3PxNDWEAwszYhZ0NE5b5E&exp=1752300086&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAxNl8wMDIAAAAAAZf9OWRtoN9pL8Wl9p1qcrgPEkX8Ye_foFzeW0ndoeBbVwprHtM",
+      image: "https://images.unsplash.com/photo-1575364289437-fb1479d52732?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTIzfHxwdXp6bGUlMjBraWR8ZW58MHx8MHx8fDA%3D",
       description: "Học xếp hình và giải trí trí tuệ",
       highScore: 0,
       stars: 25,
@@ -41,7 +41,7 @@ export default function GamesPage() {
     {
       id: 9,
       title: "Phán đoán tình huống",
-      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FM%2F92b0ec5d-0f0b-4b49-8c08-dd02e9f8dbb3?csig=AAAAAAAAAAAAAAAAAAAAAHfkKBJmzlQVsLlQwwr5C1GgiXNtmsjfi4yPqt8dH_Hq&exp=1752314325&signer=media-rpc&token=AAIAAU0AJDkyYjBlYzVkLTBmMGItNGI0OS04YzA4LWRkMDJlOWY4ZGJiMwAAAAABl_4SqAgSgBdiDxlp9LPqAZ-QBkeI-4yz7lhghyOqeAnoUMWyag",
+      image: "https://images.unsplash.com/photo-1641439927222-6138ce56f90d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTI4fHxnYW1lJTIwaWNvbnxlbnwwfHwwfHx8MA%3D%3D",
       description: "Phán đoán tình huống trong cuộc sống",
       highScore: 0,
       stars: 25,
@@ -50,7 +50,7 @@ export default function GamesPage() {
     {
       id: 10,
       title: "Tô màu tự do",
-      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000036_002?csig=AAAAAAAAAAAAAAAAAAAAABvQp29Uo0H0aw6L-Ouzpr7Q2SBts5aY5fBylZh6Aadw&exp=1752300405&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDAzNl8wMDIAAAAAAZf9PkPQaX01W9sXPRubg2hMwBd3GuRAtXdbca1exVan1mHNMUM",
+      image: "https://images.unsplash.com/photo-1583156944293-8951639522fc?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDR8fGFydCUyMHN1cHBsaWVzJTIwZ2FtZXxlbnwwfHwwfHx8MA%3D%3D",
       description:
         "Bảng vẽ online với nhiều màu sắc để phát triển sáng tạo và cảm xúc",
       highScore: 0,
@@ -60,7 +60,7 @@ export default function GamesPage() {
     {
       id: 11,
       title: "Vẽ theo mẫu",
-      image: "https://media.canva.com/v2/files/uri:ifs%3A%2F%2FS%2F658e9d1b-d8e2-458b-acf9-7ab69d08c30c_00000057_000?csig=AAAAAAAAAAAAAAAAAAAAAOPbmhz3B2vWdeC8gRi7JUGUH_bxfR4tgpnE7n1kjiM1&exp=1752300545&signer=assistant-rpc&token=AAIAAVMAMTY1OGU5ZDFiLWQ4ZTItNDU4Yi1hY2Y5LTdhYjY5ZDA4YzMwY18wMDAwMDA1N18wMDAAAAAAAZf9QGXBetpmJtS2Dfh_C5dQTUMMKrFSyulE8zka5t2KQGhdu3E",
+      image: "https://images.unsplash.com/photo-1616627981431-ed306bb11ac0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZHJhd2luZ3xlbnwwfHwwfHx8MA%3D%3D",
       description:
         "Quan sát và sao chép hình ảnh để phát triển kỹ năng quan sát",
       highScore: 0,
